@@ -2,6 +2,33 @@
 
 Notable changes to the Microsoft Foundry Canvas plugin for GitHub Copilot App.
 
+## Version 1.0.13
+
+This release simplifies project selection across Chat and Canvas, adds directory switching and feedback surveys, and improves Hosted Agent validation and Agent Inspector details.
+
+### Added
+
+- **Directory selection**: Use **Switch directory** to choose a Microsoft Entra directory or enter a Tenant ID. Canvas remembers the selection and uses it for sign-in, resource discovery, and project context. Related: [#755](https://github.com/microsoft/foundry-dev-tools/issues/755).
+- **Saved projects**: Copilot can offer the Canvas-selected Foundry project during agent creation, so you can reuse it without manually copying its endpoint. Related: [#751](https://github.com/microsoft/foundry-dev-tools/issues/751).
+- **Local agent port**: Set `AGENTDEV_PORT` before loading the extension to use a different local agent port for startup, readiness checks, and Inspector connections. The default remains `8088`.
+- **Feedback survey**: Share your experience through a Canvas feedback dialog with **Take survey**, **Not now**, and **Don't show again**. Reminder and opt-out choices persist across sessions. Related: [#761](https://github.com/microsoft/foundry-dev-tools/issues/761).
+- **Agent Inspector filters**: Filter Responses Events and Tools by run. Event counts, Copilot actions, copy, and download use the same filtered event selection.
+
+### Changed
+
+- **Chat and Canvas workflows**: Configuration and deployment stay in Chat by default unless you explicitly request Canvas. The remembered **Continue in Chat** or **Open Foundry Canvas** choice now applies only to interactive inspection and testing.
+- **Hosted Agent validation**: Validate one agent per run using `agentPath` or the current folder. Reports support titled guidance links and multiline source locations, with status tabs ordered as **Feedbacks**, **Passed checks**, **Inconclusive**, and **Not applicable**. Existing reports remain supported.
+- **Agent Inspector details**: Responses Preview mode hides unsupported Visualization and Input & Output views, keeps Tokens, Events, and Tools available with consistent empty states, and improves control accessibility.
+- **Agent Inspector failures**: The Overview run timeline now shows client- and server-reported failure details.
+
+### Fixed
+
+- **Project synchronization**: Choosing a Foundry project in Copilot Chat now updates the saved selection and live Canvas without reopening it or requiring a second selection. Stale deployment results no longer overwrite the new project's state. Related: [#752](https://github.com/microsoft/foundry-dev-tools/issues/752).
+- **Agent creation status**: The creation-progress message clears when Chat stops or becomes idle, even if an event is missed. Older responses no longer restore a completed creation state.
+- **Default view**: Opening or refocusing Canvas without an explicit intent or agent now shows creation for an empty workspace and management for an existing agent.
+- **Validation fixes**: Remediation reruns stay targeted to the original report's agent directory.
+- **Agent Inspector connections**: Late discovery results from a previous runtime no longer display stale data, select the wrong scenario, or trigger duplicate replacement requests.
+
 ## Version 1.0.12
 
 This release gives you more control over Chat and Canvas workflows, refines Hosted Agent validation, and improves sign-in, project selection, and Agent Inspector reliability.
