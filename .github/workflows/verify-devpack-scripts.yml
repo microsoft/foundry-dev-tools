@@ -54,7 +54,21 @@ jobs:
           - { os: windows-latest, arch: x64 }
           - { os: windows-11-arm, arch: arm64 }
 
+    env:
+      SCENARIO: ${{ matrix.scenario }}
+
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.repository.default_branch || github.ref }}
+          persist-credentials: false
+
+      - name: Test smoke assertions
+        shell: pwsh
+        run: |
+          node --test .github/scripts/verify_devpack_smoke.test.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Smoke assertion tests failed' }
+
       - name: Verify release tag
         shell: pwsh
         run: |
@@ -180,30 +194,28 @@ jobs:
           New-Item -ItemType Directory -Path $temp -Force | Out-Null
           $env:TEMP = $temp
           $env:TMP = $temp
+          $installerLog = Join-Path $env:RUNNER_TEMP 'foundry-devpack.log'
+          $consoleOutput = Join-Path $env:RUNNER_TEMP 'foundry-devpack-output.txt'
 
           if ($env:INSTALL_SOURCE -eq 'aka') {
             & powershell.exe -ExecutionPolicy AllSigned -Command `
-              "Invoke-RestMethod 'https://aka.ms/foundry-devpack-install.ps1' | Invoke-Expression"
+              "Invoke-RestMethod 'https://aka.ms/foundry-devpack-install.ps1' | Invoke-Expression" `
+              2>&1 | Tee-Object -FilePath $consoleOutput
           } elseif ($env:INSTALL_SOURCE -eq 'winget') {
-            $installerLog = Join-Path $env:RUNNER_TEMP 'foundry-devpack.log'
             $expectedVersion = $env:RELEASE_TAG -replace '^devpack-installer-', ''
             winget install --exact --id Microsoft.FoundryDevPack `
               --version $expectedVersion --source winget --force --silent `
               --disable-interactivity --accept-package-agreements --accept-source-agreements `
               --log $installerLog
           } else {
-            $installerLog = Join-Path $env:RUNNER_TEMP 'foundry-devpack.log'
             & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy AllSigned `
               -File $env:DEVPACK_SCRIPT --verbose --log $installerLog
           }
           if ($LASTEXITCODE -ne 0) { throw "DevPack install exited $LASTEXITCODE" }
-          if ($env:INSTALL_SOURCE -in @('release', 'winget')) {
-            if (-not (Test-Path $installerLog)) { throw 'installer log was not created' }
-            $logText = Get-Content $installerLog -Raw
-            if ($logText -notmatch 'Finished \(failed=0, cancelled=False\)') {
-              throw 'installer log does not contain the successful run result'
-            }
-          }
+          $format = if ($env:INSTALL_SOURCE -eq 'aka') { 'console' } else { 'log' }
+          $resultFile = if ($format -eq 'console') { $consoleOutput } else { $installerLog }
+          node .github/scripts/verify_devpack_smoke.mjs run $env:RELEASE_TAG $env:SCENARIO $format $resultFile
+          if ($LASTEXITCODE -ne 0) { throw 'DevPack install verification failed' }
           $leaked = @(Get-ChildItem $temp -Directory -Filter 'foundry-devpack-*' -ErrorAction SilentlyContinue)
           if ($leaked.Count) {
             throw "bootstrap left temporary directories: $($leaked.FullName -join ', ')"
@@ -221,10 +233,8 @@ jobs:
             --disable-interactivity --accept-package-agreements --accept-source-agreements `
             --log $repairLog
           if ($LASTEXITCODE -ne 0) { throw "winget repair exited $LASTEXITCODE" }
-          if (-not (Test-Path $repairLog)) { throw 'repair log was not created' }
-          if ((Get-Content $repairLog -Raw) -notmatch 'Finished \(failed=0, cancelled=False\)') {
-            throw 'repair log does not contain the successful run result'
-          }
+          node .github/scripts/verify_devpack_smoke.mjs run $env:RELEASE_TAG $env:SCENARIO log $repairLog
+          if ($LASTEXITCODE -ne 0) { throw 'DevPack repair verification failed' }
 
       - name: Verify installed components
         shell: pwsh
@@ -235,11 +245,17 @@ jobs:
           $env:Path = "$machine;$user;$env:Path"
 
           az version | Out-Host
-          azd version | Out-Host
+          if ($LASTEXITCODE -ne 0) { throw "az version exited $LASTEXITCODE" }
+          $azdVersion = Join-Path $env:RUNNER_TEMP 'azd-version.txt'
+          azd version | Tee-Object -FilePath $azdVersion | Out-Host
+          if ($LASTEXITCODE -ne 0) { throw "azd version exited $LASTEXITCODE" }
           $extensions = azd ext list --installed -o json | Out-String
+          if ($LASTEXITCODE -ne 0) { throw "azd extension list exited $LASTEXITCODE" }
           $extensions | Write-Host
-          if ($extensions -notmatch 'microsoft\.foundry') { throw 'microsoft.foundry azd extension not installed' }
-          if ($extensions -notmatch 'azure\.ai\.agents') { throw 'azure.ai.agents azd extension not installed' }
+          $extensionsPath = Join-Path $env:RUNNER_TEMP 'azd-extensions.json'
+          Set-Content -LiteralPath $extensionsPath -Value $extensions -Encoding utf8
+          node .github/scripts/verify_devpack_smoke.mjs dependencies $env:RELEASE_TAG $azdVersion $extensionsPath
+          if ($LASTEXITCODE -ne 0) { throw 'DevPack dependency verification failed' }
 
           $skill = Join-Path $env:USERPROFILE '.agents\skills\microsoft-foundry\SKILL.md'
           if (-not (Test-Path $skill -PathType Leaf)) { throw "microsoft-foundry skill not found at $skill" }
@@ -257,8 +273,12 @@ jobs:
           if (-not (code --list-extensions | Select-String -Quiet -Pattern 'ms-windows-ai-studio.windows-ai-studio')) {
             throw 'Foundry Toolkit VS Code extension not installed'
           }
-          copilot plugin list --no-color | Out-Host
-          if (-not (copilot plugin list --no-color | Select-String -Quiet -Pattern 'microsoft-foundry')) {
+          copilot --version | Out-Host
+          if ($LASTEXITCODE -ne 0) { throw "Copilot version exited $LASTEXITCODE" }
+          $plugins = copilot --no-color plugin list | Out-String
+          if ($LASTEXITCODE -ne 0) { throw "Copilot plugin list exited $LASTEXITCODE" }
+          Write-Host $plugins
+          if ($plugins -notmatch 'microsoft-foundry') {
             throw 'Foundry Copilot plugin not installed'
           }
 
@@ -344,7 +364,19 @@ jobs:
           - { os: ubuntu-latest, arch: x64 }
           - { os: ubuntu-24.04-arm, arch: arm64 }
 
+    env:
+      SCENARIO: ${{ matrix.scenario }}
+
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.repository.default_branch || github.ref }}
+          persist-credentials: false
+
+      - name: Test smoke assertions
+        shell: bash
+        run: node --test .github/scripts/verify_devpack_smoke.test.mjs
+
       - name: Verify release tag
         shell: bash
         run: |
@@ -417,13 +449,11 @@ jobs:
           export TMPDIR="$temp"
 
           if [ "$INSTALL_SOURCE" = "aka" ]; then
-            curl -fsSL https://aka.ms/foundry-devpack-install.sh | bash
+            curl -fsSL https://aka.ms/foundry-devpack-install.sh | bash 2>&1 | tee "$RUNNER_TEMP/foundry-devpack-output.txt"
+            node .github/scripts/verify_devpack_smoke.mjs run "$RELEASE_TAG" "$SCENARIO" console "$RUNNER_TEMP/foundry-devpack-output.txt"
           else
             bash "$DEVPACK_SCRIPT" --verbose --log "$RUNNER_TEMP/foundry-devpack.log"
-          fi
-          if [ "$INSTALL_SOURCE" = "release" ]; then
-            test -f "$RUNNER_TEMP/foundry-devpack.log"
-            grep -F 'Finished (failed=0, cancelled=False)' "$RUNNER_TEMP/foundry-devpack.log"
+            node .github/scripts/verify_devpack_smoke.mjs run "$RELEASE_TAG" "$SCENARIO" log "$RUNNER_TEMP/foundry-devpack.log"
           fi
           if find "$temp" -mindepth 1 -maxdepth 1 -type d -name 'foundry-devpack-*' -print -quit | grep -q .; then
             echo "error: bootstrap left temporary directories under $temp" >&2
@@ -437,10 +467,9 @@ jobs:
           set -euxo pipefail
           export PATH="$HOME/.local/bin:$PATH"
           az version
-          azd version
+          azd version | tee "$RUNNER_TEMP/azd-version.txt"
           azd ext list --installed -o json | tee "$RUNNER_TEMP/azd-extensions.json"
-          grep -qi 'microsoft\.foundry' "$RUNNER_TEMP/azd-extensions.json"
-          grep -qi 'azure\.ai\.agents' "$RUNNER_TEMP/azd-extensions.json"
+          node .github/scripts/verify_devpack_smoke.mjs dependencies "$RELEASE_TAG" "$RUNNER_TEMP/azd-version.txt" "$RUNNER_TEMP/azd-extensions.json"
           test -f "$HOME/.agents/skills/microsoft-foundry/SKILL.md"
 
       - name: Verify VS Code extension and Copilot plugin
@@ -450,7 +479,8 @@ jobs:
           set -euxo pipefail
           export PATH="$HOME/.local/bin:$PATH"
           code --list-extensions | grep -qi 'ms-windows-ai-studio.windows-ai-studio'
-          copilot plugin list --no-color | tee "$RUNNER_TEMP/copilot-plugins.txt"
+          copilot --version
+          copilot --no-color plugin list | tee "$RUNNER_TEMP/copilot-plugins.txt"
           grep -qi 'microsoft-foundry' "$RUNNER_TEMP/copilot-plugins.txt"
           test -L "$HOME/.claude/skills/microsoft-foundry"
           test "$(readlink "$HOME/.claude/skills/microsoft-foundry")" = "$HOME/.agents/skills/microsoft-foundry"
@@ -475,10 +505,20 @@ jobs:
           - { os: macos-latest, arch: arm64 }
 
     env:
+      SCENARIO: ${{ matrix.scenario }}
       HOMEBREW_NO_AUTO_UPDATE: "1"
       HOMEBREW_NO_ANALYTICS: "1"
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.repository.default_branch || github.ref }}
+          persist-credentials: false
+
+      - name: Test smoke assertions
+        shell: bash
+        run: node --test .github/scripts/verify_devpack_smoke.test.mjs
+
       - name: Verify release tag
         shell: bash
         run: |
@@ -549,26 +589,26 @@ jobs:
 
           case "$INSTALL_SOURCE" in
             aka)
-              curl -fsSL https://aka.ms/foundry-devpack-install.sh | bash
+              curl -fsSL https://aka.ms/foundry-devpack-install.sh | bash 2>&1 | tee "$RUNNER_TEMP/foundry-devpack-output.txt"
+              node .github/scripts/verify_devpack_smoke.mjs run "$RELEASE_TAG" "$SCENARIO" console "$RUNNER_TEMP/foundry-devpack-output.txt"
               ;;
             brew)
               brew untap microsoft/foundry 2>/dev/null || true
-              brew install --cask microsoft/foundry/devpack && foundry-devpack install
+              brew install --cask microsoft/foundry/devpack
+              foundry-devpack install 2>&1 | tee "$RUNNER_TEMP/foundry-devpack-output.txt"
+              node .github/scripts/verify_devpack_smoke.mjs run "$RELEASE_TAG" "$SCENARIO" console "$RUNNER_TEMP/foundry-devpack-output.txt"
               expected_version="${RELEASE_TAG#devpack-installer-}"
               foundry-devpack --version | grep -F "$expected_version"
               ;;
             release)
               bash "$DEVPACK_SCRIPT" --verbose --log "$RUNNER_TEMP/foundry-devpack.log"
+              node .github/scripts/verify_devpack_smoke.mjs run "$RELEASE_TAG" "$SCENARIO" log "$RUNNER_TEMP/foundry-devpack.log"
               ;;
             *)
               echo "error: unsupported install source: $INSTALL_SOURCE" >&2
               exit 1
               ;;
           esac
-          if [ "$INSTALL_SOURCE" = "release" ]; then
-            test -f "$RUNNER_TEMP/foundry-devpack.log"
-            grep -F 'Finished (failed=0, cancelled=False)' "$RUNNER_TEMP/foundry-devpack.log"
-          fi
           if find "$temp" -mindepth 1 -maxdepth 1 -type d -name 'foundry-devpack-*' -print -quit | grep -q .; then
             echo "error: bootstrap left temporary directories under $temp" >&2
             find "$temp" -mindepth 1 -maxdepth 1 -type d -name 'foundry-devpack-*' -print >&2
@@ -581,10 +621,9 @@ jobs:
           set -euxo pipefail
           export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
           az version
-          azd version
+          azd version | tee "$RUNNER_TEMP/azd-version.txt"
           azd ext list --installed -o json | tee "$RUNNER_TEMP/azd-extensions.json"
-          grep -qi 'microsoft\.foundry' "$RUNNER_TEMP/azd-extensions.json"
-          grep -qi 'azure\.ai\.agents' "$RUNNER_TEMP/azd-extensions.json"
+          node .github/scripts/verify_devpack_smoke.mjs dependencies "$RELEASE_TAG" "$RUNNER_TEMP/azd-version.txt" "$RUNNER_TEMP/azd-extensions.json"
           test -f "$HOME/.agents/skills/microsoft-foundry/SKILL.md"
 
       - name: Verify VS Code extension and Copilot plugin
@@ -594,7 +633,8 @@ jobs:
           set -euxo pipefail
           export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
           code --list-extensions | grep -qi 'ms-windows-ai-studio.windows-ai-studio'
-          copilot plugin list --no-color | tee "$RUNNER_TEMP/copilot-plugins.txt"
+          copilot --version
+          copilot --no-color plugin list | tee "$RUNNER_TEMP/copilot-plugins.txt"
           grep -qi 'microsoft-foundry' "$RUNNER_TEMP/copilot-plugins.txt"
           test -L "$HOME/.claude/skills/microsoft-foundry"
           test "$(readlink "$HOME/.claude/skills/microsoft-foundry")" = "$HOME/.agents/skills/microsoft-foundry"
