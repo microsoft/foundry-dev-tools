@@ -1265,7 +1265,7 @@ body {
     height: 100%;
     min-height: 0;
 }
-.canvas-fluent-provider {
+.canvas-fluent-provider.fui-FluentProvider {
     background: transparent;
     color: inherit;
 }
@@ -1278,5 +1278,93 @@ body {
     .panel-shell {
         min-height: 100vh;
         border-radius: 0;
+    }
+}
+.survey-dialog.fui-DialogSurface {
+    width: min(480px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    padding: 20px;
+    border: 1px solid var(--fluent-stroke);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--fluent-fg-1);
+    box-shadow: var(--fluent-menu-shadow);
+}
+.survey-dialog .fui-DialogBody {
+    gap: 12px;
+}
+.survey-dialog .fui-DialogTitle {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+.survey-dialog .fui-DialogContent {
+    color: var(--fluent-fg-3);
+    font-size: 13px;
+    line-height: 18px;
+}
+.survey-dialog .icon-btn {
+    width: 24px;
+    height: 24px;
+    color: var(--fluent-fg-3);
+}
+.survey-dialog .survey-actions {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    justify-content: flex-end;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+.survey-dialog .btn {
+    min-height: 32px;
+    min-width: 0;
+    padding: 5px 10px;
+    border-radius: var(--fluent-radius);
+    border-color: var(--fluent-secondary-border);
+    background: var(--fluent-secondary-background);
+    color: var(--fluent-secondary-foreground);
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+.survey-dialog .btn:hover {
+    border-color: light-dark(#bdbdbd, #7a7a7a);
+    background: light-dark(#f5f5f5, #333);
+}
+.survey-dialog :is(.btn, .icon-btn):focus-visible {
+    outline: 2px solid var(--fluent-brand-foreground);
+    outline-offset: 2px;
+}
+.survey-dialog .btn:disabled { opacity: .5; cursor: default; }
+.survey-dialog .survey-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--fluent-deploy-background);
+    border-color: var(--fluent-deploy-border);
+    color: var(--fluent-deploy-foreground);
+}
+.survey-dialog .survey-primary:hover {
+    background: light-dark(#ebe3f8, rgba(146,99,241,.16));
+    border-color: var(--fluent-deploy-border);
+}
+.survey-dialog .survey-primary .fi { --fi-size: 14px; }
+.survey-dialog .survey-opt-out { margin-right: auto; }
+.survey-dialog .survey-error {
+    margin-top: 12px;
+    color: var(--fluent-fg-1);
+}
+@media (max-width: 400px) {
+    .survey-dialog.fui-DialogSurface { padding: 16px; }
+    .survey-dialog .survey-opt-out { margin-right: 0; }
+    .survey-dialog .survey-actions {
+        flex-direction: column;
+        align-items: stretch;
     }
 }
