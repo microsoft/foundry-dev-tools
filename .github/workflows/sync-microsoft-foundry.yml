@@ -35,7 +35,7 @@ jobs:
     steps:
       - name: Generate Skylight artifact token
         id: skylight-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.SYNC_APP_ID }}
           private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
@@ -96,12 +96,12 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Use Node.js 20.19
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20.19"
 
       - name: Download Skylight Canvas package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: microsoft-foundry-canvas-package
           path: artifact
@@ -183,7 +183,7 @@ jobs:
           node --check extension.mjs
 
       - name: Upload verified runtime package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: microsoft-foundry-${{ steps.source.outputs.short_sha }}
           path: |
@@ -202,26 +202,26 @@ jobs:
 
     steps:
       - name: Checkout workflow automation
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.sha }}
           path: automation
           persist-credentials: false
 
       - name: Use Node.js 20.19
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20.19"
 
       - name: Generate GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.SYNC_APP_ID }}
           private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
 
       - name: Checkout foundry-toolkit
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           token: ${{ steps.app-token.outputs.token }}
           ref: main
@@ -230,7 +230,7 @@ jobs:
           persist-credentials: false
 
       - name: Download verified runtime package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: microsoft-foundry-${{ needs.acquire.outputs.source_short_sha }}
           path: bundle
@@ -306,7 +306,7 @@ jobs:
       - name: Create draft pull request
         if: steps.diff.outputs.has_changes == 'true'
         id: cpr
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ steps.app-token.outputs.token }}
           path: target
