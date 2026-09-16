@@ -1,5 +1,28 @@
 # What's New in Foundry Toolkit for VS Code
 
+## Version 1.6.13 - 16 September, 2026
+
+This release of Microsoft Foundry Toolkit for VS Code adds private container registry connections, Fara model support for AMD NPUs, and Aion fine-tuning adapter support. It also updates Windows ML tooling and improves model search, hosted agent validation, and Agent Inspector.
+
+### Added
+
+- **Private container registries**: Deploy hosted agents from prebuilt images, including private non-ACR registries, using a matching registry connection in your Foundry project.
+- **Fara on AMD NPUs**: Added the Fara 7B VitisAI INT4 model with image inputs for Windows x64 AMD NPU users.
+- **Aion fine-tuning adapters**: Added support for downloading Aion's `quantized_adapter.safetensors` output while retaining support for `adapter_model.safetensors`. The Aion workflow requires the companion template to be included in the packaged resources ([microsoft/windows-ai-studio-templates#397](https://github.com/microsoft/windows-ai-studio-templates/pull/397)).
+
+### Changed
+
+- **WinML CLI**: Updated to 0.3.1 with a refreshed model catalog and conversion recipes ([microsoft/windows-ai-studio-templates#396](https://github.com/microsoft/windows-ai-studio-templates/pull/396)).
+- **Windows ML**: The Windows ML runtime now uses `windowsml` 2.3 with updated execution providers, without requiring the Windows App SDK. Existing projects need to be updated ([microsoft/olive-recipes#382](https://github.com/microsoft/olive-recipes/pull/382), [microsoft/olive-recipes#401](https://github.com/microsoft/olive-recipes/pull/401)).
+- **Hosted agent validation**: Target a specific hosted agent and open a single generated report in VS Code. If the required validation skill is missing, the workflow attempts installation and provides recovery steps if installation fails.
+- **Fine-tuning parameters**: Display template-provided suggestions alongside range hints and validate parameters with only a minimum or maximum limit.
+
+### Fixed
+
+- **Agent Inspector**: Completed responses retain their output and error details. Tool approvals and sign-in steps no longer interrupt an active continuation or remove its user message.
+- **Model Catalog**: Popular Models now hides during searches or narrowing filters. Custom models respect search and filters, remain available through the Custom provider filter, and no longer cause premature no-results messages while loading. Section navigation follows the visible results.
+- **Fine-tuning downloads**: Retry downloads that left an empty folder, and report missing or empty adapters and output-copy failures instead of showing success.
+
 ## Version 1.6.12 - 9 September, 2026
 
 This release adds remote image controls and more model profiling detail, makes model search easier to access, and improves Agent Inspector connection and response reliability.
