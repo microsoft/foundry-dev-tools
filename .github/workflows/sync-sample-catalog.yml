@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       commit_sha:
-        description: "foundry-samples commit to pin to. Blank = latest main."
+        description: "Full foundry-samples SHA. Blank = reviewed sample-cards.json SHA; input must match."
         required: false
         type: string
         default: ""
@@ -65,20 +65,22 @@ jobs:
         shell: bash
         env:
           INPUT_SHA: ${{ inputs.commit_sha }}
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          cards_sha=$(node -p "require('./samples/hosted-agent/sample-cards.json').sourceCommitSha")
           if [[ -n "$INPUT_SHA" ]]; then
             sha="$INPUT_SHA"
             source="user-supplied input"
           else
-            # No SHA provided: pin to the current tip of foundry-samples@main
-            # so the dispatcher doesn't have to look it up by hand.
-            sha=$(gh api repos/microsoft-foundry/foundry-samples/commits/main --jq .sha)
-            source="latest microsoft-foundry/foundry-samples@main"
+            sha="$cards_sha"
+            source="sample-cards.json sourceCommitSha"
           fi
-          if [[ ! "$sha" =~ ^[0-9a-f]{7,40}$ ]]; then
-            echo "Resolved SHA is not a valid git object: $sha" >&2
+          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Resolved SHA must be a full 40-character commit: $sha" >&2
+            exit 1
+          fi
+          if [[ "$sha" != "$cards_sha" ]]; then
+            echo "Update and review sample-cards.json for the requested commit before generating the shared A/B catalog." >&2
             exit 1
           fi
           echo "Using SHA $sha (source: $source)"
@@ -95,6 +97,9 @@ jobs:
           AI_REFINE: ${{ inputs.refine_with_ai }}
           IGNORE_EXISTING: ${{ inputs.ignore_existing_catalog }}
         run: node .github/scripts/generate_sample_catalog.mjs "${{ steps.resolve-sha.outputs.sha }}"
+
+      - name: Validate unified catalog
+        run: node --test .github/scripts/sample_catalog_cards.test.mjs
 
       - name: Detect catalog changes
         id: diff
@@ -187,19 +192,23 @@ jobs:
           body: |
             ## Summary
             This automated draft PR updates `samples/hosted-agent/sample-catalog.json` by scanning
-            the `microsoft-foundry/foundry-samples` repository for hosted-agent sample templates.
+            the `microsoft-foundry/foundry-samples` repository and combining its templates with
+            the reviewed card definitions. Both A/B experiences consume this one catalog.
 
             ## What changed
             - New templates added or removed based on the upstream repo structure.
-            - `commitSha` pinned to the upstream commit supplied via the `commit_sha` workflow input.
-            - `requiresModel` and `protocol` values re-derived from each sample's `agent.yaml`.
-            - `displayName` derived from each template's folder name; `description` LLM-generated when empty.
+            - `commitSha` pinned to `sample-cards.json` (an explicit workflow SHA must match).
+            - `requiresModel` and `protocol` values re-derived from each sample's `azure.yaml`.
+            - Blank `displayName` and `description` filled by AI when configured; names fall back to the folder name.
             - PM-edited `displayName` and `description` values are preserved from the previous catalog.
+            - `schemaVersion`, `patterns`, and `cards` generated in the same file from the matching definitions.
 
             ## Reviewer Checks
             - Confirm new templates have correct `language`, `framework`, and `protocol` values.
             - Review the auto-generated `description` for any new templates.
             - Confirm no PM-edited display fields were accidentally lost.
+            - Confirm every template belongs to one card and each card's selection combinations are unique.
+            - Review card Details and Pattern assignments when their template membership changes.
           labels: ${{ steps.labels.outputs.labels }}
           add-paths: |
             samples/hosted-agent/sample-catalog.json

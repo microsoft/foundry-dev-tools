@@ -11,6 +11,7 @@
  *
  * Usage:
  *   node generate_sample_catalog.mjs <commitSha>
+ *   node generate_sample_catalog.mjs --from-existing
  *
  * Environment variables:
  *   GITHUB_TOKEN        Optional GitHub token for API authentication.
@@ -19,9 +20,10 @@
  *   AZURE_OPENAI_*      Optional; when set, descriptions are LLM-generated.
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } from 'node:fs';
+import { readFileSync, existsSync, appendFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeCatalogWithCards } from './sample_catalog_cards.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -31,6 +33,7 @@ const SAMPLES_REPO_URL = process.env.SAMPLES_REPO_URL || 'https://github.com/mic
 const SAMPLES_REPO_API = 'https://api.github.com/repos/microsoft-foundry/foundry-samples';
 const OUTPUT_PATH = join(REPO_ROOT, 'samples', 'hosted-agent', 'sample-catalog.json');
 const OVERRIDES_PATH = join(REPO_ROOT, 'samples', 'hosted-agent', 'sample-overrides.json');
+const CARDS_PATH = join(REPO_ROOT, 'samples', 'hosted-agent', 'sample-cards.json');
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 
@@ -1329,7 +1332,22 @@ function warnDuplicateDisplayNames(templates) {
 }
 
 async function main() {
+    if (process.argv.length !== 3) {
+        throw new Error('Usage: node generate_sample_catalog.mjs <commitSha> | --from-existing');
+    }
+    const definitions = JSON.parse(readFileSync(CARDS_PATH, 'utf-8').replace(/^\uFEFF/, ''));
+    if (process.argv[2] === '--from-existing') {
+        const source = JSON.parse(readFileSync(OUTPUT_PATH, 'utf-8').replace(/^\uFEFF/, ''));
+        const catalog = writeCatalogWithCards(source, definitions, OUTPUT_PATH);
+        console.log(`Wrote ${OUTPUT_PATH}: ${catalog.templates.length} templates, ${catalog.cards.length} cards (existing snapshot preserved)`);
+        writeSummary(catalog.templates.length);
+        return;
+    }
+
     const commitSha = parseCommitShaArg();
+    if (commitSha !== definitions.sourceCommitSha) {
+        throw new Error('Requested commit must match sample-cards.json sourceCommitSha; review template coverage and card content before changing the snapshot.');
+    }
     console.log(`Using commit: ${commitSha}`);
 
     console.log('Scanning templates...');
@@ -1368,11 +1386,8 @@ async function main() {
         templates: orderedTemplates,
     };
 
-    const outputDir = dirname(OUTPUT_PATH);
-    mkdirSync(outputDir, { recursive: true });
-    writeFileSync(OUTPUT_PATH, JSON.stringify(catalog, null, 4) + '\n', 'utf-8');
-
-    console.log(`Wrote ${OUTPUT_PATH}`);
+    const output = writeCatalogWithCards(catalog, definitions, OUTPUT_PATH);
+    console.log(`Wrote ${OUTPUT_PATH}: ${output.templates.length} templates, ${output.cards.length} cards`);
 
     writeSummary(templates.length);
 }
