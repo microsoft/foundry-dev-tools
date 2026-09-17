@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
@@ -117,7 +117,9 @@ export function buildCatalogWithCards(source, definitions) {
 
     const unassigned = source.templates.filter(template => !assignedPaths.has(template.path));
     assert.equal(unassigned.length, 0, `Templates without cards:\n${unassigned.map(template => template.path).join('\n')}`);
-    cards.sort((left, right) => byPath.get(left.templatePaths[0]).index - byPath.get(right.templatePaths[0]).index);
+    const previousOrder = new Map((source.cards ?? []).map((card, index) => [card.id, index]));
+    const order = card => previousOrder.get(card.id) ?? previousOrder.size + byPath.get(card.templatePaths[0]).index;
+    cards.sort((left, right) => order(left) - order(right));
 
     return {
         commitSha: source.commitSha,
@@ -132,7 +134,61 @@ export function buildCatalogWithCards(source, definitions) {
     };
 }
 
-export function writeCatalogWithCards(source, definitions, outputPath) {
+export async function reconcileCardDefinitions(previous, source, definitions, chooseCard) {
+    buildCatalogWithCards(previous, definitions);
+    const byPath = validateSource(source);
+    assert.equal(source.repo, previous.repo, 'Incremental sync must use the same source repository');
+    const previousPaths = new Set(previous.templates.map(template => template.path));
+    for (const template of previous.templates) {
+        if (byPath.has(template.path)) {
+            assert.deepEqual(byPath.get(template.path).template, template, `Existing template changed: ${template.path}`);
+        }
+    }
+    const result = {
+        sourceCommitSha: source.commitSha,
+        cards: definitions.cards.map(card => ({
+            ...structuredClone(card),
+            templatePaths: card.templatePaths.filter(templatePath => byPath.has(templatePath)),
+        })).filter(card => card.templatePaths.length > 0),
+    };
+    const reservedIds = new Set(definitions.cards.map(card => card.id));
+    for (const template of source.templates.filter(template => !previousPaths.has(template.path))) {
+        const candidates = result.cards.filter(card => !card.templatePaths.some(templatePath =>
+            DIMENSION_IDS.every(dimension => byPath.get(templatePath).template[dimension] === template[dimension])
+        ));
+        const decision = await chooseCard({
+            template: structuredClone(template),
+            candidates: structuredClone(candidates),
+            patterns: structuredClone(PATTERNS),
+        });
+        assert.ok(decision && typeof decision === 'object', `Missing AI card decision for ${template.path}`);
+        requireText(decision.reason, `${template.path} placement reason`);
+        if (decision.cardId !== undefined) {
+            assert.equal(decision.card, undefined, 'Choose an existing card or create one, not both');
+            const target = candidates.find(card => card.id === decision.cardId);
+            assert.ok(target, `Unknown or conflicting card for ${template.path}: ${decision.cardId}`);
+            target.templatePaths.push(template.path);
+        } else {
+            const card = decision.card;
+            assert.ok(card && !reservedIds.has(card.id), `New card must have an unused ID for ${template.path}`);
+            assert.equal(card.details?.requirements?.length, 1, 'New card Requirements must be one value');
+            requireText(card.details.requirements[0], 'New card Requirements');
+            assert.ok(card.details.requirements[0].trim().split(/\s+/).length <= 5, 'New card Requirements must total at most five words');
+            result.cards.push({
+                id: card.id,
+                title: card.title,
+                categoryId: card.categoryId,
+                details: structuredClone(card.details),
+                templatePaths: [template.path],
+            });
+            reservedIds.add(card.id);
+        }
+    }
+    buildCatalogWithCards(source, result);
+    return result;
+}
+
+export function writeCatalogWithCards(source, definitions, outputPath, definitionsPath) {
     const catalog = buildCatalogWithCards(source, definitions);
     let previous;
     try {
@@ -144,9 +200,16 @@ export function writeCatalogWithCards(source, definitions, outputPath) {
         isDeepStrictEqual({ ...previous, generatedAt: catalog.generatedAt }, catalog)) {
         catalog.generatedAt = previous.generatedAt;
     }
-    mkdirSync(dirname(outputPath), { recursive: true });
-    const temporaryPath = `${outputPath}.${process.pid}.tmp`;
-    writeFileSync(temporaryPath, `${JSON.stringify(catalog, null, 4)}\n`, 'utf8');
-    renameSync(temporaryPath, outputPath);
+    const outputs = [[outputPath, catalog]];
+    if (definitionsPath) outputs.push([definitionsPath, definitions]);
+    try {
+        for (const [filePath, content] of outputs) {
+            mkdirSync(dirname(filePath), { recursive: true });
+            writeFileSync(`${filePath}.${process.pid}.tmp`, `${JSON.stringify(content, null, 4)}\n`, 'utf8');
+        }
+        for (const [filePath] of outputs) renameSync(`${filePath}.${process.pid}.tmp`, filePath);
+    } finally {
+        for (const [filePath] of outputs) rmSync(`${filePath}.${process.pid}.tmp`, { force: true });
+    }
     return catalog;
 }
