@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, renameSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 export const PATTERNS = [
     { id: 'just-the-basics', displayName: 'Just the basics' },
@@ -133,6 +134,16 @@ export function buildCatalogWithCards(source, definitions) {
 
 export function writeCatalogWithCards(source, definitions, outputPath) {
     const catalog = buildCatalogWithCards(source, definitions);
+    let previous;
+    try {
+        previous = JSON.parse(readFileSync(outputPath, 'utf8').replace(/^\uFEFF/, ''));
+    } catch (error) {
+        if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
+    }
+    if (typeof previous?.generatedAt === 'string' && Number.isFinite(Date.parse(previous.generatedAt)) &&
+        isDeepStrictEqual({ ...previous, generatedAt: catalog.generatedAt }, catalog)) {
+        catalog.generatedAt = previous.generatedAt;
+    }
     mkdirSync(dirname(outputPath), { recursive: true });
     const temporaryPath = `${outputPath}.${process.pid}.tmp`;
     writeFileSync(temporaryPath, `${JSON.stringify(catalog, null, 4)}\n`, 'utf8');

@@ -259,6 +259,28 @@ test('writer rejects invalid cards without changing the existing catalog', conte
     assert.ok(!readdirSync(directory).some(name => name.endsWith('.tmp')));
 });
 
+test('writer keeps new timestamps when source, template, or card content changes', context => {
+    const { source, definitions, outputPath } = temporaryFixture(context);
+    const original = writeCatalogWithCards(source, definitions, outputPath);
+    for (const change of ['source', 'template', 'card']) {
+        writeFileSync(outputPath, JSON.stringify(original));
+        const changedSource = structuredClone(source);
+        const changedDefinitions = structuredClone(definitions);
+        changedSource.generatedAt = '2026-09-18T10:00:00Z';
+        if (change === 'source') {
+            changedSource.commitSha = 'b'.repeat(40);
+            changedDefinitions.sourceCommitSha = changedSource.commitSha;
+        } else if (change === 'template') {
+            changedSource.templates[0].description = 'Updated template description.';
+        } else {
+            changedDefinitions.cards[0].details.summary = 'Updated card summary.';
+        }
+        const output = writeCatalogWithCards(changedSource, changedDefinitions, outputPath);
+        assert.deepEqual(output, buildCatalogWithCards(changedSource, changedDefinitions), change);
+        assert.deepEqual(JSON.parse(readFileSync(outputPath, 'utf8')), output, change);
+    }
+});
+
 test('CLI rebuilds existing snapshot offline and only writes the unified catalog', context => {
     const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
     const expected = buildCatalogWithCards(source, definitions);
@@ -299,6 +321,11 @@ test('normal scanning writes templates and cards together using pinned source da
     const manifest = 'services:\n  agent:\n    protocols:\n      - protocol: responses\n    environmentVariables:\n      - name: AZURE_AI_MODEL_DEPLOYMENT_NAME\n';
     const code = `
         process.argv = [process.execPath, ${JSON.stringify(fileURLToPath(generator))}, ${JSON.stringify(source.commitSha)}];
+        globalThis.Date = class extends Date {
+            constructor(...args) {
+                super(...(args.length ? args : [process.env.CATALOG_TEST_NOW]));
+            }
+        };
         globalThis.fetch = async resource => {
             const url = String(resource);
             if (!url.includes(${JSON.stringify(source.commitSha)})) throw new Error('Unpinned request: ' + url);
@@ -311,6 +338,7 @@ test('normal scanning writes templates and cards together using pinned source da
     const env = {
         ...process.env, REPO_ROOT: root, GITHUB_TOKEN: '', AZURE_OPENAI_ENDPOINT: '', AZURE_OPENAI_API_KEY: '',
         AI_REFINE: 'false', IGNORE_EXISTING: 'false',
+        CATALOG_TEST_NOW: '2026-09-17T10:00:00Z',
     };
     delete env.GITHUB_STEP_SUMMARY;
     const result = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
@@ -323,4 +351,11 @@ test('normal scanning writes templates and cards together using pinned source da
         source.templates.slice().sort((left, right) => left.path.localeCompare(right.path)));
     assert.deepEqual(output, buildCatalogWithCards(output, definitions));
     assert.deepEqual(readdirSync(directory).sort(), ['sample-cards.json', 'sample-catalog.json']);
+    const before = readFileSync(outputPath);
+    env.CATALOG_TEST_NOW = '2026-09-18T10:00:00Z';
+    const repeated = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
+        encoding: 'utf8', env, timeout: 10000,
+    });
+    assert.equal(repeated.status, 0, repeated.stderr || repeated.error?.message);
+    assert.deepEqual(readFileSync(outputPath), before, 'Unchanged scans must not refresh generatedAt');
 });
