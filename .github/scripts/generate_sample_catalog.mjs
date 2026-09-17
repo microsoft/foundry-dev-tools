@@ -31,7 +31,14 @@ const __dirname = dirname(__filename);
 
 const REPO_ROOT = process.env.REPO_ROOT || resolve(__dirname, '..', '..');
 const SAMPLES_REPO_URL = process.env.SAMPLES_REPO_URL || 'https://github.com/microsoft-foundry/foundry-samples/';
-const SAMPLES_REPO_API = 'https://api.github.com/repos/microsoft-foundry/foundry-samples';
+const sourceRepository = new URL(SAMPLES_REPO_URL);
+const repositoryPath = sourceRepository.pathname.match(/^\/([\w.-]+\/[\w.-]+)\/?$/)?.[1];
+if (sourceRepository.origin !== 'https://github.com' || sourceRepository.username || sourceRepository.password ||
+    sourceRepository.search || sourceRepository.hash || !repositoryPath) {
+    throw new Error('SAMPLES_REPO_URL must be an HTTPS GitHub repository URL without credentials, query, or fragment');
+}
+const SAMPLES_REPO_API = `https://api.github.com/repos/${repositoryPath}`;
+const SAMPLES_REPO_RAW = `https://raw.githubusercontent.com/${repositoryPath}`;
 const OUTPUT_PATH = join(REPO_ROOT, 'samples', 'hosted-agent', 'sample-catalog.json');
 const OVERRIDES_PATH = join(REPO_ROOT, 'samples', 'hosted-agent', 'sample-overrides.json');
 const CARDS_PATH = join(REPO_ROOT, 'samples', 'hosted-agent', 'sample-cards.json');
@@ -565,7 +572,7 @@ function parseAzureYaml(content) {
  * @returns {Promise<{ protocols: string[], requiresModel: boolean } | null>}
  */
 async function fetchAzureYaml(samplePath, ref) {
-    const rawUrl = `https://raw.githubusercontent.com/microsoft-foundry/foundry-samples/${ref}/${samplePath}/azure.yaml`;
+    const rawUrl = `${SAMPLES_REPO_RAW}/${ref}/${samplePath}/azure.yaml`;
     try {
         const content = await fetchText(rawUrl);
         return parseAzureYaml(content);
@@ -632,7 +639,7 @@ const LLM_MAX_DELAY_MS = Number(process.env.LLM_MAX_DELAY_MS) || 30_000;
  * @returns {Promise<string | null>}
  */
 async function fetchReadme(samplePath, ref) {
-    const rawUrl = `https://raw.githubusercontent.com/microsoft-foundry/foundry-samples/${ref}/${samplePath}/README.md`;
+    const rawUrl = `${SAMPLES_REPO_RAW}/${ref}/${samplePath}/README.md`;
     try {
         return await fetchText(rawUrl);
     } catch {
@@ -1361,7 +1368,11 @@ async function syncCatalog(commitSha, definitions) {
     if (added.length && (!AZURE_OPENAI_ENDPOINT || !AZURE_OPENAI_API_KEY)) {
         throw new Error('New samples require the existing Azure OpenAI configuration; no files were updated.');
     }
-    applyOverrides(added, loadOverrides());
+    const overrides = loadOverrides();
+    for (const templatePath of previousPaths) {
+        if (scannedPaths.has(templatePath)) overrides.delete(templatePath);
+    }
+    applyOverrides(added, overrides);
     const readmes = new Map();
     for (const template of added) {
         const readme = await fetchReadme(template.path, commitSha);

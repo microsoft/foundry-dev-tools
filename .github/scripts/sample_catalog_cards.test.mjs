@@ -266,6 +266,8 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
         import assert from 'node:assert/strict';
         const scenario = ${JSON.stringify(scenario)};
         const addedPaths = ${JSON.stringify(addedPaths)};
+        const sourceRequests = [];
+        process.on('exit', () => console.log('SOURCE_REQUESTS=' + JSON.stringify(sourceRequests)));
         process.argv = [process.execPath, ${JSON.stringify(fileURLToPath(generator))}, '--sync', ${JSON.stringify(targetSha)}];
         globalThis.fetch = async (resource, options) => {
             const url = String(resource);
@@ -283,6 +285,7 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                 }
                 return Response.json({ choices: [{ message: { content: JSON.stringify(content) } }] });
             }
+            sourceRequests.push(url);
             assert.ok(url.includes(${JSON.stringify(targetSha)}), 'All source requests must be pinned');
             if (url.includes('/git/trees/')) return Response.json({ tree: ${JSON.stringify(tree)}, truncated: !!scenario.truncated });
             assert.ok(addedPaths.some(templatePath => url.includes('/' + templatePath + '/')), 'Do not fetch metadata for existing samples');
@@ -294,7 +297,7 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
     `;
     const env = {
         ...process.env, REPO_ROOT: root, GITHUB_TOKEN: '', AZURE_OPENAI_ENDPOINT: 'https://catalog-ai.invalid',
-        AZURE_OPENAI_API_KEY: scenario.noAI ? '' : 'test-only', SAMPLES_REPO_URL: previous.repo,
+        AZURE_OPENAI_API_KEY: scenario.noAI ? '' : 'test-only', SAMPLES_REPO_URL: scenario.repositoryUrl ?? previous.repo,
         AI_REFINE: 'false', IGNORE_EXISTING: 'false', LLM_MAX_ATTEMPTS: '1',
     };
     delete env.GITHUB_STEP_SUMMARY;
@@ -337,6 +340,66 @@ test('incremental CLI updates both files, preserves survivors, and uses AI only 
     const repeated = runIncremental(root, output, paths, { noAI: true });
     assert.equal(repeated.status, 0, repeated.stderr);
     assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+});
+
+test('incremental CLI scans the configured repository for tree, manifest, and README', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    source.repo = 'https://github.com/catalog-owner/sample-fork/';
+    writeFileSync(outputPath, JSON.stringify(source));
+    const newPath = `${source.templates[1].path}-new`;
+    const result = runIncremental(root, source, [source.templates[0].path, newPath]);
+    assert.equal(result.status, 0, result.stderr);
+    const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('SOURCE_REQUESTS=')).slice('SOURCE_REQUESTS='.length));
+    const sha = 'b'.repeat(40);
+    assert.deepEqual(requests, [
+        `https://api.github.com/repos/catalog-owner/sample-fork/git/trees/${sha}?recursive=1`,
+        `https://raw.githubusercontent.com/catalog-owner/sample-fork/${sha}/${newPath}/azure.yaml`,
+        `https://raw.githubusercontent.com/catalog-owner/sample-fork/${sha}/${newPath}/README.md`,
+    ]);
+    assert.equal(JSON.parse(readFileSync(outputPath, 'utf8')).repo, source.repo);
+});
+
+test('incremental CLI rejects invalid repository URLs before fetching or writing', context => {
+    const { root, source, outputPath, directory } = temporaryFixture(context);
+    const cardsPath = join(directory, 'sample-cards.json');
+    const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+    for (const repositoryUrl of [
+        'https://example.com/owner/repo', 'http://github.com/owner/repo',
+        'https://user@github.com/owner/repo', 'https://github.com/owner/repo?branch=main',
+        'https://github.com/owner/repo#main', 'https://github.com/owner',
+    ]) {
+        const result = runIncremental(root, source, source.templates.map(template => template.path), { repositoryUrl });
+        assert.equal(result.status, 1, repositoryUrl);
+        assert.match(result.stderr, /SAMPLES_REPO_URL must be an HTTPS GitHub repository URL/);
+        assert.match(result.stdout, /SOURCE_REQUESTS=\[\]/);
+        assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+    }
+});
+
+test('incremental CLI applies only new overrides and warns for deleted or unknown paths', context => {
+    const { root, source, outputPath, directory } = temporaryFixture(context);
+    const survivingPath = source.templates[0].path;
+    const deletedPath = source.templates[1].path;
+    const newPath = `${deletedPath}-new`;
+    const unknownPath = 'samples/python/hosted-agents/agent-framework/unknown';
+    source.templates[0].requiresModel = false;
+    writeFileSync(outputPath, JSON.stringify(source));
+    writeFileSync(join(directory, 'sample-overrides.json'), JSON.stringify({ byPath: {
+        [survivingPath]: { requiresModel: true },
+        [deletedPath]: { requiresModel: true },
+        [newPath]: { requiresModel: false },
+        [unknownPath]: { requiresModel: true },
+    } }));
+    const result = runIncremental(root, source, [survivingPath, newPath]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(!result.stderr.includes(`Override for "${survivingPath}"`), 'Surviving overrides must not emit false warnings');
+    assert.ok(!result.stderr.includes(`Override for "${newPath}"`), 'New overrides must be applied');
+    for (const templatePath of [deletedPath, unknownPath]) {
+        assert.ok(result.stderr.includes(`Override for "${templatePath}" did not match`), templatePath);
+    }
+    const output = JSON.parse(readFileSync(outputPath, 'utf8'));
+    assert.deepEqual(output.templates[0], source.templates[0]);
+    assert.equal(output.templates[1].requiresModel, false);
 });
 
 test('incremental CLI creates a new card when the tuple is already occupied', context => {
