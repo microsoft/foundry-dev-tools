@@ -125,9 +125,9 @@ test('consolidated snapshot resolves every card selection and preserves the five
     const load = name => JSON.parse(readFileSync(new URL(name, directory), 'utf8').replace(/^\uFEFF/, ''));
     const source = load('sample-catalog.json');
     const output = buildCatalogWithCards(source, load('sample-cards.json'));
-    assert.equal(output.commitSha, '3b98218db7e9a92367dc3e4b6638fd97ac7c9502');
-    assert.equal(output.templates.length, 89);
-    assert.equal(output.cards.length, 44);
+    assert.equal(output.commitSha, '3d734b93b66f163bea9886d73c6808adc32e68fc');
+    assert.equal(output.templates.length, 105);
+    assert.equal(output.cards.length, 50);
 
     const templatesByPath = new Map(output.templates.map(template => [template.path, template]));
     const owners = new Map();
@@ -144,6 +144,15 @@ test('consolidated snapshot resolves every card selection and preserves the five
             assert.ok(!owners.has(variant.path), `Duplicate owner: ${variant.path}`);
             owners.set(variant.path, card.id);
         }
+        for (const language of output.dimensions.language.options) {
+            for (const framework of output.dimensions.framework.options) {
+                for (const protocol of output.dimensions.protocol.options) {
+                    const matches = variants.filter(variant => variant.language === language.id &&
+                        variant.framework === framework.id && variant.protocol === protocol.id);
+                    assert.ok(matches.length <= 1, `${card.id}: ambiguous ${language.id}/${framework.id}/${protocol.id}`);
+                }
+            }
+        }
     }
     assert.equal(owners.size, output.templates.length);
     assert.deepEqual(output.templates.slice(0, 10).map(template => owners.get(template.path)), [
@@ -155,11 +164,11 @@ test('consolidated snapshot resolves every card selection and preserves the five
     assert.deepEqual(Object.fromEntries(PATTERNS.map(pattern => [
         pattern.id, output.cards.filter(card => card.categoryId === pattern.id).length,
     ])), {
-        'just-the-basics': 3,
-        'tools-mcp-skills': 8,
+        'just-the-basics': 4,
+        'tools-mcp-skills': 9,
         'knowledge-rag-memory': 3,
-        'files-documents': 2,
-        'human-in-the-loop-async-events': 3,
+        'files-documents': 3,
+        'human-in-the-loop-async-events': 6,
         'multi-agent-orchestration': 5,
         'browser-computer-use': 1,
         'other-sdks-adapters': 1,
@@ -169,6 +178,56 @@ test('consolidated snapshot resolves every card selection and preserves the five
         'teams-m365-channel': 1,
         'voice-realtime': 6,
     });
+});
+
+test('stable additions have the reviewed owners and colliding samples remain separate', () => {
+    const directory = new URL('../../samples/hosted-agent/', import.meta.url);
+    const source = JSON.parse(readFileSync(new URL('sample-catalog.json', directory), 'utf8'));
+    const definitions = JSON.parse(readFileSync(new URL('sample-cards.json', directory), 'utf8'));
+    const output = buildCatalogWithCards(source, definitions);
+    const owners = new Map(output.cards.flatMap(card => card.templatePaths.map(templatePath => [templatePath, card.id])));
+    const additions = {
+        'toolbox-mcp-skills': ['samples/python/hosted-agents/agent-framework/responses/22-foundry-toolbox-mcp-skills'],
+        'invocations-echo': ['samples/python/hosted-agents/bring-your-own/activity/echo'],
+        'teams-work-iq': ['samples/python/hosted-agents/bring-your-own/activity/github-copilot'],
+        'network-diagnostics': [
+            'samples/csharp/hosted-agents/agent-framework/egress-control',
+            'samples/python/hosted-agents/agent-framework/responses/18-egress-control',
+        ],
+        'background-research-report': [
+            'samples/csharp/hosted-agents/agent-framework/harness-research',
+            'samples/python/hosted-agents/agent-framework/responses/19-harness-research',
+            'samples/python/hosted-agents/bring-your-own/invocations/resilient-research',
+        ],
+        'approved-data-processing': [
+            'samples/csharp/hosted-agents/agent-framework/harness-data-processing',
+            'samples/python/hosted-agents/agent-framework/responses/20-harness-data-processing',
+        ],
+        'finance-harness': [
+            'samples/csharp/hosted-agents/agent-framework/harness-scaling-capabilities',
+            'samples/python/hosted-agents/agent-framework/responses/21-harness-scaling-capabilities',
+        ],
+        'resilient-approval': ['samples/python/hosted-agents/bring-your-own/invocations/resilient-approval-gate'],
+        'resilient-steering': ['samples/python/hosted-agents/bring-your-own/responses/resilient-steering'],
+        'resilient-streaming': ['samples/python/hosted-agents/bring-your-own/responses/resilient-streaming'],
+        'uv-project': ['samples/python/hosted-agents/bring-your-own/responses/uv-pyproject'],
+    };
+    for (const [cardId, paths] of Object.entries(additions)) {
+        for (const templatePath of paths) assert.equal(owners.get(templatePath), cardId);
+    }
+    for (const [targetId, sourceId] of [
+        ['file-qa-analysis', 'approved-data-processing'],
+        ['proposal-human-approval', 'resilient-approval'],
+        ['minimal-chat-integration', 'uv-project'],
+        ['resilient-steering', 'resilient-streaming'],
+    ]) {
+        const merged = structuredClone(definitions);
+        const target = merged.cards.find(card => card.id === targetId);
+        const removed = merged.cards.find(card => card.id === sourceId);
+        target.templatePaths.push(...removed.templatePaths);
+        merged.cards = merged.cards.filter(card => card.id !== sourceId);
+        assert.throws(() => buildCatalogWithCards(source, merged), /Ambiguous selection/, `${targetId} + ${sourceId}`);
+    }
 });
 
 function temporaryFixture(context) {

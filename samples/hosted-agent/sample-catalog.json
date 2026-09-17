@@ -1,7 +1,7 @@
 {
-    "commitSha": "3b98218db7e9a92367dc3e4b6638fd97ac7c9502",
+    "commitSha": "3d734b93b66f163bea9886d73c6808adc32e68fc",
     "repo": "https://github.com/microsoft-foundry/foundry-samples/",
-    "generatedAt": "2026-07-23T07:59:46Z",
+    "generatedAt": "2026-08-25T02:52:33Z",
     "dimensions": {
         "language": {
             "title": "Select a Language",
@@ -54,6 +54,10 @@
                 {
                     "id": "invocations_ws",
                     "displayName": "Invocations (WebSocket)"
+                },
+                {
+                    "id": "activity",
+                    "displayName": "Activity"
                 }
             ]
         }
@@ -202,6 +206,15 @@
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "responses",
+            "displayName": "Egress Control",
+            "description": "Agent that tests managed egress proxy policies by making outbound requests and returning status and headers.",
+            "path": "samples/csharp/hosted-agents/agent-framework/egress-control",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
             "displayName": "Agent with File Tools",
             "description": "Agent that answers questions over bundled and session file sources using scoped file tools.",
             "path": "samples/csharp/hosted-agents/agent-framework/file-tools",
@@ -232,6 +245,33 @@
             "displayName": "Foundry MCP Toolbox (Platform-Managed)",
             "description": "Agent that uses a Foundry Toolbox's server-side tools through the MCP proxy.",
             "path": "samples/csharp/hosted-agents/agent-framework/foundry-toolbox-server-side",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Harness Data Processing",
+            "description": "Hosts a data-processing harness that analyzes a bundled CSV and requires approval for file changes.",
+            "path": "samples/csharp/hosted-agents/agent-framework/harness-data-processing",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Research Harness",
+            "description": "Agent plans and runs a research workflow, browsing the web, tracking todos, and saving findings.",
+            "path": "samples/csharp/hosted-agents/agent-framework/harness-research",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Scaling Capabilities",
+            "description": "Personal-finance agent with skills, a confined shell, CodeAct, and background research.",
+            "path": "samples/csharp/hosted-agents/agent-framework/harness-scaling-capabilities",
             "requiresModel": true
         },
         {
@@ -551,6 +591,69 @@
         },
         {
             "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Egress Policy Tester",
+            "description": "Agent that exercises egress proxy policies by making outbound requests and returning responses.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/18-egress-control",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Research Harness",
+            "description": "Agent that plans research, tracks todos, searches the web, and saves sourced notes.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/19-harness-research",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Harness Data Processing",
+            "description": "Hosts a data-processing harness that analyzes a bundled CSV and requests approval before writes.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/20-harness-data-processing",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Harness Scaling Capabilities",
+            "description": "Hosts a personal-finance harness agent with on-demand skills, a confined shell, and CodeAct.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/21-harness-scaling-capabilities",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Foundry Toolbox MCP Skills",
+            "description": "Discovers Agent Skills on a Foundry Toolbox via MCP and exposes them to the model.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/22-foundry-toolbox-mcp-skills",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "activity",
+            "displayName": "Echo Agent",
+            "description": "Agent that echoes incoming messages back to the sender.",
+            "path": "samples/python/hosted-agents/bring-your-own/activity/echo",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "activity",
+            "displayName": "GitHub Copilot",
+            "description": "Conversational assistant using GitHub Copilot with to-do and shared-file reading tools.",
+            "path": "samples/python/hosted-agents/bring-your-own/activity/github-copilot",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
             "framework": "bring-your-own",
             "protocol": "invocations",
             "displayName": "Automatic UI Events",
@@ -610,6 +713,24 @@
             "displayName": "Note-Taking Agent",
             "description": "Note-taking agent that saves and retrieves per-session notes via session files.",
             "path": "samples/python/hosted-agents/bring-your-own/invocations/notetaking-agent",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Resilient Approval Gate",
+            "description": "Long-running, crash-resilient agent that gates plans and irreversible actions on human approval.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/resilient-approval-gate",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Resilient Research",
+            "description": "Long-running, crash-resilient research agent that checkpoints work and streams resumable progress.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/resilient-research",
             "requiresModel": true
         },
         {
@@ -769,9 +890,36 @@
             "language": "python",
             "framework": "bring-your-own",
             "protocol": "responses",
+            "displayName": "Resilient Steering",
+            "description": "Crash-resilient, steerable agent for recoverable long-running responses.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/resilient-steering",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Resilient Streaming",
+            "description": "Streams multi-stage responses with checkpoints so interruptions resume without data loss.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/resilient-streaming",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
             "displayName": "Session Multiplexing",
             "description": "Agent showing multiple users sharing an agent session while isolating response chains.",
             "path": "samples/python/hosted-agents/bring-your-own/responses/session-multiplexing",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "uv Project Setup",
+            "description": "Minimal agent that forwards user input to a Foundry model and returns model responses.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/uv-pyproject",
             "requiresModel": true
         },
         {
@@ -1160,6 +1308,32 @@
             ]
         },
         {
+            "id": "network-diagnostics",
+            "title": "Check network access and policies",
+            "categoryId": "security-governance-ops",
+            "details": {
+                "summary": "Probe outbound connectivity and inspect how hosted-agent egress policies affect requests.",
+                "whatItDoes": "Sends requests to authorized test destinations and reports network outcomes. The BYO Invocations service probes DNS, TCP, TLS, and HTTP without a model; Agent Framework variants use model-directed HTTP tools to test egress allow/deny rules, transforms, and rewrites.",
+                "whyUseIt": "Distinguish network reachability failures from configured outbound policy behavior.",
+                "exampleScenario": "Check an allowed endpoint and compare its response with a destination blocked by a test egress policy.",
+                "bestFit": "Operators diagnosing controlled hosted-agent network configurations.",
+                "capabilities": [
+                    "Tests outbound network access",
+                    "Returns diagnostic request outcomes",
+                    "Tests managed egress policies in the Agent Framework variants"
+                ],
+                "whatItGenerates": "A BYO network probe or an Agent Framework egress-test agent with hosting artifacts. Egress variants include layered RAI-policy infrastructure and need model and policy-management access; policies apply to the deployed host. Restrict diagnostic access and do not share sensitive headers or internal topology.",
+                "requirements": [
+                    "Network targets, model (Agent Framework)"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/egress-control",
+                "samples/python/hosted-agents/agent-framework/responses/18-egress-control",
+                "samples/python/hosted-agents/bring-your-own/invocations/diagnostic-agent"
+            ]
+        },
+        {
             "id": "file-qa-analysis",
             "title": "Work with files",
             "categoryId": "files-documents",
@@ -1225,13 +1399,93 @@
                     "Advertises Skill descriptions",
                     "Loads instruction content on demand"
                 ],
-                "whatItGenerates": "A C# Agent Framework project with an MCP Skills provider and hosting configuration. The sample consumes an existing Toolbox; it does not create the Skills or Toolbox.",
+                "whatItGenerates": "A Python or C# Agent Framework project with an MCP Skills provider and hosting configuration. The C# variant consumes an existing Toolbox; the Python variant also includes Skill sources, a Toolbox definition, and provisioning hooks.",
                 "requirements": [
                     "Model deployment, Toolbox with Skills"
                 ]
             },
             "templatePaths": [
-                "samples/csharp/hosted-agents/agent-framework/foundry-toolbox-mcp-skills"
+                "samples/csharp/hosted-agents/agent-framework/foundry-toolbox-mcp-skills",
+                "samples/python/hosted-agents/agent-framework/responses/22-foundry-toolbox-mcp-skills"
+            ]
+        },
+        {
+            "id": "approved-data-processing",
+            "title": "Approve data file changes",
+            "categoryId": "files-documents",
+            "details": {
+                "summary": "Analyze a CSV and review proposed file changes before the agent writes or deletes data.",
+                "whatItDoes": "Uses an Agent Framework harness to inspect bundled sales data through file tools. Reads run immediately; writes and deletes pause for a structured approval response before changing session files.",
+                "whyUseIt": "Explore data analysis with explicit user control over file mutations.",
+                "exampleScenario": "Summarize sales by region, then approve writing a filtered CSV to the session workspace.",
+                "bestFit": "Teams prototyping file-based analysis with approval-gated outputs.",
+                "capabilities": [
+                    "Reads and analyzes CSV data",
+                    "Requests approval before file writes or deletes",
+                    "Stores approved output in session files"
+                ],
+                "whatItGenerates": "A Python or C# data-processing harness with seed data, scoped file tools, and Responses hosting. Directory layouts differ; the client must support structured approval responses. Hosted file lifetime follows the session, not permanent storage.",
+                "requirements": [
+                    "Model deployment, approval client"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/harness-data-processing",
+                "samples/python/hosted-agents/agent-framework/responses/20-harness-data-processing"
+            ]
+        },
+        {
+            "id": "background-research-report",
+            "title": "Research a topic",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Explore a topic and produce a research summary through a hosted agent workflow.",
+                "whatItDoes": "Runs topic-focused research using background Responses, a plan-and-execute harness, or a resilient Invocations task. Harness variants request plan approval, search the web, track todos, and save notes; the resilient variant checkpoints model sub-calls and supports steering and stream reconnection.",
+                "whyUseIt": "Choose a research workflow that fits the application's planning, progress, and recovery needs.",
+                "exampleScenario": "Research a technology trend and ask for a summary of the key findings.",
+                "bestFit": "Applications prototyping research assistants and longer-running analysis.",
+                "capabilities": [
+                    "Accepts a research topic",
+                    "Produces a generated research result",
+                    "Supports planning, background execution, or checkpointed work according to the selected variant"
+                ],
+                "whatItGenerates": "A Python or C# research project with variant-specific hosting and state handling. Harnesses require network access and suitable model capacity; clients must support the chosen approval or progress contract. Only the resilient Invocations variant provides checkpointed crash recovery, with an optional offline simulation mode.",
+                "requirements": [
+                    "Model access, research client"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/harness-research",
+                "samples/csharp/hosted-agents/bring-your-own/responses/background-agent",
+                "samples/python/hosted-agents/agent-framework/responses/19-harness-research",
+                "samples/python/hosted-agents/bring-your-own/invocations/resilient-research",
+                "samples/python/hosted-agents/bring-your-own/responses/background-agent"
+            ]
+        },
+        {
+            "id": "finance-harness",
+            "title": "Analyze a portfolio with tools",
+            "categoryId": "tools-mcp-skills",
+            "details": {
+                "summary": "Explore portfolio analysis with finance Skills, file tools, and background ticker research.",
+                "whatItDoes": "Combines valuation and risk-scoring Skills, a confined shell, CodeAct, and research workers in a personal-finance harness. The C# variant gates writes, shell commands, and simulated trades on approval; the Python variant temporarily bypasses those approvals because of an upstream issue.",
+                "whyUseIt": "Explore how Skills and specialized tools combine in a concrete multi-capability agent.",
+                "exampleScenario": "Read the sample portfolio, score its risk, and gather recent information about its tickers.",
+                "bestFit": "Developers evaluating harness capabilities with trusted financial sample data.",
+                "capabilities": [
+                    "Loads finance Skills on demand",
+                    "Reads portfolio files and organizes confirmations",
+                    "Delegates ticker research to background agents",
+                    "Runs CodeAct where the selected runtime supports it"
+                ],
+                "whatItGenerates": "A Python or C# finance harness with Skills, tools, seed data, and Responses hosting. C# CodeAct uses Hyperlight and needs hardware virtualization, which may be unavailable in hosted containers; Python uses Monty. Shell restrictions are not a security boundary. Use trusted inputs; trades are simulated and output is not financial advice.",
+                "requirements": [
+                    "Model deployment, virtualization (C# CodeAct)"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/harness-scaling-capabilities",
+                "samples/python/hosted-agents/agent-framework/responses/21-harness-scaling-capabilities"
             ]
         },
         {
@@ -1239,22 +1493,23 @@
             "title": "Test with an echo agent",
             "categoryId": "just-the-basics",
             "details": {
-                "summary": "Return incoming messages through Invocations without calling a language model.",
-                "whatItDoes": "Receives a message and returns an echo response through a custom C# agent.",
+                "summary": "Return incoming messages through a hosted endpoint without calling a language model.",
+                "whatItDoes": "Receives a message and echoes its text through C# Invocations or Python Activity hosting. The Activity variant includes channel delivery and a conversation welcome handler.",
                 "whyUseIt": "Isolate the hosting and request-routing path from model authentication and inference.",
                 "exampleScenario": "Send a test message and verify that the endpoint returns the expected echo.",
-                "bestFit": "Hosting smoke tests and developers learning the Invocations contract.",
+                "bestFit": "Hosting smoke tests and developers learning Invocations or Activity handlers.",
                 "capabilities": [
                     "Receives text messages",
                     "Echoes input without model inference"
                 ],
-                "whatItGenerates": "A C# echo agent and Invocations hosting configuration, not a conversational AI application.",
+                "whatItGenerates": "A C# Invocations echo agent or a Python Activity echo agent with hosting configuration. The Activity deployment also needs the documented Bot and Teams setup; no model is required for either echo handler.",
                 "requirements": [
                     "No model required"
                 ]
             },
             "templatePaths": [
-                "samples/csharp/hosted-agents/agent-framework/invocations-echo-agent"
+                "samples/csharp/hosted-agents/agent-framework/invocations-echo-agent",
+                "samples/python/hosted-agents/bring-your-own/activity/echo"
             ]
         },
         {
@@ -1365,24 +1620,25 @@
             "title": "Teams Activity Agent",
             "categoryId": "teams-m365-channel",
             "details": {
-                "summary": "Answer Teams and calendar questions with Work IQ, including attachments after channel publication.",
-                "whatItDoes": "Uses Work IQ tools to answer questions about Teams and calendar data, with attachment handling after channel publication.",
-                "whyUseIt": "Explore a work-context assistant without building every channel and tool integration yourself.",
-                "exampleScenario": "Ask how many meetings are scheduled for tomorrow from a Teams conversation.",
-                "bestFit": "Teams and Microsoft 365 assistant prototypes using Agent Framework.",
+                "summary": "Bring a model-backed assistant to Teams with conversational tools and file attachments.",
+                "whatItDoes": "Serves conversations and attachments through a Teams integration. Agent Framework variants use Work IQ for Teams and calendar queries; the Python BYO Activity variant uses Copilot SDK for task lists, shared files, and generated downloads.",
+                "whyUseIt": "Explore a Teams assistant with hosted-agent logic and channel integration already connected.",
+                "exampleScenario": "Share a document in a Teams conversation and ask the assistant about its contents.",
+                "bestFit": "Teams and Microsoft 365 assistant prototypes using Agent Framework or Copilot SDK.",
                 "capabilities": [
-                    "Uses configured Work IQ tools",
-                    "Answers calendar and Teams questions",
-                    "Supports channel messages and attachments when published"
+                    "Responds to Teams conversations when published",
+                    "Handles shared file attachments",
+                    "Uses Work IQ or task and file tools, depending on the implementation"
                 ],
-                "whatItGenerates": "An Agent Framework project and hosting configuration. Teams publication and tool authorization are separate setup steps.",
+                "whatItGenerates": "An Agent Framework project or a Python Copilot SDK Activity host with channel and hosting configuration. Work IQ authorization applies to the framework variants; the Activity variant needs Bot/Teams setup and uses a Foundry model rather than GitHub authentication.",
                 "requirements": [
-                    "Model deployment, Work IQ, Teams"
+                    "Model deployment, Teams"
                 ]
             },
             "templatePaths": [
                 "samples/csharp/hosted-agents/agent-framework/teams-activity",
-                "samples/python/hosted-agents/agent-framework/responses/07-teams-activity"
+                "samples/python/hosted-agents/agent-framework/responses/07-teams-activity",
+                "samples/python/hosted-agents/bring-your-own/activity/github-copilot"
             ]
         },
         {
@@ -1535,31 +1791,6 @@
                 "samples/csharp/hosted-agents/bring-your-own/invocations_ws/HelloWorld",
                 "samples/python/hosted-agents/bring-your-own/invocations_ws/hello-world",
                 "samples/python/hosted-agents/bring-your-own/voicelive/hello-world-invocations-voicelive"
-            ]
-        },
-        {
-            "id": "background-research-report",
-            "title": "Run research in the background",
-            "categoryId": "human-in-the-loop-async-events",
-            "details": {
-                "summary": "Start asynchronous research and retrieve or cancel the response through its ID.",
-                "whatItDoes": "Runs a model request in Responses background mode, streams output, and exposes retrieval and cancellation through the host. Background execution does not imply crash recovery.",
-                "whyUseIt": "Learn how clients can track work without keeping the initiating request open.",
-                "exampleScenario": "Start an analysis of an industry trend, poll the response ID, and cancel it if no longer needed.",
-                "bestFit": "Applications integrating asynchronous Responses operations.",
-                "capabilities": [
-                    "Starts background model generation",
-                    "Supports response retrieval",
-                    "Supports in-flight cancellation"
-                ],
-                "whatItGenerates": "A Python or C# background-response handler and hosting configuration, not a recurring task scheduler.",
-                "requirements": [
-                    "Model deployment, Responses client"
-                ]
-            },
-            "templatePaths": [
-                "samples/csharp/hosted-agents/bring-your-own/responses/background-agent",
-                "samples/python/hosted-agents/bring-your-own/responses/background-agent"
             ]
         },
         {
@@ -1756,30 +1987,6 @@
             ]
         },
         {
-            "id": "network-diagnostics",
-            "title": "Check network connectivity",
-            "categoryId": "security-governance-ops",
-            "details": {
-                "summary": "Run DNS, TCP, TLS, and HTTP probes from the hosted runtime without model inference.",
-                "whatItDoes": "Probes caller-specified test destinations and returns a structured connectivity report. Restrict diagnostic access and avoid sharing internal topology.",
-                "whyUseIt": "Separate network reachability issues from model and application behavior.",
-                "exampleScenario": "Check whether the hosted runtime can resolve and reach an intended container-registry endpoint.",
-                "bestFit": "Operators diagnosing controlled hosted-agent network configurations.",
-                "capabilities": [
-                    "Performs DNS and connection probes",
-                    "Reports TLS and HTTP outcomes",
-                    "Runs without an LLM"
-                ],
-                "whatItGenerates": "A diagnostic Invocations service and hosting artifacts, not a production conversational assistant.",
-                "requirements": [
-                    "Authorized network targets"
-                ]
-            },
-            "templatePaths": [
-                "samples/python/hosted-agents/bring-your-own/invocations/diagnostic-agent"
-            ]
-        },
-        {
             "id": "event-grid-blob-summary",
             "title": "Summarize files on upload",
             "categoryId": "human-in-the-loop-async-events",
@@ -1801,6 +2008,31 @@
             },
             "templatePaths": [
                 "samples/python/hosted-agents/bring-your-own/invocations/event-grid-trigger"
+            ]
+        },
+        {
+            "id": "resilient-approval",
+            "title": "Resume approval-gated tasks",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Checkpoint a long-running plan and pause for human approval before irreversible steps.",
+                "whatItDoes": "Creates a plan, waits for approval or edits, and executes approved steps with checkpoints. Steps marked irreversible require a second confirmation. A resilient task store and step watermarks support recovery after interruption; an offline mode uses deterministic stand-ins.",
+                "whyUseIt": "Explore durable human decisions during longer-running agent work.",
+                "exampleScenario": "Plan a release-preparation task, approve the plan, and review a publishing step before execution.",
+                "bestFit": "Developers evaluating resumable approval workflows and side-effect handling.",
+                "capabilities": [
+                    "Requests plan and action approvals",
+                    "Persists task progress between turns",
+                    "Resumes interrupted execution from checkpoints",
+                    "Exposes task status and cancellation"
+                ],
+                "whatItGenerates": "A Python BYO Invocations agent with a resilient multi-turn task and checkpoint storage. The client must implement the sample's action and polling contract. Review storage durability, authorization, and idempotency before replacing demonstration steps with real external actions.",
+                "requirements": [
+                    "Model access, approval client"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/invocations/resilient-approval-gate"
             ]
         },
         {
@@ -1974,6 +2206,54 @@
             ]
         },
         {
+            "id": "resilient-steering",
+            "title": "Steer a running conversation",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Redirect an in-flight response and explore recovery when the host restarts.",
+                "whatItDoes": "Accepts new input during a stored background response, winds down the current turn, and runs the queued input. Crash recovery re-runs the interrupted turn from scratch rather than preserving its partial output. The sample simulates model streaming.",
+                "whyUseIt": "Understand how steering, cancellation, and shutdown interact with recoverable background work.",
+                "exampleScenario": "Start a long reply, change the requested topic while it runs, and observe the next turn.",
+                "bestFit": "Developers integrating steerable Responses conversations.",
+                "capabilities": [
+                    "Accepts steering input during a running turn",
+                    "Distinguishes steering from user cancellation",
+                    "Re-runs interrupted turns after recovery"
+                ],
+                "whatItGenerates": "A Python BYO Responses demonstration with resilient-background and steerable-conversation options. Recovery requires stored background requests. Simulated output needs no model call; replace the simulation to integrate a real model, whose calls may repeat after recovery.",
+                "requirements": [
+                    "Stored background responses"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/responses/resilient-steering"
+            ]
+        },
+        {
+            "id": "resilient-streaming",
+            "title": "Resume a multi-stage response",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Checkpoint streamed stages so a restarted response can reuse completed output.",
+                "whatItDoes": "Streams simulated analyze, generate, and refine stages, checkpointing after each output item. Recovery restores completed items with their original IDs and resumes unfinished work; a stage interrupted before its checkpoint is re-run.",
+                "whyUseIt": "Explore resumable delivery without regenerating stages that were already checkpointed.",
+                "exampleScenario": "Interrupt a staged report response after the first checkpoint, then reconnect to the same response ID.",
+                "bestFit": "Clients handling longer streamed responses and interrupted connections.",
+                "capabilities": [
+                    "Checkpoints completed response stages",
+                    "Restores persisted output items",
+                    "Resumes stored background responses"
+                ],
+                "whatItGenerates": "A Python BYO Responses demonstration using stream checkpoints and persisted response snapshots. Enable stored background requests for recovery. Output is simulated; real model calls require integration.",
+                "requirements": [
+                    "Stored background responses"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/responses/resilient-streaming"
+            ]
+        },
+        {
             "id": "session-multiplexing",
             "title": "Isolate users in shared sessions",
             "categoryId": "security-governance-ops",
@@ -1995,6 +2275,30 @@
             },
             "templatePaths": [
                 "samples/python/hosted-agents/bring-your-own/responses/session-multiplexing"
+            ]
+        },
+        {
+            "id": "uv-project",
+            "title": "Host a uv-managed project",
+            "categoryId": "just-the-basics",
+            "details": {
+                "summary": "Serve model replies from a Python project with reproducible uv-managed dependencies.",
+                "whatItDoes": "Forwards text to a Foundry model through Responses while keeping project dependencies in pyproject.toml and uv.lock. The sample demonstrates existing-code initialization and remote dependency builds, with system-certificate configuration in uv.toml.",
+                "whyUseIt": "Adopt hosted-agent deployment without replacing an existing uv project structure.",
+                "exampleScenario": "Initialize the supplied Python project, verify its locked environment, and invoke a short model-backed reply.",
+                "bestFit": "Python developers using uv and lockfile-based builds.",
+                "capabilities": [
+                    "Serves text replies through Responses",
+                    "Declares dependencies in pyproject.toml",
+                    "Uses a lockfile for reproducible builds"
+                ],
+                "whatItGenerates": "A Python BYO project with pyproject.toml, uv.lock, uv.toml, and hosting artifacts. The sample requires Python 3.13 or later and uv; update and verify the lockfile when changing dependencies. Model and project provisioning remain setup steps.",
+                "requirements": [
+                    "Model deployment, uv"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/responses/uv-pyproject"
             ]
         },
         {
