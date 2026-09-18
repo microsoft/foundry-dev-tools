@@ -8,7 +8,7 @@ body {
     color: var(--text-color-default, #1f2328);
 }
 
-.validation-provider {
+#root > .validation-provider {
     min-height: 100vh;
     container-type: inline-size;
 }
@@ -200,16 +200,17 @@ body {
 .report-context__label {
     overflow: hidden;
     color: var(--text-color-muted, #59636e);
-    font-size: 10px;
-    line-height: 14px;
+    font-size: 12px;
+    line-height: 20px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .report-context__item strong {
     overflow: hidden;
-    font-size: var(--text-body-medium, 14px);
-    line-height: var(--leading-body-medium, 20px);
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: var(--font-weight-semibold, 600);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -284,8 +285,8 @@ body {
     width: 100%;
     margin: 5px 0 0;
     color: var(--text-color-muted, #59636e);
-    font-size: 10px;
-    line-height: 14px;
+    font-size: 12px;
+    line-height: 20px;
 }
 
 .report-metadata {
@@ -293,8 +294,8 @@ body {
     gap: 6px 16px;
     margin-top: 9px;
     color: var(--text-color-muted, #59636e);
-    font-size: 10px;
-    line-height: 14px;
+    font-size: 12px;
+    line-height: 20px;
 }
 
 .report-metadata__item { gap: 5px; }
@@ -331,7 +332,7 @@ body {
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    line-height: 18px;
+    line-height: 20px;
 }
 
 .report-success__message svg {
@@ -372,8 +373,8 @@ body {
     flex: 0 0 auto;
     grid-template-rows: 20px;
     padding: 4px;
-    font-size: 10px;
-    line-height: 14px;
+    font-size: 12px;
+    line-height: 20px;
 }
 
 .validation-status-tab[aria-selected="true"]::after {
@@ -390,8 +391,8 @@ body {
     overflow: hidden;
     max-width: 100%;
     flex-shrink: 0;
-    font-size: 10px;
-    line-height: 14px;
+    font-size: 12px;
+    line-height: 20px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -402,8 +403,8 @@ body {
     flex: none;
     background: var(--background-color-muted, #f6f8fa);
     color: var(--text-color-default, #1f2328);
-    font-size: 10px;
-    line-height: 14px;
+    font-size: 12px;
+    line-height: 20px;
 }
 
 .checks-section { margin-top: 12px; }
@@ -436,6 +437,11 @@ body {
 .validation-finding:hover {
     z-index: 1;
     box-shadow: 0 2px 7px color-mix(in srgb, var(--text-color-default, #1f2328) 18%, transparent);
+}
+
+.validation-finding[data-guidance-open="true"] {
+    z-index: 5;
+    overflow: visible;
 }
 
 .validation-finding::before {
@@ -546,8 +552,8 @@ body {
 
 .validation-finding__title {
     min-width: 0;
-    font-size: 12px;
-    line-height: 18px;
+    font-size: 13px;
+    line-height: 20px;
     font-weight: var(--font-weight-semibold, 600);
 }
 
@@ -592,8 +598,8 @@ body {
 .validation-finding__diagnosis {
     padding-left: calc(var(--finding-icon-column) + var(--finding-title-gap));
     color: var(--text-color-muted, #59636e);
-    font-size: 10px;
-    line-height: 18px;
+    font-size: 12px;
+    line-height: 20px;
 }
 
 .validation-finding[data-status="skipped"] .validation-finding__diagnosis {
@@ -623,12 +629,31 @@ body {
     flex-wrap: wrap;
     gap: 4px 0;
     color: var(--text-color-muted, #59636e);
-    font-size: 10px;
-    line-height: 14px;
+    font-size: 12px;
+    line-height: 20px;
     font-weight: var(--font-weight-semibold, 600);
 }
 
+.validation-finding__meta-separator {
+    margin: 0 7px;
+    color: var(--text-color-muted, #59636e);
+}
+
 .validation-finding__rule {
+    overflow-wrap: anywhere;
+    color: var(--text-color-muted, #59636e);
+    font-family: var(--font-mono, monospace);
+}
+
+.validation-finding__source-entry {
+    display: inline-flex;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.validation-finding__source {
+    min-width: 0;
+    overflow-wrap: anywhere;
     color: var(--text-color-muted, #59636e);
     font-family: var(--font-mono, monospace);
 }
@@ -636,16 +661,25 @@ body {
 .validation-finding__details h3 {
     margin: 0 0 3px;
     color: var(--text-color-default, #1f2328);
-    font-size: 10px;
-    line-height: 14px;
+    font-size: 12px;
+    line-height: 20px;
     font-weight: var(--font-weight-semibold, 600);
 }
 
 .validation-finding__details p {
     margin: 0;
     color: var(--text-color-muted, #59636e);
-    font-size: 10px;
-    line-height: 18px;
+    font-size: 12px;
+    line-height: 20px;
+}
+
+.validation-finding__detail-actions {
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
 }
 
 .validation-finding__docs.validation-finding__docs {
@@ -653,20 +687,130 @@ body {
     z-index: 3;
     display: inline-flex;
     width: fit-content;
+    height: 24px;
+    min-height: 24px;
     align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    line-height: 14px;
-    font-weight: var(--font-weight-semibold, 600);
+    color: var(--text-color-default, #1f2328);
+    font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    font-size: 12px;
+    line-height: 20px;
+    font-weight: var(--font-weight-regular, 400);
     pointer-events: auto;
+}
+
+.validation-finding__guidance-trigger.validation-finding__guidance-trigger {
+    gap: 4px;
+    padding: 3px 6px;
+    border: 1px solid var(--border-color-default, #d1d9e0);
+    border-radius: 4px;
+    background: var(--background-color-default, #fff);
+    cursor: pointer;
+}
+
+.validation-finding__guidance-trigger:hover,
+.validation-finding__guidance-trigger:active {
+    border-color: var(--border-color-default, #d1d9e0);
+    background: var(--background-color-muted, #f6f8fa);
+    color: var(--text-color-default, #1f2328);
+}
+
+.validation-finding__guidance-link.validation-finding__guidance-link {
+    gap: 4px;
+    padding: 0 6px;
+    border: 0;
+    background: transparent;
+    color: var(--text-color-default, #1f2328);
+    font-weight: var(--font-weight-regular, 400);
     text-decoration: none;
 }
 
-.validation-finding__docs:hover { text-decoration: underline; }
+.validation-finding__guidance-link:hover { text-decoration: underline; }
 
-.validation-finding__docs svg {
+.validation-finding__guidance-link:focus-visible {
+    border-radius: 2px;
+    outline: 2px solid var(--color-focus-outline, #0969da);
+    outline-offset: 1px;
+}
+
+.validation-finding__guidance-link svg {
+    width: 16px;
+    height: 16px;
+}
+
+.validation-finding__guidance-trigger svg {
+    display: block;
     width: 12px;
     height: 12px;
+}
+
+.validation-finding__guidance-menu {
+    position: relative;
+    display: inline-flex;
+}
+
+.validation-finding__guidance-popover.validation-finding__guidance-popover {
+    position: absolute;
+    z-index: 1000;
+    top: calc(100% + 4px);
+    left: 0;
+    display: flex;
+    width: min(280px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    flex-direction: column;
+    padding: 4px;
+    overflow: hidden auto;
+    border: 1px solid var(--border-color-default, #d1d9e0);
+    border-radius: 6px;
+    background: var(--background-color-default, #fff);
+    color: var(--text-color-default, #1f2328);
+    box-shadow:
+        0 8px 16px color-mix(in srgb, var(--text-color-default, #1f2328) 14%, transparent),
+        0 0 2px color-mix(in srgb, var(--text-color-default, #1f2328) 12%, transparent);
+}
+
+.validation-finding__guidance-item.validation-finding__guidance-item {
+    position: relative;
+    display: flex;
+    width: 100%;
+    min-height: 28px;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: var(--text-color-default, #1f2328);
+    font-size: 12px;
+    line-height: 20px;
+    text-decoration: none;
+}
+
+.validation-finding__guidance-item:hover,
+.validation-finding__guidance-item:focus-visible {
+    background: var(--background-color-muted, #f6f8fa);
+}
+
+.validation-finding__guidance-item-content {
+    display: inline-flex;
+    width: fit-content;
+    min-width: 0;
+    max-width: 100%;
+    align-items: center;
+    gap: 8px;
+}
+
+.validation-finding__guidance-item-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.validation-finding__guidance-item-content svg {
+    flex: none;
+}
+
+.validation-finding__guidance-fallback {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .report-action-status {
@@ -677,7 +821,8 @@ body {
     padding: 8px 10px;
     border-radius: 6px;
     background: color-mix(in srgb, var(--validation-copilot) 10%, transparent);
-    font-size: 10px;
+    font-size: 12px;
+    line-height: 20px;
 }
 
 .report-action-status svg {

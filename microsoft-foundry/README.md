@@ -22,7 +22,7 @@ Inspector.
 
 ## Install
 
-Open GitHub Copilot App, search `microsoft-foundry` from Settings -> Plugins, then install it. 
+Open GitHub Copilot App, go to the **Customize** tab, select **Plugin**, and search for `microsoft-foundry`. Install the plugin from the [awesome-copilot marketplace](https://awesome-copilot.github.com/plugin/microsoft-foundry/).
 
 ## Usage
 

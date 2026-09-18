@@ -1,5 +1,7 @@
 # Microsoft Foundry DevTools
 
+https://github.com/user-attachments/assets/66a5dd71-5bc6-4c6b-a4db-5676e364c74f
+
 [![Get started with Foundry](https://img.shields.io/badge/Foundry-Get_started-0078D4?style=flat-square)](https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/install-cli-sdk?tabs=windows%2Cpython%2Cazd-ai)
 [![Install Foundry Toolkit for VS Code](https://img.shields.io/badge/VS_Code-Install_Toolkit-0098FF?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=ms-windows-ai-studio.windows-ai-studio)
 [![Join the Foundry community on Discord](https://img.shields.io/badge/Discord-Join_the_community-5865F2?style=flat-square&logo=discord&logoColor=white)](https://aka.ms/azureaifoundry/discord)
@@ -16,12 +18,12 @@ This repository is your starting point for Foundry developer tools, documentatio
 
 Start with the workflow that fits how you work. These tools work together, so you can move between your terminal, coding agent, and visual tools as your project grows.
 
-| Tool | What you can do | Explore |
-| --- | --- | --- |
-| ⌨️ **Azure Developer CLI (`azd`)** | Use `azd` and its Foundry extensions (`azd ai`) to scaffold, deploy, evaluate, and automate AI applications and agents from the terminal. | [Repository and quick start](https://github.com/Azure/azure-dev) |
-| 🧠 **Foundry Skills** | Give your coding agent reusable guidance for Foundry development. The Microsoft Foundry Skill helps it build, deploy, and manage agents and models with `azd`. | [Skill guide](https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/use-microsoft-foundry-skill) |
-| 💻 **Foundry Toolkit for VS Code** | Discover models, build and test agents, evaluate results, and manage Foundry resources without leaving VS Code. Formerly AI Toolkit. | [Toolkit documentation](https://code.visualstudio.com/docs/intelligentapps/overview?azure-portal=true) |
-| 🎨 **Foundry Canvas (preview)** | Design, configure, test, and deploy hosted agents from a guided side panel in GitHub Copilot App, with Copilot making the code changes. | [Canvas overview](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/foundry-canvas) |
+| Tool | What you can do | Explore | Release notes |
+| --- | --- | --- | --- |
+| ⌨️ **Azure Developer CLI (`azd`)** | Use `azd` and its Foundry extensions (`azd ai`) to scaffold, deploy, evaluate, and automate AI applications and agents from the terminal. | [Repository and quick start](https://github.com/Azure/azure-dev) | [Release notes](https://github.com/Azure/azure-dev/blob/main/cli/azd/CHANGELOG.md) |
+| 🧠 **Foundry Skills** | Give your coding agent reusable guidance for Foundry development. The Microsoft Foundry Skill helps it build, deploy, and manage agents and models with `azd`. | [Skill guide](https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/use-microsoft-foundry-skill) | [Release notes](https://github.com/microsoft/GitHub-Copilot-for-Azure/releases) |
+| 💻 **Foundry Toolkit for VS Code** | Discover models, build and test agents, evaluate results, and manage Foundry resources without leaving VS Code. Formerly AI Toolkit. | [Toolkit documentation](https://code.visualstudio.com/docs/intelligentapps/overview?azure-portal=true) | [Release notes](https://microsoft.github.io/foundry-dev-tools/) |
+| 🎨 **Foundry Canvas (preview)** | Design, configure, test, and deploy hosted agents from a guided side panel in GitHub Copilot App, with Copilot making the code changes. | [Canvas overview](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/foundry-canvas) | [Release notes](./microsoft-foundry/changelog.md) |
 
 <a id="get-started"></a>
 
@@ -29,14 +31,14 @@ Start with the workflow that fits how you work. These tools work together, so yo
 
 Follow [Prepare your development environment](https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/install-cli-sdk?tabs=windows%2Cpython%2Cazd-ai) for prerequisites and setup on Windows, macOS, or Linux. **Foundry DevPack** is the recommended way to install the developer tools together. The guide also covers installing each tool separately.
 
-DevPack adds the Toolkit and Canvas extensions only when their host apps are present. It does not install VS Code or GitHub Copilot App.
+DevPack adds the Toolkit and Canvas extensions only when their host apps are present. It does not install VS Code or GitHub Copilot App. See the [DevPack installer releases](https://github.com/microsoft/foundry-dev-tools/releases?q=devpack-installer&expanded=true) for version history.
 
 | Your starting point | Next step |
 | --- | --- |
 | **Terminal** | [Install `azd` and the Foundry extensions](https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/install-cli-sdk?tabs=windows%2Cpython%2Cazd-ai#install-developer-tools-separately). |
 | **Coding agent** | [Install the Microsoft Foundry Skill](https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/use-microsoft-foundry-skill) for your coding-agent host. |
 | **VS Code** | [Install Foundry Toolkit](https://marketplace.visualstudio.com/items?itemName=ms-windows-ai-studio.windows-ai-studio), then follow the [Toolkit setup guide](https://code.visualstudio.com/docs/intelligentapps/overview#_install-and-setup). |
-| **GitHub Copilot App** | Open **Settings > Plugins**, search for `microsoft-foundry`, and install it. Follow the [Canvas guide](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/foundry-canvas) to build your first hosted agent. |
+| **GitHub Copilot App** | Open the **Customize** tab, select **Plugin**, search for `microsoft-foundry`, and install it from the [awesome-copilot marketplace](https://awesome-copilot.github.com/plugin/microsoft-foundry/). Follow the [Canvas guide](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/foundry-canvas) to build your first hosted agent. |
 
 <a id="source-code-and-contributions"></a>
 
@@ -76,7 +78,6 @@ For security vulnerabilities, follow our [security reporting policy](./SECURITY.
 
 - [Foundry development environment](https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/install-cli-sdk?tabs=windows%2Cpython%2Cazd-ai): prerequisites and installation.
 - [Foundry Toolkit documentation](https://code.visualstudio.com/docs/intelligentapps/overview?azure-portal=true) and [tutorials](https://aka.ms/foundrytk/tutorial): detailed features and walkthroughs.
-- [Foundry Toolkit release notes](https://microsoft.github.io/foundry-dev-tools/): Toolkit features, improvements, and fixes by release.
 - [Foundry Canvas documentation](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/foundry-canvas): the guided hosted-agent workflow.
 - [Microsoft Foundry Discord community](https://aka.ms/azureaifoundry/discord): connect with other developers.
 

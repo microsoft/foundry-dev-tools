@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "microsoft-foundry",
   "description": "Skills and interactive Copilot canvas for designing, configuring, testing and deploying agents to Microsoft Foundry.",
-  "version": "1.0.12",
+  "version": "1.0.14",
   "author": {
     "name": "Microsoft",
     "url": "https://github.com/microsoft"
