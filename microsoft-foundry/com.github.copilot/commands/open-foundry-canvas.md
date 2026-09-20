@@ -1,7 +1,5 @@
 ---
-name: open-foundry-canvas
 description: Open the Microsoft Foundry Canvas panel in GitHub Copilot App.
-compatibility: Requires GitHub Copilot App with the agent-builder canvas and open_canvas tool.
 ---
 
 # Open Foundry Canvas

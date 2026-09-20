@@ -1414,7 +1414,7 @@ body {
     background: var(--bg);
     box-shadow: 0 1px 2px rgb(0 0 0 / 12%), 0 0 2px rgb(0 0 0 / 8%);
 }
-.panel-shell > [data-current="true"]:not(#resourcesBlock)::before,
+.panel-shell > [data-current="true"]:not(#resourcesBlock):not(#deployBlock)::before,
 .setup-sign-in::before {
     content: "";
     position: absolute;
@@ -1430,6 +1430,10 @@ body {
 .project-choose { padding: 4px 0; border: 0; background: transparent; color: var(--fluent-brand-foreground); font: inherit; text-align: left; cursor: pointer; }
 .project-choose:disabled { color: var(--muted); cursor: default; }
 .setup-sign-in { padding: 12px; }
+.startup-card { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
+.startup-line { display: block; width: 65%; height: 14px; border-radius: 4px; background: var(--bg-subtle); }
+.startup-line-short { width: 35%; }
+.startup-caption { color: var(--muted); font-size: var(--canvas-font-caption); line-height: var(--canvas-line-caption); }
 .setup-sign-in h2 { display: flex; align-items: center; gap: 6px; margin: 0; font-size: var(--canvas-font-body); line-height: var(--canvas-line-body); }
 .step-number { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 14px; width: 14px; height: 14px; align-self: flex-start; border: 1px solid currentColor; border-radius: 50%; font-size: 10px; font-weight: 400; line-height: 12px; }
 .step-content { margin: 8px 0 0 20px; }
@@ -1566,7 +1570,7 @@ body {
     --sign-in-action-border-pressed: light-dark(rgba(100,63,178,.5), rgba(196,177,238,.5));
 }
 .panel-shell, .canvas-heading { background: var(--canvas-background); color: var(--text); }
-.panel-shell > [data-current="true"]:not(#resourcesBlock)::before, .setup-sign-in::before { background: var(--colorBrandStroke1); }
+.panel-shell > [data-current="true"]:not(#resourcesBlock):not(#deployBlock)::before, .setup-sign-in::before { background: var(--colorBrandStroke1); }
 .setup-sign-in h2, .project-setup-heading { font-weight: 600; }
 .panel-shell .btn:is(.btn-deploy, .btn-inspect, .btn-playground) { min-height: 32px; font-weight: 600; }
 .directory-dialog .fui-DialogTitle { font-size: var(--canvas-font-title); line-height: var(--canvas-line-title); font-weight: 600; }
@@ -1602,3 +1606,56 @@ body {
 .survey-dialog .survey-primary:active:not(:disabled) { background: var(--sign-in-action-background-pressed); border-color: var(--sign-in-action-border-pressed); }
 
 .update-bar { border: 1px solid var(--colorNeutralStroke1); }
+
+/* Designer review: stable click targets and quiet card elevation. */
+.panel-shell button:not(:disabled):not([aria-disabled="true"]), .panel-shell a[href] { cursor: pointer; }
+.panel-shell button > *, .panel-shell a[href] > * { cursor: inherit; }
+.panel-shell button .fi, .panel-shell a .fi { pointer-events: none; }
+.panel-shell .icon-btn { padding: 0; }
+.panel-shell .icon-btn .fi { display: block; --fi-size: 16px; }
+.panel-shell > :is(.project-bar, .accordion-section, .workflow-card) { transition: box-shadow 160ms ease; }
+.panel-shell > :is(.project-bar, .accordion-section, .workflow-card):hover { box-shadow: var(--shadow8); }
+.accordion-toggle:hover { background: transparent; }
+.accordion-chev { align-self: flex-start; margin-top: 3px; opacity: 0; transition: transform 150ms ease, opacity 120ms ease; }
+.accordion-section:hover > .accordion-toggle .accordion-chev { opacity: 1; }
+.init .start-option:not(:disabled):hover { box-shadow: var(--shadow8); }
+.init .option-title { font-size: 10px; line-height: 14px; }
+.init .start-option { transition: box-shadow 160ms ease; }
+.init .start-option:disabled { cursor: default; }
+.init .start-option:disabled .option-icon { opacity: .45; }
+.init .agent-creation-activity { padding: 0; margin: 0; border: 0; box-shadow: none; background: transparent; }
+.init .creation-refresh { flex: 0 0 24px; width: 24px; height: 24px; opacity: 1; }
+.init .creation-refresh:hover { background: var(--colorNeutralBackground1Hover); }
+.canvas-fluent-provider .init-toggle:disabled { color: var(--text); cursor: default; }
+.step-number--complete { background: var(--colorPalettePurpleBackground2); color: var(--colorBrandForeground1); border-color: transparent; }
+.step-number--complete .fi { --fi-size: 12px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* Compact account menu with independently anchored, searchable pickers. */
+.project-menu { overflow: visible; max-height: none; }
+.pm-id { gap: 8px; }
+.pm-id-avatar { width: 32px; height: 32px; background: var(--colorNeutralBackground3); color: var(--colorNeutralForeground3); }
+.pm-id-name { font-size: var(--fontSizeBase200); line-height: var(--lineHeightBase200); font-weight: var(--fontWeightSemibold); }
+.pm-directory-link, .pm-auth-btn { padding: 2px 4px; border-radius: var(--fluent-radius); }
+.pm-directory-link { margin-left: -4px; font-size: var(--fontSizeBase100); line-height: var(--lineHeightBase100); font-weight: var(--fontWeightRegular); }
+.pm-auth-btn { font-size: var(--fontSizeBase200); line-height: var(--lineHeightBase200); font-weight: var(--fontWeightSemibold); }
+.pm-directory-link:hover, .pm-auth-btn:hover { background: var(--colorNeutralBackground1Hover); text-decoration: none; }
+.pm-picker { position: relative; }
+.pm-picker + .pm-picker { border-top: 1px solid var(--fluent-stroke); }
+.pm-picker-menu { position: absolute; top: 100%; left: 0; width: 100%; z-index: 1; padding: 4px; border: 1px solid var(--fluent-stroke); border-radius: var(--fluent-radius); background: var(--bg); box-shadow: var(--fluent-menu-shadow); }
+.pm-picker-menu .pm-list { max-height: min(280px, 40vh); }
+.pm-row { padding-left: 6px; gap: 6px; }
+.pm-row .item-check { width: 18px; flex: 0 0 18px; }
+.pm-row .item-check .fi { --fi-size: 16px; }
+
+/* Reserve icon/action space so hovering does not move menu content. */
+.resource-select .model-menu { width: 100%; margin: 0 0 6px; }
+.resource-trigger { padding-right: 40px; }
+.resource-trigger .resource-chev { position: absolute; right: 8px; top: 50%; margin-top: -7px; }
+.resource-refresh { top: 50%; margin-top: -13px; }
+.resource-menu .item-action { min-height: 24px; padding: 0 4px; gap: 4px; white-space: nowrap; }
+.resource-menu .item-action .fi { display: block; --fi-size: 16px; }
+.toolbox-use:hover { background: transparent; }
+.agent-context-picker { position: relative; min-width: 0; flex: 1; }
+.agent-context-picker .agent-context-trigger { max-width: 100%; }
+.agent-context-bar .agent-menu { top: 100%; left: 0; width: 280px; min-width: 0; max-width: 100%; }
