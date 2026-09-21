@@ -1,13 +1,16 @@
 name: Verify DevPack scripts
 
 on:
+  schedule:
+    # 07:17 UTC+8 daily, away from the top-of-hour queue.
+    - cron: "17 23 * * *"
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "DevPack release tag to verify"
-        required: true
+        description: "DevPack release tag to verify (blank selects newest published DevPack)"
+        required: false
         type: string
       install_source:
         description: "Installation source"
@@ -19,6 +22,7 @@ on:
           - aka
           - brew
           - winget
+          - all
       telemetry:
         description: "Send installer telemetry during this validation run"
         required: true
@@ -29,32 +33,58 @@ permissions:
   contents: read
 
 concurrency:
-  group: verify-devpack-scripts-${{ github.event.release.tag_name || inputs.release_tag }}-${{ inputs.install_source || 'release' }}-telemetry-${{ inputs.telemetry || false }}
+  group: verify-devpack-scripts-${{ github.event_name == 'schedule' && 'daily' || github.event.release.tag_name || inputs.release_tag || 'latest' }}-${{ inputs.install_source || 'release' }}-telemetry-${{ inputs.telemetry || false }}
   cancel-in-progress: false
 
 env:
-  RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
-  INSTALL_SOURCE: ${{ inputs.install_source || 'release' }}
   TELEMETRY_ENABLED: ${{ inputs.telemetry || false }}
   FOUNDRY_DEVPACK_COLLECT_TELEMETRY: ${{ inputs.telemetry && '1' || '0' }}
   GITHUB_TOKEN: ${{ github.token }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
+  prepare:
+    if: ${{ github.event_name != 'release' || startsWith(github.event.release.tag_name, 'devpack-installer-') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      release_tag: ${{ steps.target.outputs.release_tag }}
+      windows_sources: ${{ steps.target.outputs.windows_sources }}
+      linux_sources: ${{ steps.target.outputs.linux_sources }}
+      macos_sources: ${{ steps.target.outputs.macos_sources }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.repository.default_branch || github.ref }}
+          persist-credentials: false
+      - name: Test smoke assertions and scheduling
+        run: node --test .github/scripts/verify_devpack_smoke.test.mjs .github/scripts/devpack_smoke_schedule.test.mjs
+      - name: Select release and source matrices
+        id: target
+        env:
+          INPUT_TAG: ${{ inputs.release_tag }}
+          INPUT_SOURCE: ${{ inputs.install_source || 'release' }}
+          EVENT_RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: node .github/scripts/devpack_smoke_schedule.mjs prepare
+
   windows:
-    if: ${{ (startsWith(github.event.release.tag_name, 'devpack-installer-') || startsWith(inputs.release_tag, 'devpack-installer-')) && (github.event_name == 'release' || inputs.install_source != 'brew') }}
-    name: windows ${{ matrix.platform.arch }} ${{ matrix.scenario }} (${{ inputs.install_source || 'release' }}, telemetry=${{ inputs.telemetry || false }})
+    needs: prepare
+    if: ${{ needs.prepare.outputs.windows_sources != '[]' }}
+    name: windows ${{ matrix.platform.arch }} ${{ matrix.scenario }} (${{ matrix.source }}, telemetry=${{ inputs.telemetry || false }})
     runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
+        source: ${{ fromJSON(needs.prepare.outputs.windows_sources) }}
         scenario: [baseline, no-az, with-code]
         platform:
           - { os: windows-latest, arch: x64 }
           - { os: windows-11-arm, arch: arm64 }
 
     env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+      INSTALL_SOURCE: ${{ matrix.source }}
       SCENARIO: ${{ matrix.scenario }}
 
     steps:
@@ -294,6 +324,17 @@ jobs:
             throw 'Claude Code skill unexpectedly used the copy fallback'
           }
 
+      - name: Collect dependency inventory
+        if: always()
+        shell: pwsh
+        env:
+          SMOKE_JOB_STATUS: ${{ job.status }}
+        run: |
+          $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' +
+            [Environment]::GetEnvironmentVariable('Path', 'User') + ';' + $env:Path
+          node .github/scripts/devpack_smoke_schedule.mjs collect
+          if ($LASTEXITCODE -ne 0) { throw 'Diagnostic collection failed' }
+
       - name: Verify ARP and uninstall
         shell: pwsh
         run: |
@@ -351,20 +392,38 @@ jobs:
           }
           Remove-Item $env:DEVPACK_SCRIPT -Force -ErrorAction SilentlyContinue
 
+      - name: Upload smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: devpack-smoke-windows-${{ matrix.platform.arch }}-${{ matrix.scenario }}-${{ matrix.source }}
+          path: |
+            ${{ runner.temp }}/devpack-diagnostics/
+            ${{ runner.temp }}/foundry-devpack*.log
+            ${{ runner.temp }}/foundry-devpack-output.txt
+            ${{ runner.temp }}/azd-version.txt
+            ${{ runner.temp }}/azd-extensions.json
+          retention-days: 7
+          if-no-files-found: warn
+
   linux:
-    if: ${{ (startsWith(github.event.release.tag_name, 'devpack-installer-') || startsWith(inputs.release_tag, 'devpack-installer-')) && (github.event_name == 'release' || (inputs.install_source != 'brew' && inputs.install_source != 'winget')) }}
-    name: linux ${{ matrix.platform.arch }} ${{ matrix.scenario }} (${{ inputs.install_source || 'release' }}, telemetry=${{ inputs.telemetry || false }})
+    needs: prepare
+    if: ${{ needs.prepare.outputs.linux_sources != '[]' }}
+    name: linux ${{ matrix.platform.arch }} ${{ matrix.scenario }} (${{ matrix.source }}, telemetry=${{ inputs.telemetry || false }})
     runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
+        source: ${{ fromJSON(needs.prepare.outputs.linux_sources) }}
         scenario: [baseline, no-az, with-code]
         platform:
           - { os: ubuntu-latest, arch: x64 }
           - { os: ubuntu-24.04-arm, arch: arm64 }
 
     env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+      INSTALL_SOURCE: ${{ matrix.source }}
       SCENARIO: ${{ matrix.scenario }}
 
     steps:
@@ -486,25 +545,53 @@ jobs:
           test "$(readlink "$HOME/.claude/skills/microsoft-foundry")" = "$HOME/.agents/skills/microsoft-foundry"
           test ! -e "$HOME/.claude/skills/microsoft-foundry/.foundry-devpack-copy"
 
+      - name: Collect dependency inventory
+        if: always()
+        shell: bash
+        env:
+          SMOKE_JOB_STATUS: ${{ job.status }}
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          node .github/scripts/devpack_smoke_schedule.mjs collect
+
       - name: Remove bootstrap
         if: always()
         shell: bash
         run: rm -f "$DEVPACK_SCRIPT"
 
+      - name: Upload smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: devpack-smoke-linux-${{ matrix.platform.arch }}-${{ matrix.scenario }}-${{ matrix.source }}
+          path: |
+            ${{ runner.temp }}/devpack-diagnostics/
+            ${{ runner.temp }}/foundry-devpack*.log
+            ${{ runner.temp }}/foundry-devpack-output.txt
+            ${{ runner.temp }}/azd-version.txt
+            ${{ runner.temp }}/azd-extensions.json
+            ${{ runner.temp }}/copilot-plugins.txt
+          retention-days: 7
+          if-no-files-found: warn
+
   macos:
-    if: ${{ (startsWith(github.event.release.tag_name, 'devpack-installer-') || startsWith(inputs.release_tag, 'devpack-installer-')) && (github.event_name == 'release' || inputs.install_source != 'winget') }}
-    name: macos ${{ matrix.platform.arch }} ${{ matrix.scenario }} (${{ inputs.install_source || 'release' }}, telemetry=${{ inputs.telemetry || false }})
+    needs: prepare
+    if: ${{ needs.prepare.outputs.macos_sources != '[]' }}
+    name: macos ${{ matrix.platform.arch }} ${{ matrix.scenario }} (${{ matrix.source }}, telemetry=${{ inputs.telemetry || false }})
     runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
+        source: ${{ fromJSON(needs.prepare.outputs.macos_sources) }}
         scenario: [baseline, no-az, with-code]
         platform:
           - { os: macos-15-intel, arch: x64 }
           - { os: macos-latest, arch: arm64 }
 
     env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+      INSTALL_SOURCE: ${{ matrix.source }}
       SCENARIO: ${{ matrix.scenario }}
       HOMEBREW_NO_AUTO_UPDATE: "1"
       HOMEBREW_NO_ANALYTICS: "1"
@@ -528,6 +615,11 @@ jobs:
           if [ "$TELEMETRY_ENABLED" = "true" ]; then expected=1; fi
           [ "$FOUNDRY_DEVPACK_COLLECT_TELEMETRY" = "$expected" ]
           echo "Testing $RELEASE_TAG from $INSTALL_SOURCE on macos ${{ matrix.platform.arch }} (${{ matrix.scenario }}), telemetry=$TELEMETRY_ENABLED"
+
+      - name: Refresh Homebrew metadata for daily smoke
+        if: github.event_name == 'schedule' || inputs.install_source == 'all'
+        shell: bash
+        run: brew update
 
       - name: Remove Azure CLI
         if: matrix.scenario == 'no-az'
@@ -640,6 +732,15 @@ jobs:
           test "$(readlink "$HOME/.claude/skills/microsoft-foundry")" = "$HOME/.agents/skills/microsoft-foundry"
           test ! -e "$HOME/.claude/skills/microsoft-foundry/.foundry-devpack-copy"
 
+      - name: Collect dependency inventory
+        if: always()
+        shell: bash
+        env:
+          SMOKE_JOB_STATUS: ${{ job.status }}
+        run: |
+          export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+          node .github/scripts/devpack_smoke_schedule.mjs collect
+
       - name: Uninstall Homebrew cask
         if: env.INSTALL_SOURCE == 'brew'
         shell: bash
@@ -653,3 +754,44 @@ jobs:
         if: always() && env.INSTALL_SOURCE != 'brew'
         shell: bash
         run: rm -f "$DEVPACK_SCRIPT"
+
+      - name: Upload smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: devpack-smoke-macos-${{ matrix.platform.arch }}-${{ matrix.scenario }}-${{ matrix.source }}
+          path: |
+            ${{ runner.temp }}/devpack-diagnostics/
+            ${{ runner.temp }}/foundry-devpack*.log
+            ${{ runner.temp }}/foundry-devpack-output.txt
+            ${{ runner.temp }}/azd-version.txt
+            ${{ runner.temp }}/azd-extensions.json
+            ${{ runner.temp }}/copilot-plugins.txt
+          retention-days: 7
+          if-no-files-found: warn
+
+  report:
+    name: Report daily smoke
+    needs: [prepare, windows, linux, macos]
+    if: ${{ always() && (github.event_name == 'schedule' || inputs.install_source == 'all') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: devpack-smoke-*
+          path: ${{ runner.temp }}/smoke-artifacts
+      - name: Summarize results and update tracking issue
+        if: always()
+        env:
+          SMOKE_RESULTS: ${{ toJSON(needs) }}
+          SMOKE_ARTIFACTS: ${{ runner.temp }}/smoke-artifacts
+          REPORT_ISSUE: ${{ github.event_name == 'schedule' }}
+        run: node .github/scripts/devpack_smoke_schedule.mjs report
