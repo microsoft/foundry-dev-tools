@@ -1,5 +1,4 @@
 {
-    "schemaVersion": 1,
     "templates": [
         {
             "id": "private-network-hosted-agent",
