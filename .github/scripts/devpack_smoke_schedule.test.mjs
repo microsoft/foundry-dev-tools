@@ -6,6 +6,9 @@ import test from "node:test";
 import { buildReport, issueMarker, issueTitle, prepare, prepareInputs, report, reportAction, selectRelease, sourceMatrices } from "./devpack_smoke_schedule.mjs";
 
 const release = (tag, extras = {}) => ({ tag_name: tag, published_at: "2026-09-21T00:00:00Z", draft: false, ...extras });
+// The workflow excludes Intel/no-az on macOS: five jobs per source instead of six.
+const jobCount = matrix => Object.entries(matrix)
+  .reduce((count, [os, sources]) => count + sources.length * (os === "macos" ? 5 : 6), 0);
 
 test("selects newest numeric DevPack version, including GitHub prereleases", () => {
   assert.equal(selectRelease([
@@ -23,23 +26,25 @@ test("missing published DevPack is an error, not a fallback tag", () => {
   assert.throws(() => selectRelease([release("other-1.0.0")]), /No published DevPack/);
 });
 
-test("daily matrix has 48 valid jobs across all four sources", () => {
+test("daily matrix has 45 valid jobs across all four sources", () => {
   const matrix = sourceMatrices("all");
   assert.deepEqual(matrix, {
     windows: ["release", "winget", "aka"],
     linux: ["release", "aka"],
     macos: ["release", "brew", "aka"],
   });
-  assert.equal(Object.values(matrix).reduce((count, sources) => count + sources.length * 2 * 3, 0), 48);
+  assert.equal(jobCount(matrix), 45);
 });
 
-test("existing release/manual single-source matrices are unchanged", () => {
+test("single-source matrices retain OS coverage except macOS Intel/no-az", () => {
   for (const source of ["release", "aka"]) {
     const matrix = sourceMatrices(source);
-    assert.equal(Object.values(matrix).reduce((count, sources) => count + sources.length * 6, 0), 18);
+    assert.equal(jobCount(matrix), 17);
   }
   assert.deepEqual(sourceMatrices("winget"), { windows: ["winget"], linux: [], macos: [] });
   assert.deepEqual(sourceMatrices("brew"), { windows: [], linux: [], macos: ["brew"] });
+  assert.equal(jobCount(sourceMatrices("winget")), 6);
+  assert.equal(jobCount(sourceMatrices("brew")), 5);
   assert.throws(() => sourceMatrices("homebrew"), /Invalid installation source/);
 });
 
@@ -90,7 +95,10 @@ test("report identifies failures and records executed versions rather than assum
   assert.ok(text.includes("windows   x64"));
   assert.ok(text.includes("GitHub Copilot CLI 1.0.86."));
   assert.ok(text.includes("azd version 1.34.1"));
-  assert.ok(text.includes("https://github.com/job/1"));
+  assert.equal(
+    text.split("\n").find(line => line.startsWith("- [")),
+    "- [windows   x64](https://github.com/job/1): failure",
+  );
   assert.ok(!text.includes("undefined"));
 });
 

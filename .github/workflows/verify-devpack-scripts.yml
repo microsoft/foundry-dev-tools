@@ -588,6 +588,11 @@ jobs:
         platform:
           - { os: macos-15-intel, arch: x64 }
           - { os: macos-latest, arch: arm64 }
+        # Fresh Azure CLI installs on Intel now build dependencies from source
+        # without Homebrew bottle support. Retain baseline/with-code coverage.
+        exclude:
+          - platform: { os: macos-15-intel, arch: x64 }
+            scenario: no-az
 
     env:
       RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
