@@ -1440,7 +1440,11 @@ body {
 .step-content p { margin: 0 0 10px; color: var(--muted); font-size: var(--canvas-font-caption); line-height: var(--canvas-line-caption); }
 .setup-primary { color: var(--fluent-brand-foreground); border-color: var(--fluent-brand-foreground); }
 .setup-primary:disabled { opacity: .5; }
-.accordion-toggle { min-height: 40px; padding: 12px; gap: 8px; border-radius: 6px; }
+.panel-shell {
+    --workflow-card-padding: 12px;
+    --workflow-card-min-height: calc(var(--canvas-line-body) + var(--workflow-card-padding) + var(--workflow-card-padding));
+}
+.accordion-toggle { min-height: var(--workflow-card-min-height); padding: var(--workflow-card-padding); gap: 8px; border-radius: 6px; }
 .accordion-title { gap: 6px; font-size: var(--canvas-font-body); line-height: var(--canvas-line-body); text-align: left; }
 .accordion-title--described { padding-top: 0; }
 .accordion-description { font-size: var(--canvas-font-caption); line-height: var(--canvas-line-caption); }
@@ -1459,13 +1463,11 @@ body {
 .init .init-prompt { display: block; width: 100%; min-height: 90px; max-height: 320px; padding: 8px 10px; border: 1px solid var(--fluent-stroke); border-radius: 4px; background: var(--bg); resize: vertical; }
 .init .init-prompt:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
 .panel-shell .prompt-start { color: var(--fluent-brand-foreground); background: var(--fluent-deploy-background); border-color: var(--colorBrandStroke1); }
-.panel-shell .agent-creation-activity { display: flex; align-items: flex-start; gap: 8px; padding: 12px; }
+.panel-shell .agent-creation-activity { display: flex; align-items: center; gap: 8px; min-height: var(--workflow-card-min-height); padding: calc(var(--workflow-card-padding) / 2) var(--workflow-card-padding); }
 .creation-copy { flex: 1; min-width: 0; }
 .creation-copy h2 { margin: 0; font-size: var(--canvas-font-body); line-height: var(--canvas-line-body); font-weight: 600; }
-.creation-copy p { margin: 4px 0 0; font-size: var(--canvas-font-caption); line-height: var(--canvas-line-caption); color: var(--muted); }
-.is-complete .creation-copy h2 { font-weight: 400; color: var(--muted); }
 .creation-spinner, .creation-check { flex: 0 0 14px; width: 14px; height: 14px; border-radius: 50%; }
-.step-number, .creation-spinner, .creation-check { margin-top: calc((var(--canvas-line-body) - 14px) / 2); }
+.step-number, .creation-check { margin-top: calc((var(--canvas-line-body) - 14px) / 2); }
 .creation-spinner {
     border: 2px solid var(--colorNeutralStroke2);
     border-top-color: var(--colorBrandForeground1);
@@ -1623,10 +1625,6 @@ body {
 .init .start-option { transition: box-shadow 160ms ease; }
 .init .start-option:disabled { cursor: default; }
 .init .start-option:disabled .option-icon { opacity: .45; }
-.init .agent-creation-activity { padding: 0; margin: 0; border: 0; box-shadow: none; background: transparent; }
-.init .creation-refresh { flex: 0 0 24px; width: 24px; height: 24px; opacity: 1; }
-.init .creation-refresh:hover { background: var(--colorNeutralBackground1Hover); }
-.canvas-fluent-provider .init-toggle:disabled { color: var(--text); cursor: default; }
 .step-number--complete { background: var(--colorPalettePurpleBackground2); color: var(--colorBrandForeground1); border-color: transparent; }
 .step-number--complete .fi { --fi-size: 12px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
