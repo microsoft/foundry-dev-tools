@@ -1,0 +1,43 @@
+{
+    "schemaVersion": 1,
+    "templates": [
+        {
+            "id": "private-network-hosted-agent",
+            "title": "Private-network Hosted Agent",
+            "description": "Deploy a Search-grounded hosted agent with private connectivity, managed identity, and fail-closed security controls.",
+            "language": "Python",
+            "framework": "Bring Your Own",
+            "repo": "https://github.com/microsoft/Foundry-Agent-Solution-Templates",
+            "githubUrl": "https://github.com/microsoft/Foundry-Agent-Solution-Templates/tree/main/private-network-hosted-agent",
+            "ref": "main",
+            "path": "private-network-hosted-agent",
+            "readmePath": "README.md"
+        },
+        {
+            "id": "apim-hosted-agent",
+            "title": "APIM-hosted Foundry Agent",
+            "description": "Deploy a hosted agent behind Azure API Management with authentication, rate limits, token controls, and governed MCP routes.",
+            "language": "Python",
+            "framework": "Agent Framework",
+            "repo": "https://github.com/microsoft/Foundry-Agent-Solution-Templates",
+            "githubUrl": "https://github.com/microsoft/Foundry-Agent-Solution-Templates/tree/main/apim-hosted-agent",
+            "ref": "main",
+            "path": "apim-hosted-agent",
+            "readmePath": "README.md"
+        },
+        {
+            "id": "enterprise-knowledge-agent",
+            "title": "Enterprise Knowledge Agent",
+            "description": "Build an enterprise knowledge assistant with Foundry IQ, Web IQ, and optional Fabric IQ and Work IQ integrations.",
+            "language": "Python",
+            "framework": "Agent Framework",
+            "repo": "https://github.com/microsoft/Foundry-Agent-Solution-Templates",
+            "githubUrl": "https://github.com/microsoft/Foundry-Agent-Solution-Templates/tree/main/enterprise-knowledge-agent",
+            "ref": "main",
+            "path": "enterprise-knowledge-agent",
+            "readmePath": "README.md"
+        }
+    ]
+}
+
+
