@@ -203,7 +203,7 @@ jobs:
             This automated draft PR incrementally updates `samples/hosted-agent/sample-cards.json`
             and `samples/hosted-agent/sample-catalog.json` from a pinned scan of
             `microsoft-foundry/foundry-samples`. The legacy catalog stores templates only;
-            the companion card file owns grouping, Patterns, schema version, and Details.
+            the companion card file owns grouping, Patterns, and Details.
             New clients load both from the same repository commit and validate the shared sample SHA.
 
             ## What changed

@@ -76,8 +76,7 @@ function validateSource(source) {
 export function buildCatalogWithCards(source, definitions) {
     const byPath = validateSource(source);
     assert.equal(definitions?.sourceCommitSha, source.commitSha, 'Card definitions must target the same source commit');
-    if (definitions.schemaVersion !== undefined) {
-        assert.equal(definitions.schemaVersion, 2, 'Unsupported card schema');
+    if (definitions.patterns !== undefined) {
         assert.deepEqual(definitions.patterns, PATTERNS, 'Card patterns must match the supported registry');
     }
     assert.ok(Array.isArray(definitions.cards) && definitions.cards.length > 0, 'Card definitions are required');
@@ -121,7 +120,7 @@ export function buildCatalogWithCards(source, definitions) {
 
     const unassigned = source.templates.filter(template => !assignedPaths.has(template.path));
     assert.equal(unassigned.length, 0, `Templates without cards:\n${unassigned.map(template => template.path).join('\n')}`);
-    const previousOrder = new Map((source.cards ?? (definitions.schemaVersion === 2 ? definitions.cards : [])).map((card, index) => [card.id, index]));
+    const previousOrder = new Map((source.cards ?? definitions.cards).map((card, index) => [card.id, index]));
     const order = card => previousOrder.get(card.id) ?? previousOrder.size + byPath.get(card.templatePaths[0]).index;
     cards.sort((left, right) => order(left) - order(right));
 
@@ -132,7 +131,6 @@ export function buildCatalogWithCards(source, definitions) {
         dimensions: structuredClone(source.dimensions),
         templateSelection: structuredClone(source.templateSelection),
         templates: structuredClone(source.templates),
-        schemaVersion: 2,
         patterns: structuredClone(PATTERNS),
         cards,
     };
@@ -245,8 +243,8 @@ export async function reviewChangedCardDetails(previous, source, definitions, re
 
 export function writeCatalogWithCards(source, definitions, outputPath, definitionsPath = join(dirname(outputPath), 'sample-cards.json')) {
     const catalog = buildCatalogWithCards(source, definitions);
-    const { schemaVersion, patterns, cards, ...templates } = catalog;
-    const cardDocument = { schemaVersion, sourceCommitSha: catalog.commitSha, patterns, cards };
+    const { patterns, cards, ...templates } = catalog;
+    const cardDocument = { sourceCommitSha: catalog.commitSha, patterns, cards };
     let previous;
     try {
         previous = JSON.parse(readFileSync(outputPath, 'utf8').replace(/^\uFEFF/, ''));
@@ -254,7 +252,7 @@ export function writeCatalogWithCards(source, definitions, outputPath, definitio
         if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
     }
     if (previous) {
-        const { schemaVersion: _schema, patterns: _patterns, cards: _cards, ...previousTemplates } = previous;
+        const previousTemplates = Object.fromEntries(Object.keys(templates).map(key => [key, previous[key]]));
         if (typeof previousTemplates.generatedAt === 'string' && Number.isFinite(Date.parse(previousTemplates.generatedAt)) &&
             isDeepStrictEqual({ ...previousTemplates, generatedAt: templates.generatedAt }, templates)) {
             templates.generatedAt = previousTemplates.generatedAt;

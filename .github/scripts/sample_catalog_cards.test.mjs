@@ -58,7 +58,6 @@ test('builds a self-contained catalog without mutating source or curated content
     const { source, definitions } = fixture();
     const before = structuredClone({ source, definitions });
     const output = buildCatalogWithCards(source, definitions);
-    assert.equal(output.schemaVersion, 2);
     assert.deepEqual(output.templates, source.templates);
     assert.deepEqual(output.dimensions, source.dimensions);
     assert.deepEqual(output.cards[0].templatePaths, source.templates.map(template => template.path));
@@ -69,7 +68,7 @@ test('builds a self-contained catalog without mutating source or curated content
     assert.equal(new Set(PATTERNS.map(pattern => pattern.id)).size, 13);
 });
 
-test('keeps identical selection tuples in separate cards and follows template ordering', () => {
+test('keeps identical selection tuples in separate cards and preserves defined card ordering', () => {
     const { source, definitions } = fixture();
     source.templates[1] = { ...source.templates[0], path: 'samples/python/hosted-agents/agent-framework/other-workflow' };
     const card = definitions.cards[0];
@@ -77,10 +76,11 @@ test('keeps identical selection tuples in separate cards and follows template or
         { ...card, id: 'second-workflow', templatePaths: [source.templates[1].path] },
         { ...card, templatePaths: [source.templates[0].path] },
     ];
-    assert.deepEqual(buildCatalogWithCards(source, definitions).cards.map(value => value.id), ['writing-workflow', 'second-workflow']);
+    assert.deepEqual(buildCatalogWithCards(source, definitions).cards.map(value => value.id), ['second-workflow', 'writing-workflow']);
 });
 
 const invalidDefinitions = [
+    ['invalid patterns', ({ definitions }) => { definitions.patterns = []; }, /patterns must match/],
     ['commit mismatch', ({ definitions }) => { definitions.sourceCommitSha = 'b'.repeat(40); }, /same source commit/],
     ['missing cards', ({ definitions }) => { definitions.cards = []; }, /Card definitions/],
     ['duplicate card', ({ definitions }) => { definitions.cards.push(structuredClone(definitions.cards[0])); }, /Duplicate card ID/],
@@ -108,12 +108,11 @@ for (const [name, mutate, message] of invalidDefinitions) {
 
 function assertSplitPair(catalog, definitions) {
     assert.deepEqual(Object.keys(catalog).sort(), ['repo', 'commitSha', 'generatedAt', 'dimensions', 'templateSelection', 'templates'].sort());
-    assert.deepEqual(Object.keys(definitions).sort(), ['schemaVersion', 'sourceCommitSha', 'patterns', 'cards'].sort());
-    assert.equal(definitions.schemaVersion, 2);
+    assert.deepEqual(Object.keys(definitions).sort(), ['sourceCommitSha', 'patterns', 'cards'].sort());
     const combined = buildCatalogWithCards(catalog, definitions);
     assert.deepEqual(combined.cards, definitions.cards);
     assert.deepEqual(combined.patterns, definitions.patterns);
-    const { schemaVersion, cards, patterns, ...flat } = combined;
+    const { cards, patterns, ...flat } = combined;
     assert.deepEqual(flat, catalog);
     return combined;
 }
@@ -722,7 +721,6 @@ test('writer rejects invalid cards without changing the existing catalog', conte
 test('split card document preserves curated card order without embedded catalog cards', async () => {
     const { source, definitions } = fixture();
     const card = definitions.cards[0];
-    definitions.schemaVersion = 2;
     definitions.patterns = PATTERNS;
     definitions.cards = [
         { ...card, id: 'second-language', templatePaths: [source.templates[1].path] },
@@ -745,7 +743,6 @@ test('split writer isolates Details edits from legacy catalog content and timest
     const flat = JSON.parse(before);
     const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
     assert.deepEqual(Object.keys(flat).sort(), ['repo', 'commitSha', 'generatedAt', 'dimensions', 'templateSelection', 'templates'].sort());
-    assert.equal(cards.schemaVersion, 2);
     assert.deepEqual(cards.patterns, PATTERNS);
     assert.equal(cards.sourceCommitSha, flat.commitSha);
     assert.equal(cards.cards[0].details.summary, revised.cards[0].details.summary);
