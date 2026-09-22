@@ -196,6 +196,48 @@ export async function reconcileCardDefinitions(previous, source, definitions, ch
     return result;
 }
 
+export async function reviewChangedCardDetails(previous, source, definitions, reviewDetails) {
+    buildCatalogWithCards(source, definitions);
+    const result = structuredClone(definitions);
+    const previousCards = new Map(previous.cards.map(card => [card.id, card]));
+    const fields = new Set([...DETAIL_TEXT_FIELDS, ...DETAIL_LIST_FIELDS]);
+    for (const card of result.cards) {
+        const previousCard = previousCards.get(card.id);
+        const addedPaths = card.templatePaths.filter(templatePath => !previousCard?.templatePaths.includes(templatePath));
+        const removedPaths = previousCard?.templatePaths.filter(templatePath => !card.templatePaths.includes(templatePath)) ?? [];
+        if (previousCard ? !addedPaths.length && !removedPaths.length : card.templatePaths.length === 1) continue;
+        const decision = await reviewDetails({
+            card: structuredClone(card), previousCard: structuredClone(previousCard), addedPaths, removedPaths,
+        });
+        assert.ok(decision && typeof decision === 'object' && !Array.isArray(decision), `Missing Details review for ${card.id}`);
+        assert.ok(Object.keys(decision).every(key => ['detailsPatch', 'reason'].includes(key)), `Unexpected Details review property for ${card.id}`);
+        requireText(decision.reason, `${card.id} Details review reason`);
+        const patch = decision.detailsPatch;
+        assert.ok(patch && typeof patch === 'object' && !Array.isArray(patch), `Details patch must be an object for ${card.id}`);
+        const changedFields = [];
+        for (const [field, value] of Object.entries(patch)) {
+            assert.ok(fields.has(field), `Unknown Details field: ${field}`);
+            if (DETAIL_LIST_FIELDS.includes(field)) {
+                assert.ok(Array.isArray(value) && value.length > 0, `${card.id}.${field} must be a non-empty array`);
+                value.forEach(text => requireText(text, `${card.id}.${field}`));
+            } else {
+                requireText(value, `${card.id}.${field}`);
+            }
+            if (field === 'requirements') {
+                assert.equal(value.length, 1, 'Requirements must be one value');
+                assert.ok(value[0].trim().split(/\s+/).length <= 5, 'Requirements must total at most five words');
+            }
+            if (!isDeepStrictEqual(card.details[field], value)) {
+                card.details[field] = structuredClone(value);
+                changedFields.push(field);
+            }
+        }
+        console.log(`Card Details review: ${JSON.stringify({ cardId: card.id, addedPaths, removedPaths, changedFields, reason: decision.reason })}`);
+    }
+    buildCatalogWithCards(source, result);
+    return result;
+}
+
 export function writeCatalogWithCards(source, definitions, outputPath, definitionsPath) {
     const catalog = buildCatalogWithCards(source, definitions);
     let previous;
