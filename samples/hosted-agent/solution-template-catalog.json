@@ -1,12 +1,10 @@
 {
-    "schemaVersion": 1,
     "templates": [
         {
             "id": "private-network-hosted-agent",
             "title": "Private-network Hosted Agent",
-            "description": "Deploy a Search-grounded hosted agent with private connectivity, managed identity, and fail-closed security controls.",
-            "language": "Python",
-            "framework": "Bring Your Own",
+            "description": "Demonstrates security and data-protection controls for a Hosted Agent solution, including VNet isolation, private endpoints, restricted egress, managed identity, and customer-managed keys.",
+            "tags": ["Private Networking", "Security & Compliance", "Azure AI Search"],
             "repo": "https://github.com/microsoft/Foundry-Agent-Solution-Templates",
             "githubUrl": "https://github.com/microsoft/Foundry-Agent-Solution-Templates/tree/main/private-network-hosted-agent",
             "ref": "main",
@@ -16,9 +14,8 @@
         {
             "id": "apim-hosted-agent",
             "title": "APIM-hosted Foundry Agent",
-            "description": "Deploy a hosted agent behind Azure API Management with authentication, rate limits, token controls, and governed MCP routes.",
-            "language": "Python",
-            "framework": "Agent Framework",
+            "description": "Demonstrates governed agent, model, and tool traffic through API Management.",
+            "tags": ["AI Gateway", "Governance", "Content Safety"],
             "repo": "https://github.com/microsoft/Foundry-Agent-Solution-Templates",
             "githubUrl": "https://github.com/microsoft/Foundry-Agent-Solution-Templates/tree/main/apim-hosted-agent",
             "ref": "main",
@@ -28,9 +25,8 @@
         {
             "id": "enterprise-knowledge-agent",
             "title": "Enterprise Knowledge Agent",
-            "description": "Build an enterprise knowledge assistant with Foundry IQ, Web IQ, and optional Fabric IQ and Work IQ integrations.",
-            "language": "Python",
-            "framework": "Agent Framework",
+            "description": "Demonstrates grounding with custom data from Fabric, databases, org APIs, and Microsoft IQs, and shows a typical RAG setup with a hosted agent, including connection and authentication best practices.",
+            "tags": ["RAG", "Foundry IQ", "Web IQ"],
             "repo": "https://github.com/microsoft/Foundry-Agent-Solution-Templates",
             "githubUrl": "https://github.com/microsoft/Foundry-Agent-Solution-Templates/tree/main/enterprise-knowledge-agent",
             "ref": "main",
@@ -39,5 +35,3 @@
         }
     ]
 }
-
-
