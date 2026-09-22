@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       commit_sha:
-        description: "Commit SHA from microsoft-foundry/foundry-samples to pin to (leave blank to use the latest main commit)"
+        description: "Full foundry-samples SHA to scan incrementally. Blank = latest main."
         required: false
         type: string
         default: ""
@@ -60,27 +60,30 @@ jobs:
             sha="$INPUT_SHA"
             source="user-supplied input"
           else
-            # No SHA provided: pin to the current tip of foundry-samples@main
-            # so the dispatcher doesn't have to look it up by hand.
             sha=$(gh api repos/microsoft-foundry/foundry-samples/commits/main --jq .sha)
             source="latest microsoft-foundry/foundry-samples@main"
           fi
-          if [[ ! "$sha" =~ ^[0-9a-f]{7,40}$ ]]; then
-            echo "Resolved SHA is not a valid git object: $sha" >&2
+          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Resolved SHA must be a full 40-character commit: $sha" >&2
             exit 1
           fi
           echo "Using SHA $sha (source: $source)"
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "- Pinned SHA: \`$sha\` ($source)" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Generate sample catalog
+      - name: Incrementally sync cards and catalog
         env:
           REPO_ROOT: ${{ github.workspace }}
           GITHUB_TOKEN: ${{ github.token }}
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-        run: node .github/scripts/generate_sample_catalog.mjs "${{ steps.resolve-sha.outputs.sha }}"
+          AI_REFINE: 'false'
+          IGNORE_EXISTING: 'false'
+        run: node .github/scripts/generate_sample_catalog.mjs --sync "${{ steps.resolve-sha.outputs.sha }}"
+
+      - name: Validate unified catalog
+        run: node --test .github/scripts/sample_catalog_cards.test.mjs
 
       - name: Detect catalog changes
         id: diff
@@ -88,25 +91,26 @@ jobs:
         run: |
           set -euo pipefail
 
-          catalog_file="samples/hosted-agent/sample-catalog.json"
+          catalog_files=("samples/hosted-agent/sample-catalog.json" "samples/hosted-agent/sample-cards.json")
 
-          if [[ ! -f "$catalog_file" ]]; then
-            echo "Catalog file not generated."
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          for file in "${catalog_files[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              echo "Required catalog file missing: $file" >&2
+              exit 1
+            fi
+          done
 
           # Stage the file so git diff detects both new and modified files
-          git add "$catalog_file"
+          git add -- "${catalog_files[@]}"
 
-          if git diff --cached --quiet -- "$catalog_file"; then
+          if git diff --cached --quiet -- "${catalog_files[@]}"; then
             echo "No changes to sample catalog."
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           echo "Catalog has changes:"
-          git diff --cached --stat -- "$catalog_file"
+          git diff --cached --stat -- "${catalog_files[@]}"
 
           {
             echo "## Sample Catalog Sync"
@@ -114,7 +118,9 @@ jobs:
             echo "The sample catalog was regenerated from \`microsoft-foundry/foundry-samples\`."
             echo
             echo "### Changed files"
-            echo "- \`$catalog_file\`"
+            for file in "${catalog_files[@]}"; do
+              echo "- \`$file\`"
+            done
           } >> "$GITHUB_STEP_SUMMARY"
 
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
@@ -172,23 +178,30 @@ jobs:
           title: "ci: sync sample catalog from foundry-samples (${{ github.ref_name }})"
           body: |
             ## Summary
-            This automated draft PR updates `samples/hosted-agent/sample-catalog.json` by scanning
-            the `microsoft-foundry/foundry-samples` repository for hosted-agent sample templates.
+            This automated draft PR incrementally updates `samples/hosted-agent/sample-cards.json`
+            and `samples/hosted-agent/sample-catalog.json` from a pinned scan of
+            `microsoft-foundry/foundry-samples`. Both A/B experiences consume the unified catalog.
 
             ## What changed
-            - New templates added or removed based on the upstream repo structure.
-            - `commitSha` pinned to the upstream commit supplied via the `commit_sha` workflow input.
-            - `requiresModel` and `protocol` values re-derived from each sample's `agent.yaml`.
-            - `displayName` derived from each template's folder name; `description` LLM-generated when empty.
-            - PM-edited `displayName` and `description` values are preserved from the previous catalog.
+            - Surviving template metadata, card IDs, titles, Details, and relative ordering are preserved.
+            - Deleted templates are removed from both files; empty cards and unused dimension options are removed.
+            - New template metadata is generated by the existing AI service from its README; dimensions come from source metadata.
+            - AI prefers existing compatible cards without changing their Details. Occupied language/framework/protocol tuples cannot be reused within a card.
+            - New cards are created only when no compatible candidate fits; their Details and one primary Pattern are AI-generated for review.
+            - Both source SHA fields advance together only when templates are added or removed. The shared SHA also pins the implementations of surviving templates to that revision.
+            - Failed AI generation, incomplete scans, or invalid grouping stop the job before PR creation.
 
             ## Reviewer Checks
             - Confirm new templates have correct `language`, `framework`, and `protocol` values.
             - Review the auto-generated `description` for any new templates.
             - Confirm no PM-edited display fields were accidentally lost.
+            - Confirm every template belongs to one card and each card's selection combinations are unique.
+            - Review card Details and Pattern assignments when their template membership changes.
+            - Confirm existing-card reuse is semantically correct with unchanged Details; uniqueness is enforced by code, not left to AI.
           labels: ${{ steps.labels.outputs.labels }}
           add-paths: |
             samples/hosted-agent/sample-catalog.json
+            samples/hosted-agent/sample-cards.json
 
       - name: Report PR result
         if: steps.diff.outputs.has_changes == 'true'
