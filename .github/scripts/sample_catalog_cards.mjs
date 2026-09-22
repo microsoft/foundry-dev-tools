@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 export const PATTERNS = [
@@ -76,6 +76,9 @@ function validateSource(source) {
 export function buildCatalogWithCards(source, definitions) {
     const byPath = validateSource(source);
     assert.equal(definitions?.sourceCommitSha, source.commitSha, 'Card definitions must target the same source commit');
+    if (definitions.patterns !== undefined) {
+        assert.deepEqual(definitions.patterns, PATTERNS, 'Card patterns must match the supported registry');
+    }
     assert.ok(Array.isArray(definitions.cards) && definitions.cards.length > 0, 'Card definitions are required');
     const patternIds = new Set(PATTERNS.map(pattern => pattern.id));
     const cardIds = new Set();
@@ -117,7 +120,7 @@ export function buildCatalogWithCards(source, definitions) {
 
     const unassigned = source.templates.filter(template => !assignedPaths.has(template.path));
     assert.equal(unassigned.length, 0, `Templates without cards:\n${unassigned.map(template => template.path).join('\n')}`);
-    const previousOrder = new Map((source.cards ?? []).map((card, index) => [card.id, index]));
+    const previousOrder = new Map((source.cards ?? definitions.cards).map((card, index) => [card.id, index]));
     const order = card => previousOrder.get(card.id) ?? previousOrder.size + byPath.get(card.templatePaths[0]).index;
     cards.sort((left, right) => order(left) - order(right));
 
@@ -128,7 +131,6 @@ export function buildCatalogWithCards(source, definitions) {
         dimensions: structuredClone(source.dimensions),
         templateSelection: structuredClone(source.templateSelection),
         templates: structuredClone(source.templates),
-        schemaVersion: 2,
         patterns: structuredClone(PATTERNS),
         cards,
     };
@@ -145,6 +147,7 @@ export async function reconcileCardDefinitions(previous, source, definitions, ch
         }
     }
     const result = {
+        ...structuredClone(definitions),
         sourceCommitSha: source.commitSha,
         cards: definitions.cards.map(card => ({
             ...structuredClone(card),
@@ -196,20 +199,74 @@ export async function reconcileCardDefinitions(previous, source, definitions, ch
     return result;
 }
 
-export function writeCatalogWithCards(source, definitions, outputPath, definitionsPath) {
+export async function reviewChangedCardDetails(previous, source, definitions, reviewDetails) {
+    buildCatalogWithCards(source, definitions);
+    const result = structuredClone(definitions);
+    const previousCards = new Map(previous.cards.map(card => [card.id, card]));
+    const fields = new Set([...DETAIL_TEXT_FIELDS, ...DETAIL_LIST_FIELDS]);
+    for (const card of result.cards) {
+        const previousCard = previousCards.get(card.id);
+        const addedPaths = card.templatePaths.filter(templatePath => !previousCard?.templatePaths.includes(templatePath));
+        const removedPaths = previousCard?.templatePaths.filter(templatePath => !card.templatePaths.includes(templatePath)) ?? [];
+        if (previousCard ? !addedPaths.length && !removedPaths.length : card.templatePaths.length === 1) continue;
+        const decision = await reviewDetails({
+            card: structuredClone(card), previousCard: structuredClone(previousCard), addedPaths, removedPaths,
+        });
+        assert.ok(decision && typeof decision === 'object' && !Array.isArray(decision), `Missing Details review for ${card.id}`);
+        assert.ok(Object.keys(decision).every(key => ['detailsPatch', 'reason'].includes(key)), `Unexpected Details review property for ${card.id}`);
+        requireText(decision.reason, `${card.id} Details review reason`);
+        const patch = decision.detailsPatch;
+        assert.ok(patch && typeof patch === 'object' && !Array.isArray(patch), `Details patch must be an object for ${card.id}`);
+        const changedFields = [];
+        for (const [field, value] of Object.entries(patch)) {
+            assert.ok(fields.has(field), `Unknown Details field: ${field}`);
+            if (DETAIL_LIST_FIELDS.includes(field)) {
+                assert.ok(Array.isArray(value) && value.length > 0, `${card.id}.${field} must be a non-empty array`);
+                value.forEach(text => requireText(text, `${card.id}.${field}`));
+            } else {
+                requireText(value, `${card.id}.${field}`);
+            }
+            if (field === 'requirements') {
+                assert.equal(value.length, 1, 'Requirements must be one value');
+                assert.ok(value[0].trim().split(/\s+/).length <= 5, 'Requirements must total at most five words');
+            }
+            if (!isDeepStrictEqual(card.details[field], value)) {
+                card.details[field] = structuredClone(value);
+                changedFields.push(field);
+            }
+        }
+        console.log(`Card Details review: ${JSON.stringify({ cardId: card.id, addedPaths, removedPaths, changedFields, reason: decision.reason })}`);
+    }
+    buildCatalogWithCards(source, result);
+    return result;
+}
+
+export function writeCatalogWithCards(source, definitions, outputPath, definitionsPath = join(dirname(outputPath), 'sample-cards.json')) {
     const catalog = buildCatalogWithCards(source, definitions);
+    const { patterns, cards, ...templates } = catalog;
+    const cardDocument = { sourceCommitSha: catalog.commitSha, patterns, cards };
     let previous;
     try {
         previous = JSON.parse(readFileSync(outputPath, 'utf8').replace(/^\uFEFF/, ''));
     } catch (error) {
         if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
     }
-    if (typeof previous?.generatedAt === 'string' && Number.isFinite(Date.parse(previous.generatedAt)) &&
-        isDeepStrictEqual({ ...previous, generatedAt: catalog.generatedAt }, catalog)) {
-        catalog.generatedAt = previous.generatedAt;
+    if (previous) {
+        const previousTemplates = Object.fromEntries(Object.keys(templates).map(key => [key, previous[key]]));
+        if (typeof previousTemplates.generatedAt === 'string' && Number.isFinite(Date.parse(previousTemplates.generatedAt)) &&
+            isDeepStrictEqual({ ...previousTemplates, generatedAt: templates.generatedAt }, templates)) {
+            templates.generatedAt = previousTemplates.generatedAt;
+            catalog.generatedAt = previousTemplates.generatedAt;
+        }
     }
-    const outputs = [[outputPath, catalog]];
-    if (definitionsPath) outputs.push([definitionsPath, definitions]);
+    const outputs = [[outputPath, templates], [definitionsPath, cardDocument]].filter(([filePath, content]) => {
+        try {
+            return !isDeepStrictEqual(JSON.parse(readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '')), content);
+        } catch (error) {
+            if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
+            return true;
+        }
+    });
     try {
         for (const [filePath, content] of outputs) {
             mkdirSync(dirname(filePath), { recursive: true });
