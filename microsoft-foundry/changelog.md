@@ -2,6 +2,31 @@
 
 Notable changes to the Microsoft Foundry Canvas plugin for GitHub Copilot App.
 
+## Version 1.0.14
+
+This release keeps Canvas alongside ongoing Copilot Chat work, adds a command to open Canvas directly, and refreshes setup and agent creation while improving local inspection and approval continuations.
+
+### Added
+
+- **Open Canvas command**: Open Canvas directly with `/open-foundry-canvas`.
+
+### Changed
+
+- **Chat and Canvas workflows**: Canvas opens alongside supported agent workflows without interrupting Chat.
+- **Setup experience**: Clearer sign-in and project controls, improved theme readability, and **Create new agent** in the agent dropdown.
+- **Agent creation**: Progress appears below the starting prompt, sections expand to match the request, and actions stay locked until the agent is ready.
+- **Preview branding**: Canvas and browser-tab titles now include **(Preview)**.
+- **Project context**: Appended prompts omit subscription and tenant IDs.
+- **Plugin packaging**: Adopt Agent Plugins 1.0 with the runtime, Inspector, skills, and commands in one package. Related: [#676](https://github.com/microsoft/foundry-dev-tools/issues/676).
+
+### Fixed
+
+- **Startup**: Prevent sign-in flicker while restoring the account and project; offer **Retry** on failure.
+- **Background activity**: Background synchronization and refresh logs no longer clutter Chat.
+- **Local inspection**: Launch `azd` directly without shell probes or `AI_AGENT` setup.
+- **Agent Inspector approvals**: Preserve continuation replies and keep tool outputs attached to their original Chat cards.
+- **Agent Inspector responses**: Preserve output and failure details when responses include `error: null`.
+
 ## Version 1.0.13
 
 This release simplifies project selection across Chat and Canvas, adds directory switching and feedback surveys, and improves Hosted Agent validation and Agent Inspector details.
