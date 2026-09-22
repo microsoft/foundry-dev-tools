@@ -8,6 +8,11 @@ on:
         required: false
         type: string
         default: ""
+      validation_only:
+        description: "Generate and validate artifact only; do not create a branch or PR."
+        required: false
+        type: boolean
+        default: false
 
 # Least-privilege for the default GITHUB_TOKEN: only what `actions/checkout`
 # needs. All writes (push branch + create PR) are performed via the GitHub
@@ -37,6 +42,7 @@ jobs:
           fetch-depth: 0
 
       - name: Generate GitHub App token
+        if: ${{ !inputs.validation_only }}
         id: app-token
         uses: actions/create-github-app-token@v1
         with:
@@ -125,8 +131,25 @@ jobs:
 
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
 
+      - name: Upload validated catalog
+        if: ${{ inputs.validation_only }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: validated-sample-catalog
+          path: |
+            samples/hosted-agent/sample-catalog.json
+            samples/hosted-agent/sample-cards.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Report validation-only result
+        if: ${{ inputs.validation_only }}
+        shell: bash
+        run: |
+          echo "Validation-only run: catalogs generated and validated. No branch or PR was created." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Resolve pull request labels
-        if: steps.diff.outputs.has_changes == 'true'
+        if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         id: labels
         shell: bash
         env:
@@ -156,7 +179,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Generate PR branch name
-        if: steps.diff.outputs.has_changes == 'true'
+        if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         id: branch
         shell: bash
         run: |
@@ -164,7 +187,7 @@ jobs:
           echo "name=ci/sync-sample-catalog-${{ github.ref_name }}-${date_suffix}" >> "$GITHUB_OUTPUT"
 
       - name: Create draft pull request
-        if: steps.diff.outputs.has_changes == 'true'
+        if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
@@ -204,7 +227,7 @@ jobs:
             samples/hosted-agent/sample-cards.json
 
       - name: Report PR result
-        if: steps.diff.outputs.has_changes == 'true'
+        if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         shell: bash
         env:
           PR_OPERATION: ${{ steps.cpr.outputs.pull-request-operation }}

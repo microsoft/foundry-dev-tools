@@ -237,6 +237,31 @@ test('incremental reconciliation rejects edits to surviving templates', async ()
         /Existing template changed/);
 });
 
+test('incremental reconciliation allocates unique new IDs without reusing retired or published IDs', async () => {
+    const { source: previous, definitions } = fixture();
+    const published = definitions.cards[0];
+    definitions.cards.push({ ...structuredClone(published), id: 'writing-workflow-2', templatePaths: [previous.templates[1].path] });
+    published.templatePaths = [previous.templates[0].path];
+    const source = structuredClone(previous);
+    source.templates = [previous.templates[0], ...['first', 'second'].map(suffix => ({
+        ...previous.templates[0], path: `${previous.templates[0].path}-${suffix}`,
+    }))];
+    const before = structuredClone({ previous, source, definitions });
+    const proposed = { ...structuredClone(published), title: 'Another workflow' };
+    const chooseCard = async ({ candidates }) => {
+        assert.deepEqual(candidates, []);
+        return { card: proposed, reason: 'Same tuple requires a separate card.' };
+    };
+    const result = await reconcileCardDefinitions(previous, source, definitions, chooseCard);
+    assert.deepEqual(result.cards.map(card => card.id), ['writing-workflow', 'writing-workflow-3', 'writing-workflow-4']);
+    assert.deepEqual(result.cards[0], published);
+    assert.deepEqual(result.cards.slice(1).map(card => card.templatePaths), source.templates.slice(1).map(template => [template.path]));
+    assert.deepEqual(result, await reconcileCardDefinitions(previous, source, definitions, chooseCard));
+    assert.deepEqual({ previous, source, definitions }, before);
+    assert.equal(proposed.id, 'writing-workflow');
+    assert.equal(buildCatalogWithCards(source, result).cards.length, 3);
+});
+
 function temporaryFixture(context) {
     const root = mkdtempSync(join(tmpdir(), 'catalog-unified-test-'));
     context.after(() => rmSync(root, { recursive: true, force: true }));
@@ -498,14 +523,34 @@ test('incremental CLI supports deletion-only updates without AI', context => {
     assert.deepEqual(output, buildCatalogWithCards(output, cards));
 });
 
+test('incremental CLI writes distinct cards when AI proposes the same occupied ID', context => {
+    const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+    const newPaths = ['first', 'second'].map(suffix => `${source.templates[0].path}-${suffix}`);
+    const result = runIncremental(root, source, [...source.templates.map(template => template.path), ...newPaths], {
+        candidates: [], decision: { card: definitions.cards[0], reason: 'Same tuple requires a separate card.' },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const output = JSON.parse(readFileSync(outputPath, 'utf8'));
+    const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
+    assert.deepEqual(cards.cards.map(card => card.id), ['writing-workflow', 'writing-workflow-2', 'writing-workflow-3']);
+    assert.deepEqual(cards.cards[0], definitions.cards[0]);
+    assert.deepEqual(cards.cards.slice(1).map(card => card.templatePaths), newPaths.map(templatePath => [templatePath]));
+    assert.deepEqual(output, buildCatalogWithCards(output, cards));
+    const before = [readFileSync(outputPath), readFileSync(join(directory, 'sample-cards.json'))];
+    const repeated = runIncremental(root, output, output.templates.map(template => template.path), { noAI: true });
+    assert.equal(repeated.status, 0, repeated.stderr);
+    assert.deepEqual([readFileSync(outputPath), readFileSync(join(directory, 'sample-cards.json'))], before);
+});
+
 test('incremental CLI failures leave both files unchanged', context => {
-    const { root, source, outputPath, directory } = temporaryFixture(context);
+    const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
     const cardsPath = join(directory, 'sample-cards.json');
     const before = [readFileSync(outputPath), readFileSync(cardsPath)];
     const paths = [...source.templates.map(template => template.path), `${source.templates[0].path}-new`];
     for (const scenario of [
         { truncated: true }, { noAI: true }, { aiFailure: true }, { missingReadme: true },
         { decision: { cardId: 'writing-workflow', reason: 'Try to merge a conflicting tuple' } },
+        { decision: { card: { ...definitions.cards[0], id: 'not/a-valid-id' }, reason: 'Invalid new ID' } },
     ]) {
         const result = runIncremental(root, source, paths, scenario);
         assert.equal(result.status, 1, JSON.stringify(scenario));

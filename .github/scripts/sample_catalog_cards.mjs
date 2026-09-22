@@ -170,18 +170,26 @@ export async function reconcileCardDefinitions(previous, source, definitions, ch
             target.templatePaths.push(template.path);
         } else {
             const card = decision.card;
-            assert.ok(card && !reservedIds.has(card.id), `New card must have an unused ID for ${template.path}`);
+            assert.ok(card && typeof card === 'object', `New card is required for ${template.path}`);
+            assert.match(card.id ?? '', /^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Invalid new card ID');
             assert.equal(card.details?.requirements?.length, 1, 'New card Requirements must be one value');
             requireText(card.details.requirements[0], 'New card Requirements');
             assert.ok(card.details.requirements[0].trim().split(/\s+/).length <= 5, 'New card Requirements must total at most five words');
+            let cardId = card.id;
+            for (let suffix = 2; reservedIds.has(cardId); suffix++) {
+                cardId = `${card.id}-${suffix}`;
+            }
+            if (cardId !== card.id) {
+                console.log(`Allocated new card ID ${cardId} instead of reserved ID ${card.id} for ${template.path}`);
+            }
             result.cards.push({
-                id: card.id,
+                id: cardId,
                 title: card.title,
                 categoryId: card.categoryId,
                 details: structuredClone(card.details),
                 templatePaths: [template.path],
             });
-            reservedIds.add(card.id);
+            reservedIds.add(cardId);
         }
     }
     buildCatalogWithCards(source, result);
