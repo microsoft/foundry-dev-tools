@@ -88,7 +88,7 @@ jobs:
           IGNORE_EXISTING: 'false'
         run: node .github/scripts/generate_sample_catalog.mjs --sync "${{ steps.resolve-sha.outputs.sha }}"
 
-      - name: Validate unified catalog
+      - name: Validate template and card pair
         run: node --test .github/scripts/sample_catalog_cards.test.mjs
 
       - name: Detect catalog changes
@@ -202,7 +202,9 @@ jobs:
             ## Summary
             This automated draft PR incrementally updates `samples/hosted-agent/sample-cards.json`
             and `samples/hosted-agent/sample-catalog.json` from a pinned scan of
-            `microsoft-foundry/foundry-samples`. Both A/B experiences consume the unified catalog.
+            `microsoft-foundry/foundry-samples`. The legacy catalog stores templates only;
+            the companion card file owns grouping, Patterns, schema version, and Details.
+            New clients load both from the same repository commit and validate the shared sample SHA.
 
             ## What changed
             - Surviving template metadata, card IDs, titles, Patterns, and relative ordering are preserved.
@@ -217,6 +219,8 @@ jobs:
             - Failed AI generation/review, missing README evidence, incomplete scans, or invalid grouping stop the job before PR creation.
 
             ## Reviewer Checks
+            - Deploy dual-file extension support before merging this format migration to a live catalog channel.
+            - Confirm catalog contains only legacy template fields and card-only edits do not change it.
             - Confirm new templates have correct `language`, `framework`, and `protocol` values.
             - Review the auto-generated `description` for any new templates.
             - Confirm no PM-edited display fields were accidentally lost.

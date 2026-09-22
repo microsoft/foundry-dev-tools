@@ -106,7 +106,19 @@ for (const [name, mutate, message] of invalidDefinitions) {
     });
 }
 
-test('checked-in unified catalog serves both views from one reproducible snapshot', () => {
+function assertSplitPair(catalog, definitions) {
+    assert.deepEqual(Object.keys(catalog).sort(), ['repo', 'commitSha', 'generatedAt', 'dimensions', 'templateSelection', 'templates'].sort());
+    assert.deepEqual(Object.keys(definitions).sort(), ['schemaVersion', 'sourceCommitSha', 'patterns', 'cards'].sort());
+    assert.equal(definitions.schemaVersion, 2);
+    const combined = buildCatalogWithCards(catalog, definitions);
+    assert.deepEqual(combined.cards, definitions.cards);
+    assert.deepEqual(combined.patterns, definitions.patterns);
+    const { schemaVersion, cards, patterns, ...flat } = combined;
+    assert.deepEqual(flat, catalog);
+    return combined;
+}
+
+test('checked-in catalog and cards have separate responsibilities and form one reproducible snapshot', () => {
     const directory = new URL('../../samples/hosted-agent/', import.meta.url);
     const load = name => JSON.parse(readFileSync(new URL(name, directory), 'utf8').replace(/^\uFEFF/, ''));
     const source = load('sample-catalog.json');
@@ -117,7 +129,7 @@ test('checked-in unified catalog serves both views from one reproducible snapsho
     for (const field of ['repo', 'commitSha', 'generatedAt', 'dimensions', 'templateSelection', 'templates']) {
         assert.deepEqual(output[field], source[field], `Legacy field changed: ${field}`);
     }
-    assert.deepEqual(source, output);
+    assertSplitPair(source, definitions);
 });
 
 test('consolidated snapshot resolves every valid card selection', () => {
@@ -446,7 +458,7 @@ for (const stage of ['metadata', 'placement']) {
         assert.deepEqual(output.templates[0], source.templates[0]);
         assert.deepEqual(output.templates.map(template => template.path), paths);
         assert.equal(output.templates[1].displayName, 'Generated Workflow');
-        assert.deepEqual(output, buildCatalogWithCards(output, cards));
+        assertSplitPair(output, cards);
     });
 }
 
@@ -520,7 +532,7 @@ test('incremental CLI preserves template metadata and reviews only changed card 
         });
     }
     assert.deepEqual(cards.cards[0], { ...definitions.cards[0], templatePaths: paths });
-    assert.deepEqual(output, buildCatalogWithCards(output, cards));
+    assertSplitPair(output, cards);
     const before = [readFileSync(outputPath), readFileSync(cardsPath)];
     const repeated = runIncremental(root, output, paths, { noAI: true });
     assert.equal(repeated.status, 0, repeated.stderr);
@@ -542,7 +554,7 @@ test('incremental CLI applies a sparse Details patch after grouping and is idemp
     assert.equal(cards.cards[0].id, definitions.cards[0].id);
     assert.equal(cards.cards[0].title, definitions.cards[0].title);
     assert.equal(cards.cards[0].categoryId, definitions.cards[0].categoryId);
-    assert.deepEqual(output, buildCatalogWithCards(output, cards));
+    assertSplitPair(output, cards);
     const before = [readFileSync(outputPath), readFileSync(cardsPath)];
     const repeated = runIncremental(root, output, paths, { noAI: true });
     assert.equal(repeated.status, 0, repeated.stderr);
@@ -646,9 +658,9 @@ test('incremental CLI creates a new card when the tuple is already occupied', co
     const output = JSON.parse(readFileSync(outputPath, 'utf8'));
     const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
     assert.equal(cards.cards.length, 2);
-    assert.deepEqual(cards.cards[0], definitions.cards[0]);
+    assert.deepEqual(cards.cards[0], { ...definitions.cards[0], templatePaths: source.templates.map(template => template.path) });
     assert.deepEqual(cards.cards[1].templatePaths, [paths[2]]);
-    assert.deepEqual(output, buildCatalogWithCards(output, cards));
+    assertSplitPair(output, cards);
 });
 
 test('incremental CLI reviews surviving cards on deletion-only updates', context => {
@@ -659,7 +671,7 @@ test('incremental CLI reviews surviving cards on deletion-only updates', context
     const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
     assert.deepEqual(output.templates, [source.templates[0]]);
     assert.deepEqual(cards.cards[0].templatePaths, [source.templates[0].path]);
-    assert.deepEqual(output, buildCatalogWithCards(output, cards));
+    assertSplitPair(output, cards);
 });
 
 test('incremental CLI writes distinct cards when AI proposes the same occupied ID', context => {
@@ -672,9 +684,9 @@ test('incremental CLI writes distinct cards when AI proposes the same occupied I
     const output = JSON.parse(readFileSync(outputPath, 'utf8'));
     const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
     assert.deepEqual(cards.cards.map(card => card.id), ['writing-workflow', 'writing-workflow-2', 'writing-workflow-3']);
-    assert.deepEqual(cards.cards[0], definitions.cards[0]);
+    assert.deepEqual(cards.cards[0], { ...definitions.cards[0], templatePaths: source.templates.map(template => template.path) });
     assert.deepEqual(cards.cards.slice(1).map(card => card.templatePaths), newPaths.map(templatePath => [templatePath]));
-    assert.deepEqual(output, buildCatalogWithCards(output, cards));
+    assertSplitPair(output, cards);
     const before = [readFileSync(outputPath), readFileSync(join(directory, 'sample-cards.json'))];
     const repeated = runIncremental(root, output, output.templates.map(template => template.path), { noAI: true });
     assert.equal(repeated.status, 0, repeated.stderr);
@@ -707,8 +719,41 @@ test('writer rejects invalid cards without changing the existing catalog', conte
     assert.ok(!readdirSync(directory).some(name => name.endsWith('.tmp')));
 });
 
-test('writer keeps new timestamps when source, template, or card content changes', context => {
-    const { source, definitions, outputPath } = temporaryFixture(context);
+test('split card document preserves curated card order without embedded catalog cards', async () => {
+    const { source, definitions } = fixture();
+    const card = definitions.cards[0];
+    definitions.schemaVersion = 2;
+    definitions.patterns = PATTERNS;
+    definitions.cards = [
+        { ...card, id: 'second-language', templatePaths: [source.templates[1].path] },
+        { ...card, templatePaths: [source.templates[0].path] },
+    ];
+    assert.deepEqual(buildCatalogWithCards(source, definitions).cards.map(value => value.id), ['second-language', 'writing-workflow']);
+    const result = await reconcileCardDefinitions(source, source, definitions, () => assert.fail('No new samples'));
+    assert.deepEqual(result, definitions);
+    assert.deepEqual(buildCatalogWithCards(source, result).cards.map(value => value.id), ['second-language', 'writing-workflow']);
+});
+
+test('split writer isolates Details edits from legacy catalog content and timestamp', context => {
+    const { source, definitions, outputPath, directory } = temporaryFixture(context);
+    writeCatalogWithCards(source, definitions, outputPath);
+    const before = readFileSync(outputPath);
+    const revised = structuredClone(definitions);
+    revised.cards[0].details.summary = 'Updated card-only description.';
+    writeCatalogWithCards({ ...source, generatedAt: '2026-09-22T00:00:00Z' }, revised, outputPath);
+    assert.deepEqual(readFileSync(outputPath), before);
+    const flat = JSON.parse(before);
+    const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
+    assert.deepEqual(Object.keys(flat).sort(), ['repo', 'commitSha', 'generatedAt', 'dimensions', 'templateSelection', 'templates'].sort());
+    assert.equal(cards.schemaVersion, 2);
+    assert.deepEqual(cards.patterns, PATTERNS);
+    assert.equal(cards.sourceCommitSha, flat.commitSha);
+    assert.equal(cards.cards[0].details.summary, revised.cards[0].details.summary);
+    assert.deepEqual(buildCatalogWithCards(flat, cards).cards, cards.cards);
+});
+
+test('writer changes catalog timestamps only when template data changes', context => {
+    const { source, definitions, outputPath, directory } = temporaryFixture(context);
     const original = writeCatalogWithCards(source, definitions, outputPath);
     for (const change of ['source', 'template', 'card']) {
         writeFileSync(outputPath, JSON.stringify(original));
@@ -724,17 +769,21 @@ test('writer keeps new timestamps when source, template, or card content changes
             changedDefinitions.cards[0].details.summary = 'Updated card summary.';
         }
         const output = writeCatalogWithCards(changedSource, changedDefinitions, outputPath);
-        assert.deepEqual(output, buildCatalogWithCards(changedSource, changedDefinitions), change);
-        assert.deepEqual(JSON.parse(readFileSync(outputPath, 'utf8')), output, change);
+        const expected = buildCatalogWithCards(changedSource, changedDefinitions);
+        if (change === 'card') expected.generatedAt = original.generatedAt;
+        assert.deepEqual(output, expected, change);
+        assert.deepEqual(assertSplitPair(JSON.parse(readFileSync(outputPath, 'utf8')),
+            JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'))), output, change);
     }
 });
 
-test('CLI rebuilds existing snapshot offline and only writes the unified catalog', context => {
+test('CLI rebuilds existing snapshot offline into separate template and card files', context => {
     const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
     const expected = buildCatalogWithCards(source, definitions);
     const result = runGenerator(root, '--from-existing');
     assert.equal(result.status, 0, result.stderr || result.error?.message);
-    assert.deepEqual(JSON.parse(readFileSync(outputPath, 'utf8')), expected);
+    assert.deepEqual(assertSplitPair(JSON.parse(readFileSync(outputPath, 'utf8')),
+        JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'))), expected);
     assert.deepEqual(readdirSync(directory).sort(), ['sample-cards.json', 'sample-catalog.json']);
     const before = readFileSync(outputPath);
     const second = runGenerator(root, '--from-existing');
@@ -797,7 +846,7 @@ test('normal scanning writes templates and cards together using pinned source da
     assert.equal(output.commitSha, source.commitSha);
     assert.deepEqual(output.templates.slice().sort((left, right) => left.path.localeCompare(right.path)),
         source.templates.slice().sort((left, right) => left.path.localeCompare(right.path)));
-    assert.deepEqual(output, buildCatalogWithCards(output, definitions));
+    assertSplitPair(output, JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8')));
     assert.deepEqual(readdirSync(directory).sort(), ['sample-cards.json', 'sample-catalog.json']);
     const before = readFileSync(outputPath);
     env.CATALOG_TEST_NOW = '2026-09-18T10:00:00Z';

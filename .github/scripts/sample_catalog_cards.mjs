@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 export const PATTERNS = [
@@ -76,6 +76,10 @@ function validateSource(source) {
 export function buildCatalogWithCards(source, definitions) {
     const byPath = validateSource(source);
     assert.equal(definitions?.sourceCommitSha, source.commitSha, 'Card definitions must target the same source commit');
+    if (definitions.schemaVersion !== undefined) {
+        assert.equal(definitions.schemaVersion, 2, 'Unsupported card schema');
+        assert.deepEqual(definitions.patterns, PATTERNS, 'Card patterns must match the supported registry');
+    }
     assert.ok(Array.isArray(definitions.cards) && definitions.cards.length > 0, 'Card definitions are required');
     const patternIds = new Set(PATTERNS.map(pattern => pattern.id));
     const cardIds = new Set();
@@ -117,7 +121,7 @@ export function buildCatalogWithCards(source, definitions) {
 
     const unassigned = source.templates.filter(template => !assignedPaths.has(template.path));
     assert.equal(unassigned.length, 0, `Templates without cards:\n${unassigned.map(template => template.path).join('\n')}`);
-    const previousOrder = new Map((source.cards ?? []).map((card, index) => [card.id, index]));
+    const previousOrder = new Map((source.cards ?? (definitions.schemaVersion === 2 ? definitions.cards : [])).map((card, index) => [card.id, index]));
     const order = card => previousOrder.get(card.id) ?? previousOrder.size + byPath.get(card.templatePaths[0]).index;
     cards.sort((left, right) => order(left) - order(right));
 
@@ -145,6 +149,7 @@ export async function reconcileCardDefinitions(previous, source, definitions, ch
         }
     }
     const result = {
+        ...structuredClone(definitions),
         sourceCommitSha: source.commitSha,
         cards: definitions.cards.map(card => ({
             ...structuredClone(card),
@@ -238,20 +243,32 @@ export async function reviewChangedCardDetails(previous, source, definitions, re
     return result;
 }
 
-export function writeCatalogWithCards(source, definitions, outputPath, definitionsPath) {
+export function writeCatalogWithCards(source, definitions, outputPath, definitionsPath = join(dirname(outputPath), 'sample-cards.json')) {
     const catalog = buildCatalogWithCards(source, definitions);
+    const { schemaVersion, patterns, cards, ...templates } = catalog;
+    const cardDocument = { schemaVersion, sourceCommitSha: catalog.commitSha, patterns, cards };
     let previous;
     try {
         previous = JSON.parse(readFileSync(outputPath, 'utf8').replace(/^\uFEFF/, ''));
     } catch (error) {
         if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
     }
-    if (typeof previous?.generatedAt === 'string' && Number.isFinite(Date.parse(previous.generatedAt)) &&
-        isDeepStrictEqual({ ...previous, generatedAt: catalog.generatedAt }, catalog)) {
-        catalog.generatedAt = previous.generatedAt;
+    if (previous) {
+        const { schemaVersion: _schema, patterns: _patterns, cards: _cards, ...previousTemplates } = previous;
+        if (typeof previousTemplates.generatedAt === 'string' && Number.isFinite(Date.parse(previousTemplates.generatedAt)) &&
+            isDeepStrictEqual({ ...previousTemplates, generatedAt: templates.generatedAt }, templates)) {
+            templates.generatedAt = previousTemplates.generatedAt;
+            catalog.generatedAt = previousTemplates.generatedAt;
+        }
     }
-    const outputs = [[outputPath, catalog]];
-    if (definitionsPath) outputs.push([definitionsPath, definitions]);
+    const outputs = [[outputPath, templates], [definitionsPath, cardDocument]].filter(([filePath, content]) => {
+        try {
+            return !isDeepStrictEqual(JSON.parse(readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '')), content);
+        } catch (error) {
+            if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
+            return true;
+        }
+    });
     try {
         for (const [filePath, content] of outputs) {
             mkdirSync(dirname(filePath), { recursive: true });

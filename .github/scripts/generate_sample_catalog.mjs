@@ -1458,8 +1458,8 @@ async function main() {
     }
     if (process.argv[2] === '--from-existing') {
         const source = JSON.parse(readFileSync(OUTPUT_PATH, 'utf-8').replace(/^\uFEFF/, ''));
-        const catalog = writeCatalogWithCards(source, definitions, OUTPUT_PATH);
-        console.log(`Wrote ${OUTPUT_PATH}: ${catalog.templates.length} templates, ${catalog.cards.length} cards (existing snapshot preserved)`);
+        const catalog = writeCatalogWithCards(source, definitions, OUTPUT_PATH, CARDS_PATH);
+        console.log(`Wrote template and card files: ${catalog.templates.length} templates, ${catalog.cards.length} cards (existing snapshot preserved)`);
         writeSummary(catalog.templates.length);
         return;
     }
@@ -1506,8 +1506,8 @@ async function main() {
         templates: orderedTemplates,
     };
 
-    const output = writeCatalogWithCards(catalog, definitions, OUTPUT_PATH);
-    console.log(`Wrote ${OUTPUT_PATH}: ${output.templates.length} templates, ${output.cards.length} cards`);
+    const output = writeCatalogWithCards(catalog, definitions, OUTPUT_PATH, CARDS_PATH);
+    console.log(`Wrote template and card files: ${output.templates.length} templates, ${output.cards.length} cards`);
 
     writeSummary(templates.length);
 }
