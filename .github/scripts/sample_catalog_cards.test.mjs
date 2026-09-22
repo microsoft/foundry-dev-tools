@@ -267,13 +267,24 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
         const scenario = ${JSON.stringify(scenario)};
         const addedPaths = ${JSON.stringify(addedPaths)};
         const sourceRequests = [];
+        const aiRequests = [];
         process.on('exit', () => console.log('SOURCE_REQUESTS=' + JSON.stringify(sourceRequests)));
+        process.on('exit', () => console.log('AI_REQUESTS=' + JSON.stringify(aiRequests)));
         process.argv = [process.execPath, ${JSON.stringify(fileURLToPath(generator))}, '--sync', ${JSON.stringify(targetSha)}];
         globalThis.fetch = async (resource, options) => {
             const url = String(resource);
             if (url.startsWith('https://catalog-ai.invalid/')) {
-                if (scenario.aiFailure) return new Response('AI unavailable', { status: 400 });
                 const request = JSON.parse(options.body);
+                const stage = request.messages[0].content.startsWith('You generate') ? 'metadata' : 'placement';
+                aiRequests.push({ stage, budget: request.max_completion_tokens, reasoningEffort: request.reasoning_effort });
+                if (scenario.aiFailure) return new Response('AI unavailable', { status: 400 });
+                if (scenario.emptyFinish) return Response.json({ choices: [{ finish_reason: scenario.emptyFinish, message: { content: '' } }] });
+                if (scenario.lengthStage === stage && (!scenario.recoverAt || request.max_completion_tokens < scenario.recoverAt)) {
+                    return Response.json({
+                        choices: [{ finish_reason: 'length', message: { content: scenario.lengthContent ?? '' } }],
+                        usage: { completion_tokens_details: { reasoning_tokens: request.max_completion_tokens } },
+                    });
+                }
                 let content;
                 if (request.messages[0].content.startsWith('You generate')) {
                     content = { displayName: 'Generated Workflow', description: 'Draft and review a document.' };
@@ -298,10 +309,69 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
     const env = {
         ...process.env, REPO_ROOT: root, GITHUB_TOKEN: '', AZURE_OPENAI_ENDPOINT: 'https://catalog-ai.invalid',
         AZURE_OPENAI_API_KEY: scenario.noAI ? '' : 'test-only', SAMPLES_REPO_URL: scenario.repositoryUrl ?? previous.repo,
-        AI_REFINE: 'false', IGNORE_EXISTING: 'false', LLM_MAX_ATTEMPTS: '1',
+        AI_REFINE: 'false', IGNORE_EXISTING: 'false', LLM_MAX_ATTEMPTS: String(scenario.maxAttempts ?? 1),
+        AZURE_OPENAI_MAX_COMPLETION_TOKENS: String(scenario.initialBudget ?? 2000),
+        AZURE_OPENAI_REASONING_EFFORT: scenario.reasoningEffort ?? '',
     };
     delete env.GITHUB_STEP_SUMMARY;
     return spawnSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8', env, timeout: 10000 });
+}
+
+for (const stage of ['metadata', 'placement']) {
+    test(`incremental CLI retries token-exhausted ${stage} with a larger budget`, context => {
+        const { root, source, outputPath, directory } = temporaryFixture(context);
+        const paths = [source.templates[0].path, `${source.templates[1].path}-new`];
+        const result = runIncremental(root, source, paths, { lengthStage: stage, recoverAt: 4000, maxAttempts: 5 });
+        assert.equal(result.status, 0, result.stderr);
+        const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+        assert.deepEqual(requests.filter(request => request.stage === stage).map(request => request.budget), [2000, 4000]);
+        assert.ok(requests.every(request => request.reasoningEffort === undefined));
+        const output = JSON.parse(readFileSync(outputPath, 'utf8'));
+        const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
+        assert.deepEqual(output.templates[0], source.templates[0]);
+        assert.deepEqual(output.templates.map(template => template.path), paths);
+        assert.equal(output.templates[1].displayName, 'Generated Workflow');
+        assert.deepEqual(output, buildCatalogWithCards(output, cards));
+    });
+}
+
+test('incremental CLI rejects truncated JSON and preserves explicit AI settings on retries', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const paths = [source.templates[0].path, `${source.templates[1].path}-new`];
+    const result = runIncremental(root, source, paths, {
+        lengthStage: 'metadata', lengthContent: JSON.stringify({ displayName: 'Truncated', description: 'Do not use.' }),
+        initialBudget: 3000, recoverAt: 12000, maxAttempts: 5, reasoningEffort: 'low',
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+    assert.deepEqual(requests.filter(request => request.stage === 'metadata').map(request => request.budget), [3000, 6000, 12000]);
+    assert.deepEqual(requests.filter(request => request.stage === 'placement').map(request => request.budget), [3000]);
+    assert.ok(requests.every(request => request.reasoningEffort === 'low'));
+    assert.equal(JSON.parse(readFileSync(outputPath, 'utf8')).templates[1].displayName, 'Generated Workflow');
+});
+
+for (const [name, scenario, budgets] of [
+    ['token cap', { lengthStage: 'placement', maxAttempts: 5 }, [2000, 4000, 8000, 16000]],
+    ['attempt limit', { lengthStage: 'metadata', maxAttempts: 2 }, [2000, 4000]],
+    ['non-power-of-two budget cap', { lengthStage: 'metadata', initialBudget: 9000, maxAttempts: 5 }, [9000, 16000]],
+    ['explicit budget above automatic cap', { lengthStage: 'metadata', initialBudget: 32000, maxAttempts: 5 }, [32000]],
+    ['empty stop response', { emptyFinish: 'stop', maxAttempts: 5 }, [2000]],
+    ['content filter', { emptyFinish: 'content_filter', maxAttempts: 5 }, [2000]],
+    ['non-retryable API error', { aiFailure: true, maxAttempts: 5 }, [2000]],
+]) {
+    test(`incremental CLI stops at ${name} without changing either catalog file`, context => {
+        const { root, source, outputPath, directory } = temporaryFixture(context);
+        const cardsPath = join(directory, 'sample-cards.json');
+        const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+        const paths = [source.templates[0].path, `${source.templates[1].path}-new`];
+        const result = runIncremental(root, source, paths, scenario);
+        assert.equal(result.status, 1, result.stderr);
+        const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+        assert.deepEqual(requests.filter(request => request.stage === (scenario.lengthStage ?? 'metadata')).map(request => request.budget), budgets);
+        if (scenario.lengthStage) assert.match(result.stderr, /token growth or attempt limit reached/);
+        assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+        assert.ok(!readdirSync(directory).some(file => file.endsWith('.tmp')));
+    });
 }
 
 test('incremental CLI leaves both files untouched when only the upstream SHA changes', context => {
