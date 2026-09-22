@@ -630,6 +630,7 @@ const IGNORE_EXISTING = /^(true|1|yes)$/i.test(process.env.IGNORE_EXISTING || ''
 const LLM_MAX_ATTEMPTS = Number(process.env.LLM_MAX_ATTEMPTS) || 5;
 const LLM_BASE_DELAY_MS = Number(process.env.LLM_BASE_DELAY_MS) || 1000;
 const LLM_MAX_DELAY_MS = Number(process.env.LLM_MAX_DELAY_MS) || 30_000;
+const LLM_TOKEN_RETRY_LIMIT = 16_000;
 
 
 /**
@@ -723,16 +724,22 @@ async function callLLMForJson(systemPrompt, userPrompt, samplePath) {
 
             const data = await response.json();
             const choice = data.choices?.[0];
+            const finishReason = choice?.finish_reason ?? 'unknown';
+            const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens;
+            const usageHint = reasoningTokens !== undefined ? ` (reasoning_tokens=${reasoningTokens})` : '';
+            if (finishReason === 'length') {
+                if (attempt < LLM_MAX_ATTEMPTS && body.max_completion_tokens < LLM_TOKEN_RETRY_LIMIT) {
+                    const nextBudget = Math.min(body.max_completion_tokens * 2, LLM_TOKEN_RETRY_LIMIT);
+                    console.warn(`LLM exhausted max_completion_tokens=${body.max_completion_tokens} for ${samplePath}${usageHint} (attempt ${attempt}/${LLM_MAX_ATTEMPTS}); retrying with ${nextBudget}.`);
+                    body.max_completion_tokens = nextBudget;
+                    continue;
+                }
+                warn(`LLM output truncated for ${samplePath} (finish_reason=length${usageHint}, max_completion_tokens=${body.max_completion_tokens}); token growth or attempt limit reached. Configure AZURE_OPENAI_MAX_COMPLETION_TOKENS or a supported AZURE_OPENAI_REASONING_EFFORT.`);
+                return null;
+            }
             const content = choice?.message?.content?.trim();
             if (!content) {
-                // A successful (200) call with empty content is almost always a
-                // reasoning model exhausting `max_completion_tokens` on hidden
-                // reasoning (finish_reason: "length"). Surface it instead of
-                // silently returning nothing, and hint at the knobs.
-                const finishReason = choice?.finish_reason ?? 'unknown';
-                const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens;
-                const usageHint = reasoningTokens !== undefined ? ` (reasoning_tokens=${reasoningTokens})` : '';
-                warn(`LLM returned empty content for ${samplePath} (finish_reason=${finishReason}${usageHint}). If finish_reason is "length", raise AZURE_OPENAI_MAX_COMPLETION_TOKENS or set AZURE_OPENAI_REASONING_EFFORT.`);
+                warn(`LLM returned empty content for ${samplePath} (finish_reason=${finishReason}${usageHint}).`);
                 return null;
             }
 
