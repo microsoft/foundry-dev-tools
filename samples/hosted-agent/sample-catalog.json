@@ -1,7 +1,7 @@
 {
-    "commitSha": "3d734b93b66f163bea9886d73c6808adc32e68fc",
+    "commitSha": "c7226f4392c07326f03dcaae0ec1e7bb93118783",
     "repo": "https://github.com/microsoft-foundry/foundry-samples/",
-    "generatedAt": "2026-08-25T02:52:33Z",
+    "generatedAt": "2026-09-22T15:57:36Z",
     "dimensions": {
         "language": {
             "title": "Select a Language",
@@ -1010,6 +1010,123 @@
             "displayName": "Automatic Tracing",
             "description": "Agent with automatic OpenTelemetry tracing across LLM calls, nodes, and tools.",
             "path": "samples/python/hosted-agents/langgraph/responses/08-observability",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Audio Bridge Agent",
+            "description": "Hosted text agent that receives text and control events from a managed live audio service.",
+            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/basic",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Text-Only Agent",
+            "description": "Agent that streams assistant text and exposes control events to an external audio client.",
+            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langchain",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Text Only Bridge",
+            "description": "Hosted agent that routes model responses and streams assistant text to an external audio bridge.",
+            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langgraph",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "VoiceLive Copilot",
+            "description": "Streams assistant text and short tool-status messages optimized for voice playback.",
+            "path": "samples/python/hosted-agents/bring-your-own/voicelive/github-copilot-responses-voicelive",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "invocations",
+            "displayName": "Durable Checkpoints",
+            "description": "Durably preserves workflow state across restarts and supports background execution and approvals.",
+            "path": "samples/python/hosted-agents/langgraph/invocations/02-resilient",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "invocations",
+            "displayName": "Run Entrypoint",
+            "description": "Hosts an agent via the run entrypoint with multi-turn persistence using Foundry checkpointing.",
+            "path": "samples/python/hosted-agents/langgraph/invocations/03-run",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "invocations",
+            "displayName": "Location-Aware Host",
+            "description": "Host that accepts custom location messages and locale headers for location-aware chat.",
+            "path": "samples/python/hosted-agents/langgraph/invocations/04-custom-host",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "User Identity Toolbox",
+            "description": "Agent that uses a toolbox to access user identity tokens for connected services.",
+            "path": "samples/python/hosted-agents/langgraph/responses/03-langgraph-toolbox-user-identity",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Resilient Response Recovery",
+            "description": "Trip-planning agent with durable checkpoints and recoverable background responses.",
+            "path": "samples/python/hosted-agents/langgraph/responses/09-resilient",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Hosted Graph Run",
+            "description": "Launches a configuration-driven hosted agent from a compiled graph using the hosting entrypoint.",
+            "path": "samples/python/hosted-agents/langgraph/responses/10-run",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Deep Research Agent",
+            "description": "Agent that delegates research subagents to gather sources and produce a structured, cited report.",
+            "path": "samples/python/hosted-agents/langgraph/responses/11-deep-agents",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Location-Aware Host",
+            "description": "Host that accepts custom location messages and locale headers for location-aware chat.",
+            "path": "samples/python/hosted-agents/langgraph/responses/12-custom-host",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Custom Store Integration",
+            "description": "Persist agent conversation chains and responses using custom storage backends.",
+            "path": "samples/python/hosted-agents/langgraph/responses/13-custom-store",
             "requiresModel": true
         }
     ]
