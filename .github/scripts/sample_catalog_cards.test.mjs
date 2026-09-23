@@ -489,13 +489,13 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                         sameTask: scenario.sameTask ?? true,
                         reason: scenario.sameTask === false ? 'Different task despite the same Pattern.' : 'Same task through a different SDK.',
                         evidence: [input.template.path, card.templatePaths[0]].map(path => ({
-                            path, quote: 'Draft and review a document with the writing workflow.',
+                            path, excerptId: 'p1',
                         })),
                     }])) };
                 } else if (stage === 'details') {
                     const input = JSON.parse(request.messages[1].content);
                     assert.deepEqual(input.implementations.map(item => item.template.path), input.card.templatePaths);
-                    assert.ok(input.implementations.every(item => item.readme.includes('writing workflow')));
+                    assert.ok(input.implementations.every(item => item.readmeExcerpts.some(excerpt => excerpt.text.includes('writing workflow'))));
                     assert.deepEqual(input.requirementsFormat, {
                         valueCount: input.card.details.requirements.length,
                         wordCount: input.card.details.requirements.join(' ').trim().split(/\\s+/).length,
@@ -505,14 +505,21 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                     assert.ok(request.messages[0].content.includes('test every claim against EVERY final implementation'));
                     assert.ok(request.messages[0].content.includes('ONE project for the selected implementation'));
                     if (scenario.reviewFailure) return new Response('Review unavailable', { status: 400 });
-                    content = scenario.detailsDecision
-                        ? { ...reviewedDetails(input.card, scenario.detailsDecision.detailsPatch), ...scenario.detailsDecision }
-                        : reviewedDetails(input.card);
+                    const defaultDecision = reviewedDetails(input.card, scenario.detailsDecision?.detailsPatch);
+                    for (const review of Object.values(defaultDecision.fieldReviews)) {
+                        review.evidence = review.evidence.map(({ path }) => ({ path, excerptId: 'p1' }));
+                    }
+                    content = { ...defaultDecision, ...scenario.detailsDecision };
                 } else {
                     const input = JSON.parse(request.messages[1].content);
                     assert.ok(addedPaths.includes(input.template.path));
                     if (scenario.candidates) assert.deepEqual(input.candidates.map(card => card.id), scenario.candidates);
                     content = scenario.decision ?? { cardId: input.candidates[0]?.id, reason: 'Same task and unchanged Details apply.' };
+                }
+                if (Object.hasOwn(scenario, 'excerptId') && (stage === 'details' || stage === 'reuse')) {
+                    for (const review of Object.values(content.fieldReviews ?? content.candidateReviews)) {
+                        review.evidence = review.evidence.map(({ path }) => ({ path, excerptId: scenario.excerptId }));
+                    }
                 }
                 return Response.json({ choices: [{ message: { content: JSON.stringify(content) } }] });
             }
@@ -522,7 +529,7 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
             if (url.endsWith('/README.md')) {
                 const existing = !addedPaths.some(templatePath => url.includes('/' + templatePath + '/'));
                 return scenario.missingReadme || (existing && scenario.missingExistingReadme)
-                    ? new Response('', { status: 404 }) : new Response('Draft and review a document with the writing workflow.');
+                    ? new Response('', { status: 404 }) : new Response(scenario.readme ?? 'Draft and review a document with the writing workflow.');
             }
             assert.ok(addedPaths.some(templatePath => url.includes('/' + templatePath + '/')), 'Do not fetch manifests for existing samples');
             if (url.endsWith('/azure.yaml')) return new Response('services:\\n  agent:\\n    protocols:\\n      - protocol: responses\\n    environmentVariables:\\n      - name: AZURE_AI_MODEL_DEPLOYMENT_NAME\\n');
@@ -679,9 +686,56 @@ test('incremental CLI rejects fabricated Details evidence without changing eithe
     decision.fieldReviews.whatItDoes.evidence = [{ path: source.templates[0].path, quote: 'Supports two approvals and an offline simulator.' }];
     const result = runIncremental(root, source, [source.templates[0].path, `${source.templates[1].path}-new`], { detailsDecision: decision });
     assert.equal(result.status, 1, result.stderr);
-    assert.match(result.stderr, /Unverified README quote/);
+    assert.match(result.stderr, /Unverified README excerpt/);
     assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
 });
+
+test('incremental CLI resolves README excerpt IDs to source quotes instead of asking AI to copy text', context => {
+    const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+    const newPath = 'samples/python/hosted-agents/langgraph/workflow';
+    const result = runIncremental(root, source, [...source.templates.map(template => template.path), newPath], {
+        excerptId: 'p1',
+        decision: { card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'New SDK.' },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /"quote":"Draft and review a document with the writing workflow\."/);
+    const output = JSON.parse(readFileSync(outputPath, 'utf8'));
+    const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
+    assertSplitPair(output, cards);
+    assert.equal(cards.cards.length, 1);
+    assert.ok(cards.cards[0].templatePaths.includes(newPath));
+});
+
+test('incremental CLI preserves Markdown and line endings in resolved evidence', context => {
+    const { root, source } = temporaryFixture(context);
+    const paragraph = 'The **writing workflow** requires `Model access`.\r\nIt keeps a durable checkpoint.';
+    const result = runIncremental(root, source, [source.templates[0].path], {
+        excerptId: 'p2', readme: `# Sample\r\n\r\n${paragraph}\r\n\r\n## Run`,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const log = result.stdout.split(/\r?\n/).find(line => line.startsWith('Card Details review: '));
+    const review = JSON.parse(log.slice('Card Details review: '.length));
+    assert.deepEqual(review.fieldReviews.summary.evidence, [{ path: source.templates[0].path, excerptId: 'p2', quote: paragraph }]);
+});
+
+for (const stage of ['reuse', 'details']) {
+    for (const excerptId of ['p999', 'p0', '', 1, null]) {
+        test(`incremental CLI rejects invalid ${stage} excerpt ${JSON.stringify(excerptId)} before writing`, context => {
+            const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+            const cardsPath = join(directory, 'sample-cards.json');
+            const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+            const scenario = { excerptId };
+            if (stage === 'reuse') scenario.decision = {
+                card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'New SDK.',
+            };
+            const result = runIncremental(root, source, [...source.templates.map(template => template.path), 'samples/python/hosted-agents/langgraph/workflow'], scenario);
+            assert.equal(result.status, 1, result.stderr);
+            assert.match(result.stderr, /Unverified README excerpt/);
+            assert.ok(result.stderr.includes(stage === 'reuse' ? 'card reuse review' : 'Details review'));
+            assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+        });
+    }
+}
 
 for (const sameTask of [true, false]) {
     test(`incremental CLI independently reviews new-card reuse with sameTask=${sameTask}`, context => {
