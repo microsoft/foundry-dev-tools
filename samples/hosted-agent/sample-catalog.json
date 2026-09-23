@@ -1,7 +1,7 @@
 {
-    "commitSha": "3d734b93b66f163bea9886d73c6808adc32e68fc",
+    "commitSha": "be4706c76acfe44e2ae99c2818efdc4c5ab25bd9",
     "repo": "https://github.com/microsoft-foundry/foundry-samples/",
-    "generatedAt": "2026-08-25T02:52:33Z",
+    "generatedAt": "2026-09-23T05:22:25Z",
     "dimensions": {
         "language": {
             "title": "Select a Language",
@@ -1011,6 +1011,150 @@
             "description": "Agent with automatic OpenTelemetry tracing across LLM calls, nodes, and tools.",
             "path": "samples/python/hosted-agents/langgraph/responses/08-observability",
             "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Resilient Workflow",
+            "description": "Hosts a workflow that survives agent crashes and resumes pending tool calls after process restart.",
+            "path": "samples/csharp/hosted-agents/agent-framework/resilient-workflow",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Steerable Workflow",
+            "description": "Deterministic workflow that supports resilient background execution and steerable conversations.",
+            "path": "samples/csharp/hosted-agents/agent-framework/steerable-workflow",
+            "requiresModel": false
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Steerable Conversations",
+            "description": "Hosts an agent that queues new inputs to steer ongoing persisted conversations.",
+            "path": "samples/csharp/hosted-agents/agent-framework/steering",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Managed Audio Offload",
+            "description": "Agent that receives text and control events while audio input and playback are managed externally.",
+            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/basic",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Hosted Audio Target",
+            "description": "Hosted agent that provides managed audio interactions and streams assistant text to callers.",
+            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langchain",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Voice Live Bridge",
+            "description": "Hosted agent that provides a managed voice experience and streams assistant text.",
+            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langgraph",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "VoiceLive Copilot Integration",
+            "description": "Voice-friendly agent that streams assistant text and tool-status messages for VoiceLive synthesis.",
+            "path": "samples/python/hosted-agents/bring-your-own/voicelive/github-copilot-responses-voicelive",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "invocations",
+            "displayName": "Resilient Agent",
+            "description": "Agent that preserves workflow state across restarts and supports background execution and recovery.",
+            "path": "samples/python/hosted-agents/langgraph/invocations/02-resilient",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "invocations",
+            "displayName": "Config-Driven Hosting",
+            "description": "Hosts an agent with session persistence via Foundry checkpointing and a config entrypoint.",
+            "path": "samples/python/hosted-agents/langgraph/invocations/03-run",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "invocations",
+            "displayName": "Location Aware Host",
+            "description": "Location-aware agent that reads client locale and location messages to tailor responses.",
+            "path": "samples/python/hosted-agents/langgraph/invocations/04-custom-host",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "User Identity Toolbox",
+            "description": "Agent that loads toolbox tools using per-user identity for mail, calendar, and GitHub.",
+            "path": "samples/python/hosted-agents/langgraph/responses/03-langgraph-toolbox-user-identity",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Resilient Recovery",
+            "description": "Durable agent that preserves conversation state and resumes interrupted turns after restarts.",
+            "path": "samples/python/hosted-agents/langgraph/responses/09-resilient",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Config-Driven Hosting",
+            "description": "Expose an exported agent graph as a hosted endpoint.",
+            "path": "samples/python/hosted-agents/langgraph/responses/10-run",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Deep Research Agent",
+            "description": "Coordinator that delegates subagents, aggregates citations, and produces a final report.",
+            "path": "samples/python/hosted-agents/langgraph/responses/11-deep-agents",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Location-Aware Host",
+            "description": "Location-aware chat agent that accepts custom location messages and client locale headers to adjust locale and units.",
+            "path": "samples/python/hosted-agents/langgraph/responses/12-custom-host",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Custom State Stores",
+            "description": "Agent that uses custom persistence stores for conversation chains and response records.",
+            "path": "samples/python/hosted-agents/langgraph/responses/13-custom-store",
+            "requiresModel": true
         }
     ],
     "patterns": [
@@ -1094,7 +1238,9 @@
                 "samples/python/hosted-agents/bring-your-own/invocations/claude-agent-sdk",
                 "samples/python/hosted-agents/bring-your-own/responses/openai-agents-sdk",
                 "samples/csharp/hosted-agents/agent-framework/hello-world",
-                "samples/python/hosted-agents/agent-framework/invocations/01-basic"
+                "samples/python/hosted-agents/agent-framework/invocations/01-basic",
+                "samples/python/hosted-agents/langgraph/invocations/03-run",
+                "samples/python/hosted-agents/langgraph/responses/10-run"
             ]
         },
         {
@@ -1448,7 +1594,7 @@
                     "Produces a generated research result",
                     "Supports planning, background execution, or checkpointed work according to the selected variant"
                 ],
-                "whatItGenerates": "A Python or C# research project with variant-specific hosting and state handling. Harnesses require network access and suitable model capacity; clients must support the chosen approval or progress contract. Only the resilient Invocations variant provides checkpointed crash recovery, with an optional offline simulation mode.",
+                "whatItGenerates": "A Python or C# research project with variant-specific hosting and state handling. Harnesses require network access and suitable model capacity; clients must support the chosen approval or progress contract. The resilient Invocations variant provides end-to-end per-sub-call checkpointed crash recovery and resumable streaming, with an optional offline demo mode; other samples may persist checkpoints or state but do not implement the same per-sub-call recovery and SSE reconnection behavior.",
                 "requirements": [
                     "Model access, research client"
                 ]
@@ -1458,7 +1604,8 @@
                 "samples/csharp/hosted-agents/bring-your-own/responses/background-agent",
                 "samples/python/hosted-agents/agent-framework/responses/19-harness-research",
                 "samples/python/hosted-agents/bring-your-own/invocations/resilient-research",
-                "samples/python/hosted-agents/bring-your-own/responses/background-agent"
+                "samples/python/hosted-agents/bring-your-own/responses/background-agent",
+                "samples/python/hosted-agents/langgraph/responses/11-deep-agents"
             ]
         },
         {
@@ -1772,16 +1919,16 @@
             "categoryId": "voice-realtime",
             "details": {
                 "summary": "Connect a Voice Live client to a hosted audio bridge or text-event adapter.",
-                "whatItDoes": "Either bridges audio to a managed Voice Live session over WebSocket or adapts transcribed text and model replies to voice-compatible Invocations events.",
+                "whatItDoes": "Bridges browser audio to a managed Voice Live session over a WebSocket, adapts transcribed text and model replies into Voice Live–compatible Invocations SSE events, or emits Responses-based assistant text and tool-status events for VoiceLive synthesis.",
                 "whyUseIt": "Explore the connection between hosted-agent contracts and a voice conversation.",
                 "exampleScenario": "Use the selected sample's compatible client to ask a short spoken question and receive a reply.",
                 "bestFit": "Developers starting Voice Live integration in Python or C#.",
                 "capabilities": [
                     "Connects conversational input to the configured voice or model backend",
                     "Returns voice-compatible replies or events",
-                    "Bridges raw audio in the WebSocket variants; adapts text events in the Invocations variant"
+                    "Bridges raw audio in the WebSocket variants; adapts text-event SSE in the Invocations variant; streams assistant text and tool-status events in the Responses (VoiceLive) variant"
                 ],
-                "whatItGenerates": "A Python or C# WebSocket audio bridge, or a Python Invocations text-event adapter, with hosting configuration and variant-specific client examples.",
+                "whatItGenerates": "A WebSocket audio bridge (Python or C#), or a Python hosted agent that emits Invocations- or Responses-format voice-compatible events, with hosting configuration and variant-specific client examples.",
                 "requirements": [
                     "Voice Live, model access"
                 ]
@@ -1789,7 +1936,8 @@
             "templatePaths": [
                 "samples/csharp/hosted-agents/bring-your-own/invocations_ws/HelloWorld",
                 "samples/python/hosted-agents/bring-your-own/invocations_ws/hello-world",
-                "samples/python/hosted-agents/bring-your-own/voicelive/hello-world-invocations-voicelive"
+                "samples/python/hosted-agents/bring-your-own/voicelive/hello-world-invocations-voicelive",
+                "samples/python/hosted-agents/bring-your-own/voicelive/github-copilot-responses-voicelive"
             ]
         },
         {
@@ -2015,12 +2163,12 @@
             "categoryId": "human-in-the-loop-async-events",
             "details": {
                 "summary": "Checkpoint a long-running plan and pause for human approval before irreversible steps.",
-                "whatItDoes": "Creates a plan, waits for approval or edits, and executes approved steps with checkpoints. Steps marked irreversible require a second confirmation. A resilient task store and step watermarks support recovery after interruption; an offline mode uses deterministic stand-ins.",
+                "whatItDoes": "Creates a plan, waits for approval or edits, and executes approved steps with checkpoints. Steps marked irreversible require a second confirmation. In the bring-your-own Invocations sample a resilient task store and per-step watermarks support recovery after interruption and an offline demo mode uses deterministic stand-ins; the LangGraph sample instead uses durable LangGraph checkpoints together with Agent Server durable invocation state for recovery.",
                 "whyUseIt": "Explore durable human decisions during longer-running agent work.",
                 "exampleScenario": "Plan a release-preparation task, approve the plan, and review a publishing step before execution.",
                 "bestFit": "Developers evaluating resumable approval workflows and side-effect handling.",
                 "capabilities": [
-                    "Requests plan and action approvals",
+                    "Requests plan and action approvals (bring-your-own); requests approval for sensitive tool calls (LangGraph)",
                     "Persists task progress between turns",
                     "Resumes interrupted execution from checkpoints",
                     "Exposes task status and cancellation"
@@ -2031,7 +2179,8 @@
                 ]
             },
             "templatePaths": [
-                "samples/python/hosted-agents/bring-your-own/invocations/resilient-approval-gate"
+                "samples/python/hosted-agents/bring-your-own/invocations/resilient-approval-gate",
+                "samples/python/hosted-agents/langgraph/invocations/02-resilient"
             ]
         },
         {
@@ -2147,13 +2296,14 @@
                     "Invokes tools with the configured identity model",
                     "Surfaces consent requests to the client"
                 ],
-                "whatItGenerates": "A Python LangGraph agent with a BYO Responses handler and user-identity Toolbox connection configuration.",
+                "whatItGenerates": "A Python LangGraph agent with a Responses handler and user-identity Toolbox connection configuration.",
                 "requirements": [
                     "Model deployment, Toolbox, user consent"
                 ]
             },
             "templatePaths": [
-                "samples/python/hosted-agents/bring-your-own/responses/langgraph-toolbox-user-identity"
+                "samples/python/hosted-agents/bring-your-own/responses/langgraph-toolbox-user-identity",
+                "samples/python/hosted-agents/langgraph/responses/03-langgraph-toolbox-user-identity"
             ]
         },
         {
@@ -2210,22 +2360,23 @@
             "categoryId": "human-in-the-loop-async-events",
             "details": {
                 "summary": "Redirect an in-flight response and explore recovery when the host restarts.",
-                "whatItDoes": "Accepts new input during a stored background response, winds down the current turn, and runs the queued input. Crash recovery re-runs the interrupted turn from scratch rather than preserving its partial output. The sample simulates model streaming.",
+                "whatItDoes": "Accepts new input during a stored background response, winds down the current turn, and runs the queued input. Recovery behavior differs by implementation: the Python Responses sample re-runs an interrupted turn from scratch and does not checkpoint partial output, while the C# Agent Framework workflow resumes from the last committed checkpoint. The Python sample simulates model streaming; the workflow sample is deterministic and does not require a model.",
                 "whyUseIt": "Understand how steering, cancellation, and shutdown interact with recoverable background work.",
                 "exampleScenario": "Start a long reply, change the requested topic while it runs, and observe the next turn.",
-                "bestFit": "Developers integrating steerable Responses conversations.",
+                "bestFit": "Developers integrating steerable, resilient background execution.",
                 "capabilities": [
                     "Accepts steering input during a running turn",
                     "Distinguishes steering from user cancellation",
-                    "Re-runs interrupted turns after recovery"
+                    "Supports recovery after crashes; behavior varies by implementation (Responses: re-run from scratch; Agent Framework: resume from last committed checkpoint)"
                 ],
                 "whatItGenerates": "A Python BYO Responses demonstration with resilient-background and steerable-conversation options. Recovery requires stored background requests. Simulated output needs no model call; replace the simulation to integrate a real model, whose calls may repeat after recovery.",
                 "requirements": [
-                    "Stored background responses"
+                    "Foundry project or stored responses"
                 ]
             },
             "templatePaths": [
-                "samples/python/hosted-agents/bring-your-own/responses/resilient-steering"
+                "samples/python/hosted-agents/bring-your-own/responses/resilient-steering",
+                "samples/csharp/hosted-agents/agent-framework/steerable-workflow"
             ]
         },
         {
@@ -2322,6 +2473,190 @@
             },
             "templatePaths": [
                 "samples/python/hosted-agents/bring-your-own/voicelive/hotel-booking-invocations-voicelive"
+            ]
+        },
+        {
+            "id": "resilient-workflow",
+            "title": "Resilient Workflow",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Host a workflow that survives agent crashes and resumes pending tool calls after process restart.",
+                "whatItDoes": "Runs a model-backed workflow with resilient background Responses enabled. The samples register executors/tools that intentionally terminate the host (for example, a simulate_crash tool); the hosting layer persists a durable checkpoint so a replacement process can restore workflow state and deliver pending tool results to resume the interrupted turn.",
+                "whyUseIt": "Validate durable workflow checkpoints, recovery semantics, and how stored background Responses continue after an agent host crashes and is restarted. It demonstrates configuration and runtime considerations needed to build crash-resilient hosted agents.",
+                "exampleScenario": "Invoke a stored background response that instructs the model to call simulate_crash. Observe the agent process exit, let the platform start a replacement, follow the same response ID, and confirm the resumed response completes with the original function call's result.",
+                "bestFit": "Developers building hosted agents with Responses (Agent Framework or LangGraph) who need explicit demonstrations of durable checkpoints, background response recovery, and executor identity or checkpoint compatibility across restarts.",
+                "capabilities": [
+                    "Persists durable workflow checkpoints",
+                    "Resumes pending function/tool calls after restart",
+                    "Demonstrates ResilientBackground option for Responses",
+                    "Shows requirement for stable executor identity (Agent Framework sample only)"
+                ],
+                "whatItGenerates": "A C# Agent Framework sample that implements a simulate_crash AIFunctionDeclaration, an Agent Executor configured to intercept unterminated function calls, and a Crash Tool Executor that terminates the process to demonstrate checkpoint restore and resumed FunctionResult delivery.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/resilient-workflow",
+                "samples/python/hosted-agents/langgraph/responses/09-resilient"
+            ]
+        },
+        {
+            "id": "steerable-conversations",
+            "title": "Steerable Conversations",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Host an Agent Framework Responses agent that queues new inputs to steer an active, persisted conversation instead of rejecting concurrent requests.",
+                "whatItDoes": "Demonstrates a C# Agent Framework Responses host with the SteerableConversations option enabled so a second stored background request submitted to the same conversation is returned as queued and executed after the active turn reaches a safe boundary. This sample shows host configuration, local debugging, azd-based provisioning/deploy, and how to exercise queued background+stored requests; it does not implement crash recovery.",
+                "whyUseIt": "Validate and experiment with durable in-conversation steering behavior where additional user inputs can be queued to influence an in-progress persisted conversation rather than being rejected, enabling richer background and control flows.",
+                "exampleScenario": "Start a long-running background response with background=true and store=true on conversation X. While it is still running, submit a second request using the same conversation ID and confirm the second response is returned with status=queued and later completes on the same persisted session.",
+                "bestFit": "C# developers hosting Agent Framework Responses who need durable in-conversation queuing (steering) and want to compare steering with separate resilient recovery patterns.",
+                "capabilities": [
+                    "Enables host-wide steering option",
+                    "Queues second stored background request",
+                    "Runs queued input on same persisted session",
+                    "Includes azd and VS Code run/deploy guidance"
+                ],
+                "whatItGenerates": "A C# Agent Framework Responses sample (Program.cs and host configuration) that registers the agent with AddFoundryResponses configured with SteerableConversations = true, project files for local run and azd-based deployment, and a usage walkthrough showing how to submit stored background requests to observe queued behavior. It demonstrates steering only; crash/restart recovery is not included.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/steering"
+            ]
+        },
+        {
+            "id": "managed-audio-offload",
+            "title": "Managed Audio Offload",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "A hosted text agent that offloads audio input/output to Voice Live by implementing the Voice Live Bridge Protocol over invocations_ws.",
+                "whatItDoes": "Implements Voice Live Bridge Protocol 1.0 using the AgentServer invocations_ws transport. The hosted target agent accepts session lifecycle and control events (session.start, session.ready, user.message, etc.), receives final transcripts and control signals from Voice Live, and streams model text output (response.output_text.delta and terminal events) back to Voice Live via the Responses API. Voice Live (the wrapper) owns STT, VAD, TTS, playback interruption, barge-in, and audio playback admission. The sample documents supported and unsupported Bridge features and exposes a protocol-aware local smoke client for testing.",
+                "whyUseIt": "Separate audio handling from conversational logic so a hosted text agent can be reused by managed voice wrappers; keep the agent free of audio capture/playback code while still supporting streaming and real-time voice scenarios.",
+                "exampleScenario": "Deploy the hosted target agent and the provided Voice wrapper. A caller connects to the Voice wrapper's voice WebSocket endpoint; the wrapper sends transcripts and control events to the target over invocations_ws; the target streams response deltas back and the wrapper handles STT/TTS and playback for the caller. Use the included smoke_test to validate the Bridge wire flow locally.",
+                "bestFit": "Developers building text-only hosted agents that will be wrapped by platform-managed voice (Voice Live) or anyone who wants to prototype a voice-capable integration without adding audio code to the agent.",
+                "capabilities": [
+                    "Accepts Voice Live Bridge Protocol events over invocations_ws",
+                    "Streams model text deltas back to Voice Live (Responses API)",
+                    "Handles session lifecycle and control events (session.start/ready/end)",
+                    "Supports barge-in, proactive responses, response.none, and self-cancellation",
+                    "Includes a protocol-aware local smoke client and azd deployment guidance",
+                    "Documents Bridge 1.0 limitations (no DTMF, no image input, no hosted-agent handoff)"
+                ],
+                "whatItGenerates": "A Python hosted-agent sample that implements Voice Live Bridge Protocol 1.0 over invocations_ws, relays text and control events to a Foundry model, and streams response.output_text deltas back to Voice Live. The sample includes a protocol callback layer, response coordination, state management, a smoke test, and azd/azd-provision guidance; audio is simulated/managed by Voice Live, not performed by the agent.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/basic"
+            ]
+        },
+        {
+            "id": "hosted-audio-target",
+            "title": "Hosted Audio Target",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Provide a text-only hosted agent that integrates with Voice Live by implementing the Voice Live Bridge Protocol over invocations_ws and streaming assistant text back to callers.",
+                "whatItDoes": "Implements Voice Live Bridge Protocol 1.0 on the /invocations_ws transport: accepts session.start, emits session.ready, receives final transcripts as user.message, and streams response.output_text.delta back to Voice Live. The sample is text-only — Voice Live handles STT, VAD, synthesis, playback interruption, and proactive-response admission. It uses a LangChain hosting loop and the Responses API for model inference and includes a small local UTC-time tool. Protocol limitations: no DTMF, no image input, no app-driven history mutation, and no hosted-agent handoff.",
+                "whyUseIt": "Quickly add a managed audio front end to a hosted text agent without embedding audio code in the agent: let Voice Live own audio while your agent focuses on text conversation, streaming, and host-side response sequencing.",
+                "exampleScenario": "Deploy the LangChain hosted agent and a managed Voice wrapper; a caller connects to the Voice wrapper, which sends Bridge events to this hosted agent on /invocations_ws. The agent receives transcripts, calls the configured Foundry model, and streams assistant text deltas that Voice Live synthesizes to the caller.",
+                "bestFit": "Developers who want to expose a model-backed text agent as a managed-voice target (Voice Live) using Python + LangChain over invocations_ws, or teams evaluating voice/hosted-agent separation of concerns.",
+                "capabilities": [
+                    "Implements Voice Live Bridge Protocol 1.0 over invocations_ws",
+                    "Streams assistant text deltas (response.output_text.delta) to Voice Live",
+                    "Handles session lifecycle events and response sequencing",
+                    "Supports proactive responses, barge-in reconciliation, response cancellation and response.none",
+                    "Uses LangChain + Responses API and a local UTC-time tool; audio is managed externally"
+                ],
+                "whatItGenerates": "A Python LangChain hosted-agent project (invocations_ws transport) that exposes /invocations_ws, implements the typed AgentServer Voice callback surface, handles Bridge lifecycle events, calls a Foundry Responses model and streams text deltas back to Voice Live. The sample includes a protocol-aware smoke client and deterministic tests; production audio is provided by a separate managed Voice wrapper and the project does not contain STT/TTS code.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langchain"
+            ]
+        },
+        {
+            "id": "voice-live-bridge",
+            "title": "Voice Live Bridge",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "A hosted text agent that implements Voice Live Bridge Protocol 1.0 over invocations_ws to connect a managed Voice Live audio front end and stream assistant text back to Voice Live.",
+                "whatItDoes": "Implements the Voice Live Bridge 1.0 protocol using the Invocations WebSocket transport: accepts session.start, emits session.ready, receives final transcripts as user.message, creates responses, and streams response.output_text.delta messages back to Voice Live. The sample uses a Python LangGraph StateGraph to route between a Microsoft Foundry Responses model and a local UTC-time tool; it emits only assistant text to the voice wrapper. Voice Live / the Voice wrapper owns all audio (STT, VAD, TTS, barge-in, playback interruption); this hosted agent receives text and control events on /invocations_ws.",
+                "whyUseIt": "Attach a managed voice front end (Voice Live) to an existing hosted text agent without adding audio processing code. Learn Bridge protocol sequencing, streaming assistant-text deltas, LangGraph routing between model and tools, and how to coordinate response lifecycle and turnaround with a voice wrapper.",
+                "exampleScenario": "Deploy the sample locally or to a Foundry project, start the server exposing /invocations_ws, connect a Voice wrapper (or run the included smoke client). A caller speaks; Voice Live sends transcripts as user.message; the LangGraph agent calls the Foundry model and/or the UTC tool; assistant text is streamed back as response.output_text.delta and synthesized by Voice Live.",
+                "bestFit": "Developers building BYO hosted agents that must integrate with Voice Live or other managed voice wrappers using the Voice Live Bridge Protocol over invocations_ws, and teams using LangGraph to coordinate model↔tool flows without adding audio code to the agent.",
+                "capabilities": [
+                    "Implements Bridge Protocol 1.0 over invocations_ws",
+                    "Streams assistant text deltas to Voice Live",
+                    "Handles session.start/ready and full response lifecycle events",
+                    "Routes model and local tool calls via a LangGraph StateGraph",
+                    "Demonstrates barge-in, proactive responses, no-input handling, and response self-cancellation"
+                ],
+                "whatItGenerates": "A Python LangGraph hosted-agent implementation that exposes /invocations_ws, includes voice_runtime callbacks and a response coordinator, defines a StateGraph that routes between a Foundry Responses model node and a UTC-time tool, and streams assistant text deltas back to Voice Live. The sample includes a protocol-aware smoke test and azd-based provisioning/deploy guidance; audio handling is simulated by the Voice wrapper and not implemented in the agent.",
+                "requirements": [
+                    "Foundry model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langgraph"
+            ]
+        },
+        {
+            "id": "location-aware-host",
+            "title": "Location-aware host",
+            "categoryId": "other-sdks-adapters",
+            "details": {
+                "summary": "A LangGraph host that reads a client locale header and optional custom location messages to tailor model behavior and units across Invocations and Responses implementations.",
+                "whatItDoes": "Provides custom host-server implementations that extract an x-client-user-locale header and application-defined location messages from incoming requests, inject locale and structured location into the LangGraph assistant state, and delegate standard graph execution to the protocol's base host (InvocationsHostServer or ResponsesHostServer). The samples wire simple tools (calculator, current-time, and a fake-weather tool) into the graph and demonstrate follow-up turns using session continuation (agent_session_id for Invocations, previous_response_id for Responses).",
+                "whyUseIt": "Show how to adapt the LangGraph host surface to client-specific metadata (locale, location) without changing the core LangGraph execution loop. Useful when a front-end wants to send non-text structured messages or locale hints that affect temperature units, language selection, or tool input. Works with either Invocations or Responses hosting patterns.",
+                "exampleScenario": "A mobile client sends a first-turn payload containing a custom location message (label, latitude, longitude) plus a user question “What weather should I expect here?”, and includes header x-client-user-locale: en-US so the agent reports Fahrenheit; subsequent text-only follow-ups reuse the returned x-agent-session-id (Invocations) or previous_response_id (Responses) to continue the same conversation.",
+                "bestFit": "BYO or Foundry-hosted LangGraph projects that need a custom host endpoint (Invocations or Responses) to accept structured client messages and header-driven locale behavior.",
+                "capabilities": [
+                    "Parses x-client-user-locale header",
+                    "Extracts application-defined location messages",
+                    "Injects locale and location into LangGraph state",
+                    "Delegates execution to standard InvocationsHostServer (Invocations) or ResponsesHostServer (Responses)",
+                    "Supports session continuation via agent_session_id (Invocations) or previous_response_id (Responses)",
+                    "Demonstrates unit selection (F/C) and tool-driven fake-weather responses"
+                ],
+                "whatItGenerates": "A Python LangGraph sample that implements a LocationAware host for the repository's protocol-specific project. The sample shows request parsing (parse_request or build_input), a TypedDict assistant state including messages/locale/location, example client JSON for a combined location+text turn, the graph wiring to calculator/current-time/fake-weather tools, and run instructions for local debugging and azd-based deploy. Weather results are produced by the included fake-weather tool (not a live weather service).",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/langgraph/invocations/04-custom-host",
+                "samples/python/hosted-agents/langgraph/responses/12-custom-host"
+            ]
+        },
+        {
+            "id": "custom-state-stores",
+            "title": "Custom State Stores",
+            "categoryId": "knowledge-rag-memory",
+            "details": {
+                "summary": "Show how to implement and wire custom persistence stores for a LangGraph Responses agent so you control conversation chains, response records, and long-term memory storage.",
+                "whatItDoes": "Provides concrete implementations and wiring for ConversationChainStoreProtocol and ResponseProviderProtocol, plus examples of integrating LangGraph-compatible long-term memory/checkpointer stores. The sample includes SQLite-backed example stores, host-server wiring (ResponsesHostServer), and a main.py that runs locally or as a Foundry hosted agent. Model calls use AZURE_AI_API_KEY when present or DefaultAzureCredential otherwise.",
+                "whyUseIt": "Use custom stores to control persistence behavior, storage backend, data lifecycle, and deployment topology instead of relying on Foundry-managed state services—needed for on-prem deployments, custom security, or alternative storage choices.",
+                "exampleScenario": "Run the local server, persist a conversation-only parcel code in the conversation-chain store and validate it is available only in that conversation; then persist a long-term memory fact and query it from a new conversation to confirm memory retrieval. The sample shows tests and curl examples to exercise both behaviors.",
+                "bestFit": "Teams building LangGraph/Responses agents that must implement custom persistence backends (on-prem or hosted), validate storage behavior, or migrate to a non-Foundry storage solution.",
+                "capabilities": [
+                    "Custom ConversationChainStore wiring",
+                    "Custom ResponseProvider persistence",
+                    "LangGraph-compatible memory/checkpoint integration",
+                    "SQLite example implementations and tests",
+                    "Runs on-host or in Foundry hosted agents"
+                ],
+                "whatItGenerates": "A Python LangGraph Responses sample that implements and wires SQLite-based ConversationChainStore and ResponseStore classes, a ResponsesHostServer setup, tests and curl-based usage examples. The committed SQLite classes are illustrative—production backends must satisfy the same protocols and address concurrency, replication, and security limitations.",
+                "requirements": [
+                    "Python 3.13"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/langgraph/responses/13-custom-store"
             ]
         }
     ]
