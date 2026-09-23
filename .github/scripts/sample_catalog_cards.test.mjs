@@ -54,6 +54,18 @@ function fixture() {
     return { source, definitions };
 }
 
+function reviewedDetails(card, detailsPatch = {}, reason = 'Reviewed every final implementation.') {
+    return {
+        detailsPatch,
+        reason,
+        fieldReviews: Object.fromEntries(Object.keys(card.details).map(field => [field, {
+            action: Object.hasOwn(detailsPatch, field) ? 'change' : 'keep',
+            reason: Object.hasOwn(detailsPatch, field) ? 'The new implementation needs this factual qualification.' : 'The existing claim covers the final implementations.',
+            evidence: [{ path: card.templatePaths.at(-1), quote: 'Draft and review a document with the writing workflow.' }],
+        }])),
+    };
+}
+
 test('builds a self-contained catalog without mutating source or curated content', () => {
     const { source, definitions } = fixture();
     const before = structuredClone({ source, definitions });
@@ -248,6 +260,33 @@ test('incremental reconciliation rejects edits to surviving templates', async ()
         /Existing template changed/);
 });
 
+test('new-card review reuses a same-task protocol variant created earlier in the run', async () => {
+    const { source: previous, definitions } = fixture();
+    const additions = ['invocations', 'responses'].map(protocol => ({
+        ...previous.templates[0], framework: 'langgraph', protocol,
+        path: `samples/python/hosted-agents/langgraph/${protocol}/custom-host`,
+    }));
+    const source = { ...previous, templates: [...previous.templates, ...additions] };
+    let reviews = 0;
+    const chooseCard = ({ template }) => ({
+        card: { ...definitions.cards[0], id: `location-aware-${template.protocol}`, title: 'Location-aware host', categoryId: 'other-sdks-adapters' },
+        reason: 'Proposed a protocol-specific card.',
+    });
+    const result = await reconcileCardDefinitions(previous, source, definitions, chooseCard, ({ template, candidates }) => {
+        reviews++;
+        assert.deepEqual(candidates.map(card => card.id), ['location-aware-invocations']);
+        return { candidateReviews: { [candidates[0].id]: {
+            sameTask: true, reason: 'Same location-aware custom host; only protocol differs.',
+            evidence: [{ path: template.path, quote: 'Location-aware host' }, { path: candidates[0].templatePaths[0], quote: 'Location-aware host' }],
+        } } };
+    });
+    assert.equal(reviews, 1);
+    assert.deepEqual(result.cards.map(card => card.id), ['writing-workflow', 'location-aware-invocations']);
+    assert.deepEqual(result.cards[1].templatePaths, additions.map(template => template.path));
+    assert.deepEqual(definitions.cards[0].templatePaths, previous.templates.map(template => template.path).reverse());
+    await assert.rejects(reconcileCardDefinitions(previous, source, definitions, chooseCard), /reuse review required/);
+});
+
 test('incremental reconciliation allocates unique new IDs without reusing retired or published IDs', async () => {
     const { source: previous, definitions } = fixture();
     const published = definitions.cards[0];
@@ -282,7 +321,7 @@ test('Details review patches only changed cards once and preserves their identit
     const calls = [];
     const result = await reviewChangedCardDetails(definitions, next, reconciled, async input => {
         calls.push(input);
-        return { detailsPatch: { whatItGenerates: 'A writing workflow for the selected SDK.' }, reason: 'Add the new SDK variant without changing the task.' };
+        return reviewedDetails(input.card, { whatItGenerates: 'A writing workflow for the selected SDK.' });
     });
     assert.equal(calls.length, 1);
     assert.deepEqual(calls[0].addedPaths, [added.path]);
@@ -306,13 +345,46 @@ test('card protocol distinguishes implementations and Details review cannot weak
     await assert.rejects(reviewChangedCardDetails(definitions, conflicting, definitions, () => assert.fail('Reject before LLM')), /Ambiguous selection/);
 });
 
+test('Details review requires an explicit audit of every field before accepting a patch', async () => {
+    const { source, definitions } = fixture();
+    const previous = structuredClone(definitions);
+    previous.cards[0].templatePaths.pop();
+    const before = structuredClone(definitions);
+    await assert.rejects(reviewChangedCardDetails(previous, source, definitions, () => ({
+        detailsPatch: { whatItGenerates: 'Source for the selected implementation.' },
+        reason: 'Only checked the generated files.',
+    })), /fieldReviews/);
+    assert.deepEqual(definitions, before);
+});
+
+for (const [name, mutate, message] of [
+    ['omitted field', decision => { delete decision.fieldReviews.capabilities; }, /cover every Details field/],
+    ['unknown field', decision => { decision.fieldReviews.title = decision.fieldReviews.summary; }, /cover every Details field/],
+    ['unpatched claim', decision => { decision.fieldReviews.whatItDoes.action = 'change'; }, /review and patch disagree/],
+    ['unreviewed patch', decision => { decision.detailsPatch.whatItDoes = 'Changed without a matching audit.'; }, /review and patch disagree/],
+    ['empty evidence', decision => { decision.fieldReviews.summary.evidence = []; }, /requires README evidence/],
+    ['unrelated evidence', decision => { decision.fieldReviews.summary.evidence[0].path = 'samples/unrelated'; }, /final member/],
+    ['empty quote', decision => { decision.fieldReviews.summary.evidence[0].quote = ''; }, /quote required/],
+]) {
+    test(`Details audit rejects ${name} without changing definitions`, async () => {
+        const { source, definitions } = fixture();
+        const previous = structuredClone(definitions);
+        previous.cards[0].templatePaths.pop();
+        const before = structuredClone(definitions);
+        const decision = reviewedDetails(definitions.cards[0]);
+        mutate(decision);
+        await assert.rejects(reviewChangedCardDetails(previous, source, definitions, () => decision), message);
+        assert.deepEqual(definitions, before);
+    });
+}
+
 test('Details review skips new singletons but reviews final multi-variant new cards once', async () => {
     const { source, definitions } = fixture();
     const previous = { ...definitions, cards: [] };
     const calls = [];
     await reviewChangedCardDetails(previous, source, definitions, input => {
         calls.push(input);
-        return { detailsPatch: {}, reason: 'Both variants covered' };
+        return reviewedDetails(input.card);
     });
     assert.equal(calls.length, 1);
     assert.deepEqual(calls[0].addedPaths, definitions.cards[0].templatePaths);
@@ -324,10 +396,10 @@ test('Details review permits no-op decisions and reviews surviving cards after d
     const { source, definitions } = fixture();
     const next = { ...source, templates: [source.templates[0]] };
     const reconciled = await reconcileCardDefinitions(source, next, definitions, () => assert.fail('No additions'));
-    const result = await reviewChangedCardDetails(definitions, next, reconciled, async ({ addedPaths, removedPaths }) => {
+    const result = await reviewChangedCardDetails(definitions, next, reconciled, async ({ card, addedPaths, removedPaths }) => {
         assert.deepEqual(addedPaths, []);
         assert.deepEqual(removedPaths, [source.templates[1].path]);
-        return { detailsPatch: {}, reason: 'Existing wording covers the remaining implementation.' };
+        return reviewedDetails(card);
     });
     assert.deepEqual(result, reconciled);
 });
@@ -347,7 +419,8 @@ for (const [name, decision] of [
         const previous = structuredClone(definitions);
         previous.cards[0].templatePaths.pop();
         const before = structuredClone(definitions);
-        await assert.rejects(reviewChangedCardDetails(previous, source, definitions, () => decision));
+        const response = decision ? { fieldReviews: reviewedDetails(definitions.cards[0], decision.detailsPatch).fieldReviews, ...decision } : decision;
+        await assert.rejects(reviewChangedCardDetails(previous, source, definitions, () => response));
         assert.deepEqual(definitions, before);
     });
 }
@@ -379,6 +452,7 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
     const addedPaths = discoveredPaths.filter(templatePath => !previous.templates.some(template => template.path === templatePath));
     const code = `
         import assert from 'node:assert/strict';
+        const reviewedDetails = ${reviewedDetails.toString()};
         const scenario = ${JSON.stringify(scenario)};
         const addedPaths = ${JSON.stringify(addedPaths)};
         const sourceRequests = [];
@@ -391,7 +465,8 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
             if (url.startsWith('https://catalog-ai.invalid/')) {
                 const request = JSON.parse(options.body);
                 const stage = request.messages[0].content.startsWith('You generate') ? 'metadata'
-                    : request.messages[0].content.startsWith('You review Details') ? 'details' : 'placement';
+                    : request.messages[0].content.startsWith('You review Details') ? 'details'
+                    : request.messages[0].content.startsWith('You review a proposed') ? 'reuse' : 'placement';
                 aiRequests.push({ stage, budget: request.max_completion_tokens, reasoningEffort: request.reasoning_effort });
                 if (scenario.aiFailure) return new Response('AI unavailable', { status: 400 });
                 if (scenario.emptyFinish) return Response.json({ choices: [{ finish_reason: scenario.emptyFinish, message: { content: '' } }] });
@@ -404,12 +479,35 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                 let content;
                 if (request.messages[0].content.startsWith('You generate')) {
                     content = { displayName: 'Generated Workflow', description: 'Draft and review a document.' };
+                } else if (stage === 'reuse') {
+                    const input = JSON.parse(request.messages[1].content);
+                    assert.ok(input.implementations.some(item => item.template.path === input.template.path));
+                    assert.ok(request.messages[0].content.includes('Differences only in language, SDK, protocol'));
+                    assert.ok(request.messages[0].content.includes('sharing a protocol alone is not evidence'));
+                    if (scenario.reuseFailure) return new Response('Reuse review unavailable', { status: 400 });
+                    content = scenario.reuseDecision ?? { candidateReviews: Object.fromEntries(input.candidates.map(card => [card.id, {
+                        sameTask: scenario.sameTask ?? true,
+                        reason: scenario.sameTask === false ? 'Different task despite the same Pattern.' : 'Same task through a different SDK.',
+                        evidence: [input.template.path, card.templatePaths[0]].map(path => ({
+                            path, quote: 'Draft and review a document with the writing workflow.',
+                        })),
+                    }])) };
                 } else if (stage === 'details') {
                     const input = JSON.parse(request.messages[1].content);
                     assert.deepEqual(input.implementations.map(item => item.template.path), input.card.templatePaths);
                     assert.ok(input.implementations.every(item => item.readme.includes('writing workflow')));
+                    assert.deepEqual(input.requirementsFormat, {
+                        valueCount: input.card.details.requirements.length,
+                        wordCount: input.card.details.requirements.join(' ').trim().split(/\\s+/).length,
+                    });
+                    assert.ok(request.messages[0].content.includes('requiresModel=false may use Copilot credentials'));
+                    assert.ok(request.messages[0].content.includes('ONE value and FOUR words'));
+                    assert.ok(request.messages[0].content.includes('test every claim against EVERY final implementation'));
+                    assert.ok(request.messages[0].content.includes('ONE project for the selected implementation'));
                     if (scenario.reviewFailure) return new Response('Review unavailable', { status: 400 });
-                    content = scenario.detailsDecision ?? { detailsPatch: {}, reason: 'All final implementations remain covered.' };
+                    content = scenario.detailsDecision
+                        ? { ...reviewedDetails(input.card, scenario.detailsDecision.detailsPatch), ...scenario.detailsDecision }
+                        : reviewedDetails(input.card);
                 } else {
                     const input = JSON.parse(request.messages[1].content);
                     assert.ok(addedPaths.includes(input.template.path));
@@ -560,6 +658,68 @@ test('incremental CLI applies a sparse Details patch after grouping and is idemp
     assert.match(repeated.stdout, /AI_REQUESTS=\[\]/);
     assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
 });
+
+test('incremental CLI preserves valid comma-separated Requirements with mixed model configuration flags', context => {
+    const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+    const cardsPath = join(directory, 'sample-cards.json');
+    source.templates[0].requiresModel = false;
+    definitions.cards[0].details.requirements = ['Model access, research client'];
+    writeFileSync(outputPath, JSON.stringify(source));
+    writeFileSync(cardsPath, JSON.stringify(definitions));
+    const result = runIncremental(root, source, [source.templates[0].path, `${source.templates[1].path}-new`]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(readFileSync(cardsPath, 'utf8')).cards[0].details.requirements, ['Model access, research client']);
+});
+
+test('incremental CLI rejects fabricated Details evidence without changing either file', context => {
+    const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+    const cardsPath = join(directory, 'sample-cards.json');
+    const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+    const decision = reviewedDetails(definitions.cards[0]);
+    decision.fieldReviews.whatItDoes.evidence = [{ path: source.templates[0].path, quote: 'Supports two approvals and an offline simulator.' }];
+    const result = runIncremental(root, source, [source.templates[0].path, `${source.templates[1].path}-new`], { detailsDecision: decision });
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, /Unverified README quote/);
+    assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+});
+
+for (const sameTask of [true, false]) {
+    test(`incremental CLI independently reviews new-card reuse with sameTask=${sameTask}`, context => {
+        const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+        const newPath = 'samples/python/hosted-agents/langgraph/workflow';
+        const result = runIncremental(root, source, [...source.templates.map(template => template.path), newPath], {
+            sameTask,
+            decision: { card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'Proposed another card for a new SDK.' },
+        });
+        assert.equal(result.status, 0, result.stderr);
+        const output = JSON.parse(readFileSync(outputPath, 'utf8'));
+        const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
+        assertSplitPair(output, cards);
+        assert.deepEqual(cards.cards.map(card => card.id), sameTask ? ['writing-workflow'] : ['writing-workflow', 'proposed-new-card']);
+        assert.equal(cards.cards.find(card => card.templatePaths.includes(newPath)).id, sameTask ? 'writing-workflow' : 'proposed-new-card');
+        const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+        assert.deepEqual(requests.map(request => request.stage), sameTask ? ['metadata', 'placement', 'reuse', 'details'] : ['metadata', 'placement', 'reuse']);
+    });
+}
+
+for (const scenario of [
+    { reuseFailure: true },
+    { reuseDecision: { candidateReviews: {} } },
+    { reuseDecision: { candidateReviews: { 'writing-workflow': { sameTask: 'false', reason: 'Invalid boolean', evidence: [] } } } },
+    { reuseDecision: { candidateReviews: { 'writing-workflow': { sameTask: false, reason: 'No evidence', evidence: [] } } } },
+    { reuseDecision: { candidateReviews: { 'writing-workflow': { sameTask: false, reason: 'Invented distinction', evidence: [{ path: 'samples/unrelated', quote: 'Invented' }] } } } },
+]) {
+    test(`incremental CLI rejects incomplete new-card review ${JSON.stringify(scenario)}`, context => {
+        const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+        const cardsPath = join(directory, 'sample-cards.json');
+        const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+        const result = runIncremental(root, source, [...source.templates.map(template => template.path), 'samples/python/hosted-agents/langgraph/workflow'], {
+            decision: { card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'New SDK.' }, ...scenario,
+        });
+        assert.equal(result.status, 1, result.stderr);
+        assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+    });
+}
 
 for (const scenario of [
     { reviewFailure: true }, { missingExistingReadme: true },
