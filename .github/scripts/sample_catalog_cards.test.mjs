@@ -54,6 +54,18 @@ function fixture() {
     return { source, definitions };
 }
 
+function reviewedDetails(card, detailsPatch = {}, reason = 'Reviewed every final implementation.') {
+    return {
+        detailsPatch,
+        reason,
+        fieldReviews: Object.fromEntries(Object.keys(card.details).map(field => [field, {
+            action: Object.hasOwn(detailsPatch, field) ? 'change' : 'keep',
+            reason: Object.hasOwn(detailsPatch, field) ? 'The new implementation needs this factual qualification.' : 'The existing claim covers the final implementations.',
+            evidence: [{ path: card.templatePaths.at(-1), quote: 'Draft and review a document with the writing workflow.' }],
+        }])),
+    };
+}
+
 test('builds a self-contained catalog without mutating source or curated content', () => {
     const { source, definitions } = fixture();
     const before = structuredClone({ source, definitions });
@@ -106,14 +118,10 @@ for (const [name, mutate, message] of invalidDefinitions) {
     });
 }
 
-function assertSplitPair(catalog, definitions) {
-    assert.deepEqual(Object.keys(catalog).sort(), ['repo', 'commitSha', 'generatedAt', 'dimensions', 'templateSelection', 'templates'].sort());
-    assert.deepEqual(Object.keys(definitions).sort(), ['sourceCommitSha', 'patterns', 'cards'].sort());
-    const combined = buildCatalogWithCards(catalog, definitions);
-    assert.deepEqual(combined.cards, definitions.cards);
-    assert.deepEqual(combined.patterns, definitions.patterns);
-    const { cards, patterns, ...flat } = combined;
-    assert.deepEqual(flat, catalog);
+function assertSnapshot(catalog) {
+    assert.deepEqual(Object.keys(catalog).sort(), ['repo', 'commitSha', 'generatedAt', 'dimensions', 'templateSelection', 'templates', 'patterns', 'cards'].sort());
+    const combined = buildCatalogWithCards(catalog, { sourceCommitSha: catalog.commitSha, patterns: catalog.patterns, cards: catalog.cards });
+    assert.deepEqual(combined, catalog);
     return combined;
 }
 
@@ -121,21 +129,21 @@ test('checked-in catalog and cards have separate responsibilities and form one r
     const directory = new URL('../../samples/hosted-agent/', import.meta.url);
     const load = name => JSON.parse(readFileSync(new URL(name, directory), 'utf8').replace(/^\uFEFF/, ''));
     const source = load('sample-catalog.json');
-    const definitions = load('sample-cards.json');
+    const definitions = { sourceCommitSha: source.commitSha, patterns: source.patterns, cards: source.cards };
 
     assert.equal(definitions.sourceCommitSha, source.commitSha);
     const output = buildCatalogWithCards(source, definitions);
     for (const field of ['repo', 'commitSha', 'generatedAt', 'dimensions', 'templateSelection', 'templates']) {
         assert.deepEqual(output[field], source[field], `Legacy field changed: ${field}`);
     }
-    assertSplitPair(source, definitions);
+    assertSnapshot(source);
 });
 
 test('consolidated snapshot resolves every valid card selection', () => {
     const directory = new URL('../../samples/hosted-agent/', import.meta.url);
     const load = name => JSON.parse(readFileSync(new URL(name, directory), 'utf8').replace(/^\uFEFF/, ''));
     const source = load('sample-catalog.json');
-    const output = buildCatalogWithCards(source, load('sample-cards.json'));
+    const output = assertSnapshot(source);
     assert.equal(output.commitSha, source.commitSha);
     assert.equal(output.templates.length, source.templates.length);
 
@@ -248,6 +256,33 @@ test('incremental reconciliation rejects edits to surviving templates', async ()
         /Existing template changed/);
 });
 
+test('new-card review reuses a same-task protocol variant created earlier in the run', async () => {
+    const { source: previous, definitions } = fixture();
+    const additions = ['invocations', 'responses'].map(protocol => ({
+        ...previous.templates[0], framework: 'langgraph', protocol,
+        path: `samples/python/hosted-agents/langgraph/${protocol}/custom-host`,
+    }));
+    const source = { ...previous, templates: [...previous.templates, ...additions] };
+    let reviews = 0;
+    const chooseCard = ({ template }) => ({
+        card: { ...definitions.cards[0], id: `location-aware-${template.protocol}`, title: 'Location-aware host', categoryId: 'other-sdks-adapters' },
+        reason: 'Proposed a protocol-specific card.',
+    });
+    const result = await reconcileCardDefinitions(previous, source, definitions, chooseCard, ({ template, candidates }) => {
+        reviews++;
+        assert.deepEqual(candidates.map(card => card.id), ['location-aware-invocations']);
+        return { candidateReviews: { [candidates[0].id]: {
+            sameTask: true, reason: 'Same location-aware custom host; only protocol differs.',
+            evidence: [{ path: template.path, quote: 'Location-aware host' }, { path: candidates[0].templatePaths[0], quote: 'Location-aware host' }],
+        } } };
+    });
+    assert.equal(reviews, 1);
+    assert.deepEqual(result.cards.map(card => card.id), ['writing-workflow', 'location-aware-invocations']);
+    assert.deepEqual(result.cards[1].templatePaths, additions.map(template => template.path));
+    assert.deepEqual(definitions.cards[0].templatePaths, previous.templates.map(template => template.path).reverse());
+    await assert.rejects(reconcileCardDefinitions(previous, source, definitions, chooseCard), /reuse review required/);
+});
+
 test('incremental reconciliation allocates unique new IDs without reusing retired or published IDs', async () => {
     const { source: previous, definitions } = fixture();
     const published = definitions.cards[0];
@@ -282,7 +317,7 @@ test('Details review patches only changed cards once and preserves their identit
     const calls = [];
     const result = await reviewChangedCardDetails(definitions, next, reconciled, async input => {
         calls.push(input);
-        return { detailsPatch: { whatItGenerates: 'A writing workflow for the selected SDK.' }, reason: 'Add the new SDK variant without changing the task.' };
+        return reviewedDetails(input.card, { whatItGenerates: 'A writing workflow for the selected SDK.' });
     });
     assert.equal(calls.length, 1);
     assert.deepEqual(calls[0].addedPaths, [added.path]);
@@ -306,13 +341,46 @@ test('card protocol distinguishes implementations and Details review cannot weak
     await assert.rejects(reviewChangedCardDetails(definitions, conflicting, definitions, () => assert.fail('Reject before LLM')), /Ambiguous selection/);
 });
 
+test('Details review requires an explicit audit of every field before accepting a patch', async () => {
+    const { source, definitions } = fixture();
+    const previous = structuredClone(definitions);
+    previous.cards[0].templatePaths.pop();
+    const before = structuredClone(definitions);
+    await assert.rejects(reviewChangedCardDetails(previous, source, definitions, () => ({
+        detailsPatch: { whatItGenerates: 'Source for the selected implementation.' },
+        reason: 'Only checked the generated files.',
+    })), /fieldReviews/);
+    assert.deepEqual(definitions, before);
+});
+
+for (const [name, mutate, message] of [
+    ['omitted field', decision => { delete decision.fieldReviews.capabilities; }, /cover every Details field/],
+    ['unknown field', decision => { decision.fieldReviews.title = decision.fieldReviews.summary; }, /cover every Details field/],
+    ['unpatched claim', decision => { decision.fieldReviews.whatItDoes.action = 'change'; }, /review and patch disagree/],
+    ['unreviewed patch', decision => { decision.detailsPatch.whatItDoes = 'Changed without a matching audit.'; }, /review and patch disagree/],
+    ['empty evidence', decision => { decision.fieldReviews.summary.evidence = []; }, /requires README evidence/],
+    ['unrelated evidence', decision => { decision.fieldReviews.summary.evidence[0].path = 'samples/unrelated'; }, /final member/],
+    ['empty quote', decision => { decision.fieldReviews.summary.evidence[0].quote = ''; }, /quote required/],
+]) {
+    test(`Details audit rejects ${name} without changing definitions`, async () => {
+        const { source, definitions } = fixture();
+        const previous = structuredClone(definitions);
+        previous.cards[0].templatePaths.pop();
+        const before = structuredClone(definitions);
+        const decision = reviewedDetails(definitions.cards[0]);
+        mutate(decision);
+        await assert.rejects(reviewChangedCardDetails(previous, source, definitions, () => decision), message);
+        assert.deepEqual(definitions, before);
+    });
+}
+
 test('Details review skips new singletons but reviews final multi-variant new cards once', async () => {
     const { source, definitions } = fixture();
     const previous = { ...definitions, cards: [] };
     const calls = [];
     await reviewChangedCardDetails(previous, source, definitions, input => {
         calls.push(input);
-        return { detailsPatch: {}, reason: 'Both variants covered' };
+        return reviewedDetails(input.card);
     });
     assert.equal(calls.length, 1);
     assert.deepEqual(calls[0].addedPaths, definitions.cards[0].templatePaths);
@@ -324,10 +392,10 @@ test('Details review permits no-op decisions and reviews surviving cards after d
     const { source, definitions } = fixture();
     const next = { ...source, templates: [source.templates[0]] };
     const reconciled = await reconcileCardDefinitions(source, next, definitions, () => assert.fail('No additions'));
-    const result = await reviewChangedCardDetails(definitions, next, reconciled, async ({ addedPaths, removedPaths }) => {
+    const result = await reviewChangedCardDetails(definitions, next, reconciled, async ({ card, addedPaths, removedPaths }) => {
         assert.deepEqual(addedPaths, []);
         assert.deepEqual(removedPaths, [source.templates[1].path]);
-        return { detailsPatch: {}, reason: 'Existing wording covers the remaining implementation.' };
+        return reviewedDetails(card);
     });
     assert.deepEqual(result, reconciled);
 });
@@ -347,7 +415,8 @@ for (const [name, decision] of [
         const previous = structuredClone(definitions);
         previous.cards[0].templatePaths.pop();
         const before = structuredClone(definitions);
-        await assert.rejects(reviewChangedCardDetails(previous, source, definitions, () => decision));
+        const response = decision ? { fieldReviews: reviewedDetails(definitions.cards[0], decision.detailsPatch).fieldReviews, ...decision } : decision;
+        await assert.rejects(reviewChangedCardDetails(previous, source, definitions, () => response));
         assert.deepEqual(definitions, before);
     });
 }
@@ -359,9 +428,9 @@ function temporaryFixture(context) {
     mkdirSync(directory, { recursive: true });
     const input = fixture();
     const outputPath = join(directory, 'sample-catalog.json');
-    writeFileSync(outputPath, JSON.stringify(input.source));
-    writeFileSync(join(directory, 'sample-cards.json'), JSON.stringify(input.definitions));
-    return { ...input, root, directory, outputPath };
+    const source = buildCatalogWithCards(input.source, input.definitions);
+    writeFileSync(outputPath, JSON.stringify(source));
+    return { ...input, source, root, directory, outputPath };
 }
 
 function runGenerator(root, argument) {
@@ -379,6 +448,7 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
     const addedPaths = discoveredPaths.filter(templatePath => !previous.templates.some(template => template.path === templatePath));
     const code = `
         import assert from 'node:assert/strict';
+        const reviewedDetails = ${reviewedDetails.toString()};
         const scenario = ${JSON.stringify(scenario)};
         const addedPaths = ${JSON.stringify(addedPaths)};
         const sourceRequests = [];
@@ -391,7 +461,8 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
             if (url.startsWith('https://catalog-ai.invalid/')) {
                 const request = JSON.parse(options.body);
                 const stage = request.messages[0].content.startsWith('You generate') ? 'metadata'
-                    : request.messages[0].content.startsWith('You review Details') ? 'details' : 'placement';
+                    : request.messages[0].content.startsWith('You review Details') ? 'details'
+                    : request.messages[0].content.startsWith('You review a proposed') ? 'reuse' : 'placement';
                 aiRequests.push({ stage, budget: request.max_completion_tokens, reasoningEffort: request.reasoning_effort });
                 if (scenario.aiFailure) return new Response('AI unavailable', { status: 400 });
                 if (scenario.emptyFinish) return Response.json({ choices: [{ finish_reason: scenario.emptyFinish, message: { content: '' } }] });
@@ -404,17 +475,47 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                 let content;
                 if (request.messages[0].content.startsWith('You generate')) {
                     content = { displayName: 'Generated Workflow', description: 'Draft and review a document.' };
+                } else if (stage === 'reuse') {
+                    const input = JSON.parse(request.messages[1].content);
+                    assert.ok(input.implementations.some(item => item.template.path === input.template.path));
+                    assert.ok(request.messages[0].content.includes('Differences only in language, SDK, protocol'));
+                    assert.ok(request.messages[0].content.includes('sharing a protocol alone is not evidence'));
+                    if (scenario.reuseFailure) return new Response('Reuse review unavailable', { status: 400 });
+                    content = scenario.reuseDecision ?? { candidateReviews: Object.fromEntries(input.candidates.map(card => [card.id, {
+                        sameTask: scenario.sameTask ?? true,
+                        reason: scenario.sameTask === false ? 'Different task despite the same Pattern.' : 'Same task through a different SDK.',
+                        evidence: [input.template.path, card.templatePaths[0]].map(path => ({
+                            path, excerptId: 'p1',
+                        })),
+                    }])) };
                 } else if (stage === 'details') {
                     const input = JSON.parse(request.messages[1].content);
                     assert.deepEqual(input.implementations.map(item => item.template.path), input.card.templatePaths);
-                    assert.ok(input.implementations.every(item => item.readme.includes('writing workflow')));
+                    assert.ok(input.implementations.every(item => item.readmeExcerpts.some(excerpt => excerpt.text.includes('writing workflow'))));
+                    assert.deepEqual(input.requirementsFormat, {
+                        valueCount: input.card.details.requirements.length,
+                        wordCount: input.card.details.requirements.join(' ').trim().split(/\\s+/).length,
+                    });
+                    assert.ok(request.messages[0].content.includes('requiresModel=false may use Copilot credentials'));
+                    assert.ok(request.messages[0].content.includes('ONE value and FOUR words'));
+                    assert.ok(request.messages[0].content.includes('test every claim against EVERY final implementation'));
+                    assert.ok(request.messages[0].content.includes('ONE project for the selected implementation'));
                     if (scenario.reviewFailure) return new Response('Review unavailable', { status: 400 });
-                    content = scenario.detailsDecision ?? { detailsPatch: {}, reason: 'All final implementations remain covered.' };
+                    const defaultDecision = reviewedDetails(input.card, scenario.detailsDecision?.detailsPatch);
+                    for (const review of Object.values(defaultDecision.fieldReviews)) {
+                        review.evidence = review.evidence.map(({ path }) => ({ path, excerptId: 'p1' }));
+                    }
+                    content = { ...defaultDecision, ...scenario.detailsDecision };
                 } else {
                     const input = JSON.parse(request.messages[1].content);
                     assert.ok(addedPaths.includes(input.template.path));
                     if (scenario.candidates) assert.deepEqual(input.candidates.map(card => card.id), scenario.candidates);
                     content = scenario.decision ?? { cardId: input.candidates[0]?.id, reason: 'Same task and unchanged Details apply.' };
+                }
+                if (Object.hasOwn(scenario, 'excerptId') && (stage === 'details' || stage === 'reuse')) {
+                    for (const review of Object.values(content.fieldReviews ?? content.candidateReviews)) {
+                        review.evidence = review.evidence.map(({ path }) => ({ path, excerptId: scenario.excerptId }));
+                    }
                 }
                 return Response.json({ choices: [{ message: { content: JSON.stringify(content) } }] });
             }
@@ -424,7 +525,7 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
             if (url.endsWith('/README.md')) {
                 const existing = !addedPaths.some(templatePath => url.includes('/' + templatePath + '/'));
                 return scenario.missingReadme || (existing && scenario.missingExistingReadme)
-                    ? new Response('', { status: 404 }) : new Response('Draft and review a document with the writing workflow.');
+                    ? new Response('', { status: 404 }) : new Response(scenario.readme ?? 'Draft and review a document with the writing workflow.');
             }
             assert.ok(addedPaths.some(templatePath => url.includes('/' + templatePath + '/')), 'Do not fetch manifests for existing samples');
             if (url.endsWith('/azure.yaml')) return new Response('services:\\n  agent:\\n    protocols:\\n      - protocol: responses\\n    environmentVariables:\\n      - name: AZURE_AI_MODEL_DEPLOYMENT_NAME\\n');
@@ -445,7 +546,7 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
 
 for (const stage of ['metadata', 'placement']) {
     test(`incremental CLI retries token-exhausted ${stage} with a larger budget`, context => {
-        const { root, source, outputPath, directory } = temporaryFixture(context);
+        const { root, source, outputPath } = temporaryFixture(context);
         const paths = [source.templates[0].path, `${source.templates[1].path}-new`];
         const result = runIncremental(root, source, paths, { lengthStage: stage, recoverAt: 4000, maxAttempts: 5 });
         assert.equal(result.status, 0, result.stderr);
@@ -453,11 +554,11 @@ for (const stage of ['metadata', 'placement']) {
         assert.deepEqual(requests.filter(request => request.stage === stage).map(request => request.budget), [2000, 4000]);
         assert.ok(requests.every(request => request.reasoningEffort === undefined));
         const output = JSON.parse(readFileSync(outputPath, 'utf8'));
-        const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
+
         assert.deepEqual(output.templates[0], source.templates[0]);
         assert.deepEqual(output.templates.map(template => template.path), paths);
         assert.equal(output.templates[1].displayName, 'Generated Workflow');
-        assertSplitPair(output, cards);
+        assertSnapshot(output);
     });
 }
 
@@ -485,33 +586,30 @@ for (const [name, scenario, budgets] of [
     ['content filter', { emptyFinish: 'content_filter', maxAttempts: 5 }, [2000]],
     ['non-retryable API error', { aiFailure: true, maxAttempts: 5 }, [2000]],
 ]) {
-    test(`incremental CLI stops at ${name} without changing either catalog file`, context => {
+    test(`incremental CLI stops at ${name} without changing the catalog`, context => {
         const { root, source, outputPath, directory } = temporaryFixture(context);
-        const cardsPath = join(directory, 'sample-cards.json');
-        const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+        const before = readFileSync(outputPath);
         const paths = [source.templates[0].path, `${source.templates[1].path}-new`];
         const result = runIncremental(root, source, paths, scenario);
         assert.equal(result.status, 1, result.stderr);
         const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
         assert.deepEqual(requests.filter(request => request.stage === (scenario.lengthStage ?? 'metadata')).map(request => request.budget), budgets);
         if (scenario.lengthStage) assert.match(result.stderr, /token growth or attempt limit reached/);
-        assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+        assert.deepEqual(readFileSync(outputPath), before);
         assert.ok(!readdirSync(directory).some(file => file.endsWith('.tmp')));
     });
 }
 
-test('incremental CLI leaves both files untouched when only the upstream SHA changes', context => {
-    const { root, source, outputPath, directory } = temporaryFixture(context);
-    const cardsPath = join(directory, 'sample-cards.json');
-    const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+test('incremental CLI leaves the catalog untouched when only the upstream SHA changes', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
     const result = runIncremental(root, source, source.templates.map(template => template.path), { noAI: true });
     assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+    assert.deepEqual(readFileSync(outputPath), before);
 });
 
 test('incremental CLI preserves template metadata and reviews only changed card membership', context => {
-    const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
-    const cardsPath = join(directory, 'sample-cards.json');
+    const { root, source, definitions, outputPath } = temporaryFixture(context);
     const paths = [source.templates[0].path, `${source.templates[1].path}-new`];
     source.dimensions.language.title = 'Curated language title';
     source.templates[0].requiresModel = false;
@@ -519,9 +617,8 @@ test('incremental CLI preserves template metadata and reviews only changed card 
     const result = runIncremental(root, source, paths, { candidates: ['writing-workflow'] });
     assert.equal(result.status, 0, result.stderr);
     const output = JSON.parse(readFileSync(outputPath, 'utf8'));
-    const cards = JSON.parse(readFileSync(cardsPath, 'utf8'));
+
     assert.equal(output.commitSha, 'b'.repeat(40));
-    assert.equal(cards.sourceCommitSha, output.commitSha);
     assert.deepEqual(output.templates[0], source.templates[0]);
     assert.deepEqual(output.templates.map(template => template.path), paths);
     assert.equal(output.templates[1].displayName, 'Generated Workflow');
@@ -530,17 +627,16 @@ test('incremental CLI preserves template metadata and reviews only changed card 
             ...dimension, options: dimension.options.filter(option => output.templates.some(template => template[id] === option.id)),
         });
     }
-    assert.deepEqual(cards.cards[0], { ...definitions.cards[0], templatePaths: paths });
-    assertSplitPair(output, cards);
-    const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+    assert.deepEqual(output.cards[0], { ...definitions.cards[0], templatePaths: paths });
+    assertSnapshot(output);
+    const before = readFileSync(outputPath);
     const repeated = runIncremental(root, output, paths, { noAI: true });
     assert.equal(repeated.status, 0, repeated.stderr);
-    assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+    assert.deepEqual(readFileSync(outputPath), before);
 });
 
 test('incremental CLI applies a sparse Details patch after grouping and is idempotent on the next run', context => {
-    const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
-    const cardsPath = join(directory, 'sample-cards.json');
+    const { root, source, definitions, outputPath } = temporaryFixture(context);
     const paths = [source.templates[0].path, `${source.templates[1].path}-new`];
     const detailsPatch = { whatItGenerates: 'A writing project with variant-specific hosting.' };
     const result = runIncremental(root, source, paths, { detailsDecision: { detailsPatch, reason: 'Clarify hosting of the new member.' } });
@@ -548,42 +644,144 @@ test('incremental CLI applies a sparse Details patch after grouping and is idemp
     const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
     assert.deepEqual(requests.map(request => request.stage), ['metadata', 'placement', 'details']);
     const output = JSON.parse(readFileSync(outputPath, 'utf8'));
-    const cards = JSON.parse(readFileSync(cardsPath, 'utf8'));
-    assert.deepEqual(cards.cards[0].details, { ...definitions.cards[0].details, ...detailsPatch });
-    assert.equal(cards.cards[0].id, definitions.cards[0].id);
-    assert.equal(cards.cards[0].title, definitions.cards[0].title);
-    assert.equal(cards.cards[0].categoryId, definitions.cards[0].categoryId);
-    assertSplitPair(output, cards);
-    const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+
+    assert.deepEqual(output.cards[0].details, { ...definitions.cards[0].details, ...detailsPatch });
+    assert.equal(output.cards[0].id, definitions.cards[0].id);
+    assert.equal(output.cards[0].title, definitions.cards[0].title);
+    assert.equal(output.cards[0].categoryId, definitions.cards[0].categoryId);
+    assertSnapshot(output);
+    const before = readFileSync(outputPath);
     const repeated = runIncremental(root, output, paths, { noAI: true });
     assert.equal(repeated.status, 0, repeated.stderr);
     assert.match(repeated.stdout, /AI_REQUESTS=\[\]/);
-    assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+    assert.deepEqual(readFileSync(outputPath), before);
 });
+
+test('incremental CLI preserves valid comma-separated Requirements with mixed model configuration flags', context => {
+    const { root, source, definitions, outputPath } = temporaryFixture(context);
+    source.templates[0].requiresModel = false;
+    definitions.cards[0].details.requirements = ['Model access, research client'];
+    writeFileSync(outputPath, JSON.stringify(buildCatalogWithCards(source, definitions)));
+    const result = runIncremental(root, source, [source.templates[0].path, `${source.templates[1].path}-new`]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(readFileSync(outputPath, 'utf8')).cards[0].details.requirements, ['Model access, research client']);
+});
+
+test('incremental CLI rejects fabricated Details evidence without changing the catalog', context => {
+    const { root, source, definitions, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
+    const decision = reviewedDetails(definitions.cards[0]);
+    decision.fieldReviews.whatItDoes.evidence = [{ path: source.templates[0].path, quote: 'Supports two approvals and an offline simulator.' }];
+    const result = runIncremental(root, source, [source.templates[0].path, `${source.templates[1].path}-new`], { detailsDecision: decision });
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, /Unverified README excerpt/);
+    assert.deepEqual(readFileSync(outputPath), before);
+});
+
+test('incremental CLI resolves README excerpt IDs to source quotes instead of asking AI to copy text', context => {
+    const { root, source, definitions, outputPath } = temporaryFixture(context);
+    const newPath = 'samples/python/hosted-agents/langgraph/workflow';
+    const result = runIncremental(root, source, [...source.templates.map(template => template.path), newPath], {
+        excerptId: 'p1',
+        decision: { card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'New SDK.' },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /"quote":"Draft and review a document with the writing workflow\."/);
+    const output = JSON.parse(readFileSync(outputPath, 'utf8'));
+
+    assertSnapshot(output);
+    assert.equal(output.cards.length, 1);
+    assert.ok(output.cards[0].templatePaths.includes(newPath));
+});
+
+test('incremental CLI preserves Markdown and line endings in resolved evidence', context => {
+    const { root, source } = temporaryFixture(context);
+    const paragraph = 'The **writing workflow** requires `Model access`.\r\nIt keeps a durable checkpoint.';
+    const result = runIncremental(root, source, [source.templates[0].path], {
+        excerptId: 'p2', readme: `# Sample\r\n\r\n${paragraph}\r\n\r\n## Run`,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const log = result.stdout.split(/\r?\n/).find(line => line.startsWith('Card Details review: '));
+    const review = JSON.parse(log.slice('Card Details review: '.length));
+    assert.deepEqual(review.fieldReviews.summary.evidence, [{ path: source.templates[0].path, excerptId: 'p2', quote: paragraph }]);
+});
+
+for (const stage of ['reuse', 'details']) {
+    for (const excerptId of ['p999', 'p0', '', 1, null]) {
+        test(`incremental CLI rejects invalid ${stage} excerpt ${JSON.stringify(excerptId)} before writing`, context => {
+            const { root, source, definitions, outputPath } = temporaryFixture(context);
+            const before = readFileSync(outputPath);
+            const scenario = { excerptId };
+            if (stage === 'reuse') scenario.decision = {
+                card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'New SDK.',
+            };
+            const result = runIncremental(root, source, [...source.templates.map(template => template.path), 'samples/python/hosted-agents/langgraph/workflow'], scenario);
+            assert.equal(result.status, 1, result.stderr);
+            assert.match(result.stderr, /Unverified README excerpt/);
+            assert.ok(result.stderr.includes(stage === 'reuse' ? 'card reuse review' : 'Details review'));
+            assert.deepEqual(readFileSync(outputPath), before);
+        });
+    }
+}
+
+for (const sameTask of [true, false]) {
+    test(`incremental CLI independently reviews new-card reuse with sameTask=${sameTask}`, context => {
+        const { root, source, definitions, outputPath } = temporaryFixture(context);
+        const newPath = 'samples/python/hosted-agents/langgraph/workflow';
+        const result = runIncremental(root, source, [...source.templates.map(template => template.path), newPath], {
+            sameTask,
+            decision: { card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'Proposed another card for a new SDK.' },
+        });
+        assert.equal(result.status, 0, result.stderr);
+        const output = JSON.parse(readFileSync(outputPath, 'utf8'));
+
+        assertSnapshot(output);
+        assert.deepEqual(output.cards.map(card => card.id), sameTask ? ['writing-workflow'] : ['writing-workflow', 'proposed-new-card']);
+        assert.equal(output.cards.find(card => card.templatePaths.includes(newPath)).id, sameTask ? 'writing-workflow' : 'proposed-new-card');
+        const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+        assert.deepEqual(requests.map(request => request.stage), sameTask ? ['metadata', 'placement', 'reuse', 'details'] : ['metadata', 'placement', 'reuse']);
+    });
+}
+
+for (const scenario of [
+    { reuseFailure: true },
+    { reuseDecision: { candidateReviews: {} } },
+    { reuseDecision: { candidateReviews: { 'writing-workflow': { sameTask: 'false', reason: 'Invalid boolean', evidence: [] } } } },
+    { reuseDecision: { candidateReviews: { 'writing-workflow': { sameTask: false, reason: 'No evidence', evidence: [] } } } },
+    { reuseDecision: { candidateReviews: { 'writing-workflow': { sameTask: false, reason: 'Invented distinction', evidence: [{ path: 'samples/unrelated', quote: 'Invented' }] } } } },
+]) {
+    test(`incremental CLI rejects incomplete new-card review ${JSON.stringify(scenario)}`, context => {
+        const { root, source, definitions, outputPath } = temporaryFixture(context);
+        const before = readFileSync(outputPath);
+        const result = runIncremental(root, source, [...source.templates.map(template => template.path), 'samples/python/hosted-agents/langgraph/workflow'], {
+            decision: { card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'New SDK.' }, ...scenario,
+        });
+        assert.equal(result.status, 1, result.stderr);
+        assert.deepEqual(readFileSync(outputPath), before);
+    });
+}
 
 for (const scenario of [
     { reviewFailure: true }, { missingExistingReadme: true },
     { detailsDecision: { incompatible: true, reason: 'Different task' } },
     { detailsDecision: { detailsPatch: { title: 'Not allowed' }, reason: 'Rename' } },
 ]) {
-    test(`incremental CLI keeps both files unchanged on Details review failure ${JSON.stringify(scenario)}`, context => {
-        const { root, source, outputPath, directory } = temporaryFixture(context);
-        const cardsPath = join(directory, 'sample-cards.json');
-        const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+    test(`incremental CLI keeps the catalog unchanged on Details review failure ${JSON.stringify(scenario)}`, context => {
+        const { root, source, outputPath } = temporaryFixture(context);
+        const before = readFileSync(outputPath);
         const result = runIncremental(root, source, [source.templates[0].path, `${source.templates[1].path}-new`], scenario);
         assert.equal(result.status, 1, result.stderr);
-        assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+        assert.deepEqual(readFileSync(outputPath), before);
     });
 }
 
 test('incremental CLI refuses deletion-only publication without required Details review', context => {
-    const { root, source, outputPath, directory } = temporaryFixture(context);
-    const cardsPath = join(directory, 'sample-cards.json');
-    const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+    const { root, source, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
     const result = runIncremental(root, source, [source.templates[0].path], { noAI: true });
     assert.equal(result.status, 1, result.stderr);
     assert.match(result.stderr, /Changed card membership requires AI Details review/);
-    assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+    assert.deepEqual(readFileSync(outputPath), before);
 });
 
 test('incremental CLI scans the configured repository for tree, manifest, and README', context => {
@@ -605,9 +803,8 @@ test('incremental CLI scans the configured repository for tree, manifest, and RE
 });
 
 test('incremental CLI rejects invalid repository URLs before fetching or writing', context => {
-    const { root, source, outputPath, directory } = temporaryFixture(context);
-    const cardsPath = join(directory, 'sample-cards.json');
-    const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+    const { root, source, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
     for (const repositoryUrl of [
         'https://example.com/owner/repo', 'http://github.com/owner/repo',
         'https://user@github.com/owner/repo', 'https://github.com/owner/repo?branch=main',
@@ -617,7 +814,7 @@ test('incremental CLI rejects invalid repository URLs before fetching or writing
         assert.equal(result.status, 1, repositoryUrl);
         assert.match(result.stderr, /SAMPLES_REPO_URL must be an HTTPS GitHub repository URL/);
         assert.match(result.stdout, /SOURCE_REQUESTS=\[\]/);
-        assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+        assert.deepEqual(readFileSync(outputPath), before);
     }
 });
 
@@ -648,54 +845,53 @@ test('incremental CLI applies only new overrides and warns for deleted or unknow
 });
 
 test('incremental CLI creates a new card when the tuple is already occupied', context => {
-    const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+    const { root, source, definitions, outputPath } = temporaryFixture(context);
     const paths = [...source.templates.map(template => template.path), `${source.templates[0].path}-new`];
     const result = runIncremental(root, source, paths, {
         candidates: [], decision: { card: { ...definitions.cards[0], id: 'new-workflow' }, reason: 'Existing tuple is occupied.' },
     });
     assert.equal(result.status, 0, result.stderr);
     const output = JSON.parse(readFileSync(outputPath, 'utf8'));
-    const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
-    assert.equal(cards.cards.length, 2);
-    assert.deepEqual(cards.cards[0], { ...definitions.cards[0], templatePaths: source.templates.map(template => template.path) });
-    assert.deepEqual(cards.cards[1].templatePaths, [paths[2]]);
-    assertSplitPair(output, cards);
+
+    assert.equal(output.cards.length, 2);
+    assert.deepEqual(output.cards[0], { ...definitions.cards[0], templatePaths: source.templates.map(template => template.path) });
+    assert.deepEqual(output.cards[1].templatePaths, [paths[2]]);
+    assertSnapshot(output);
 });
 
 test('incremental CLI reviews surviving cards on deletion-only updates', context => {
-    const { root, source, outputPath, directory } = temporaryFixture(context);
+    const { root, source, outputPath } = temporaryFixture(context);
     const result = runIncremental(root, source, [source.templates[0].path]);
     assert.equal(result.status, 0, result.stderr);
     const output = JSON.parse(readFileSync(outputPath, 'utf8'));
-    const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
+
     assert.deepEqual(output.templates, [source.templates[0]]);
-    assert.deepEqual(cards.cards[0].templatePaths, [source.templates[0].path]);
-    assertSplitPair(output, cards);
+    assert.deepEqual(output.cards[0].templatePaths, [source.templates[0].path]);
+    assertSnapshot(output);
 });
 
 test('incremental CLI writes distinct cards when AI proposes the same occupied ID', context => {
-    const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+    const { root, source, definitions, outputPath } = temporaryFixture(context);
     const newPaths = ['first', 'second'].map(suffix => `${source.templates[0].path}-${suffix}`);
     const result = runIncremental(root, source, [...source.templates.map(template => template.path), ...newPaths], {
         candidates: [], decision: { card: definitions.cards[0], reason: 'Same tuple requires a separate card.' },
     });
     assert.equal(result.status, 0, result.stderr);
     const output = JSON.parse(readFileSync(outputPath, 'utf8'));
-    const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
-    assert.deepEqual(cards.cards.map(card => card.id), ['writing-workflow', 'writing-workflow-2', 'writing-workflow-3']);
-    assert.deepEqual(cards.cards[0], { ...definitions.cards[0], templatePaths: source.templates.map(template => template.path) });
-    assert.deepEqual(cards.cards.slice(1).map(card => card.templatePaths), newPaths.map(templatePath => [templatePath]));
-    assertSplitPair(output, cards);
-    const before = [readFileSync(outputPath), readFileSync(join(directory, 'sample-cards.json'))];
+
+    assert.deepEqual(output.cards.map(card => card.id), ['writing-workflow', 'writing-workflow-2', 'writing-workflow-3']);
+    assert.deepEqual(output.cards[0], { ...definitions.cards[0], templatePaths: source.templates.map(template => template.path) });
+    assert.deepEqual(output.cards.slice(1).map(card => card.templatePaths), newPaths.map(templatePath => [templatePath]));
+    assertSnapshot(output);
+    const before = readFileSync(outputPath);
     const repeated = runIncremental(root, output, output.templates.map(template => template.path), { noAI: true });
     assert.equal(repeated.status, 0, repeated.stderr);
-    assert.deepEqual([readFileSync(outputPath), readFileSync(join(directory, 'sample-cards.json'))], before);
+    assert.deepEqual(readFileSync(outputPath), before);
 });
 
-test('incremental CLI failures leave both files unchanged', context => {
+test('incremental CLI failures leave the catalog unchanged', context => {
     const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
-    const cardsPath = join(directory, 'sample-cards.json');
-    const before = [readFileSync(outputPath), readFileSync(cardsPath)];
+    const before = readFileSync(outputPath);
     const paths = [...source.templates.map(template => template.path), `${source.templates[0].path}-new`];
     for (const scenario of [
         { truncated: true }, { noAI: true }, { aiFailure: true }, { missingReadme: true },
@@ -704,9 +900,23 @@ test('incremental CLI failures leave both files unchanged', context => {
     ]) {
         const result = runIncremental(root, source, paths, scenario);
         assert.equal(result.status, 1, JSON.stringify(scenario));
-        assert.deepEqual([readFileSync(outputPath), readFileSync(cardsPath)], before);
+        assert.deepEqual(readFileSync(outputPath), before);
         assert.ok(!readdirSync(directory).some(name => name.endsWith('.tmp')));
     }
+});
+
+test('writer publishes a complete snapshot in exactly one file', context => {
+    const root = mkdtempSync(join(tmpdir(), 'catalog-single-file-'));
+    context.after(() => rmSync(root, { recursive: true, force: true }));
+    const { source, definitions } = fixture();
+    const outputPath = join(root, 'sample-catalog.json');
+    const expected = buildCatalogWithCards(source, definitions);
+    assert.deepEqual(writeCatalogWithCards(source, definitions, outputPath), expected);
+    assert.deepEqual(JSON.parse(readFileSync(outputPath, 'utf8')), expected);
+    assert.deepEqual(readdirSync(root), ['sample-catalog.json']);
+    const before = readFileSync(outputPath);
+    writeCatalogWithCards({ ...source, generatedAt: '2026-09-23T00:00:00Z' }, definitions, outputPath);
+    assert.deepEqual(readFileSync(outputPath), before);
 });
 
 test('writer rejects invalid cards without changing the existing catalog', context => {
@@ -718,7 +928,7 @@ test('writer rejects invalid cards without changing the existing catalog', conte
     assert.ok(!readdirSync(directory).some(name => name.endsWith('.tmp')));
 });
 
-test('split card document preserves curated card order without embedded catalog cards', async () => {
+test('internal card definitions preserve curated card order', async () => {
     const { source, definitions } = fixture();
     const card = definitions.cards[0];
     definitions.patterns = PATTERNS;
@@ -732,25 +942,24 @@ test('split card document preserves curated card order without embedded catalog 
     assert.deepEqual(buildCatalogWithCards(source, result).cards.map(value => value.id), ['second-language', 'writing-workflow']);
 });
 
-test('split writer isolates Details edits from legacy catalog content and timestamp', context => {
+test('single-file writer updates Details without changing template facts', context => {
     const { source, definitions, outputPath, directory } = temporaryFixture(context);
     writeCatalogWithCards(source, definitions, outputPath);
-    const before = readFileSync(outputPath);
+    const { cards: originalCards, patterns: originalPatterns, generatedAt, ...before } = JSON.parse(readFileSync(outputPath, 'utf8'));
     const revised = structuredClone(definitions);
     revised.cards[0].details.summary = 'Updated card-only description.';
     writeCatalogWithCards({ ...source, generatedAt: '2026-09-22T00:00:00Z' }, revised, outputPath);
-    assert.deepEqual(readFileSync(outputPath), before);
-    const flat = JSON.parse(before);
-    const cards = JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'));
-    assert.deepEqual(Object.keys(flat).sort(), ['repo', 'commitSha', 'generatedAt', 'dimensions', 'templateSelection', 'templates'].sort());
-    assert.deepEqual(cards.patterns, PATTERNS);
-    assert.equal(cards.sourceCommitSha, flat.commitSha);
-    assert.equal(cards.cards[0].details.summary, revised.cards[0].details.summary);
-    assert.deepEqual(buildCatalogWithCards(flat, cards).cards, cards.cards);
+    const { cards, patterns, generatedAt: updatedAt, ...after } = assertSnapshot(JSON.parse(readFileSync(outputPath, 'utf8')));
+    assert.deepEqual(after, before);
+    assert.deepEqual(patterns, originalPatterns);
+    assert.equal(updatedAt, '2026-09-22T00:00:00Z');
+    assert.equal(cards[0].details.summary, revised.cards[0].details.summary);
+    assert.deepEqual(cards[0].templatePaths, originalCards[0].templatePaths);
+    assert.deepEqual(readdirSync(directory), ['sample-catalog.json']);
 });
 
-test('writer changes catalog timestamps only when template data changes', context => {
-    const { source, definitions, outputPath, directory } = temporaryFixture(context);
+test('writer changes catalog timestamps when snapshot data changes', context => {
+    const { source, definitions, outputPath } = temporaryFixture(context);
     const original = writeCatalogWithCards(source, definitions, outputPath);
     for (const change of ['source', 'template', 'card']) {
         writeFileSync(outputPath, JSON.stringify(original));
@@ -767,21 +976,18 @@ test('writer changes catalog timestamps only when template data changes', contex
         }
         const output = writeCatalogWithCards(changedSource, changedDefinitions, outputPath);
         const expected = buildCatalogWithCards(changedSource, changedDefinitions);
-        if (change === 'card') expected.generatedAt = original.generatedAt;
         assert.deepEqual(output, expected, change);
-        assert.deepEqual(assertSplitPair(JSON.parse(readFileSync(outputPath, 'utf8')),
-            JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'))), output, change);
+        assert.deepEqual(assertSnapshot(JSON.parse(readFileSync(outputPath, 'utf8'))), output, change);
     }
 });
 
-test('CLI rebuilds existing snapshot offline into separate template and card files', context => {
+test('CLI rebuilds existing snapshot offline into one file', context => {
     const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
     const expected = buildCatalogWithCards(source, definitions);
     const result = runGenerator(root, '--from-existing');
     assert.equal(result.status, 0, result.stderr || result.error?.message);
-    assert.deepEqual(assertSplitPair(JSON.parse(readFileSync(outputPath, 'utf8')),
-        JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8'))), expected);
-    assert.deepEqual(readdirSync(directory).sort(), ['sample-cards.json', 'sample-catalog.json']);
+    assert.deepEqual(assertSnapshot(JSON.parse(readFileSync(outputPath, 'utf8'))), expected);
+    assert.deepEqual(readdirSync(directory), ['sample-catalog.json']);
     const before = readFileSync(outputPath);
     const second = runGenerator(root, '--from-existing');
     assert.equal(second.status, 0, second.stderr);
@@ -797,14 +1003,14 @@ test('CLI refuses a different upstream commit before fetching or overwriting', c
     assert.deepEqual(readFileSync(outputPath), before);
 });
 
-test('CLI rejects stale definitions and leaves existing snapshot unchanged', context => {
-    const { root, definitions, directory, outputPath } = temporaryFixture(context);
-    definitions.sourceCommitSha = 'b'.repeat(40);
-    writeFileSync(join(directory, 'sample-cards.json'), JSON.stringify(definitions));
+test('CLI rejects invalid embedded cards and leaves existing snapshot unchanged', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    source.cards[0].templatePaths.pop();
+    writeFileSync(outputPath, JSON.stringify(source));
     const before = readFileSync(outputPath);
     const result = runGenerator(root, '--from-existing');
     assert.equal(result.status, 1, result.error?.message);
-    assert.match(result.stderr, /same source commit/);
+    assert.match(result.stderr, /Templates without cards/);
     assert.deepEqual(readFileSync(outputPath), before);
 });
 
@@ -843,8 +1049,8 @@ test('normal scanning writes templates and cards together using pinned source da
     assert.equal(output.commitSha, source.commitSha);
     assert.deepEqual(output.templates.slice().sort((left, right) => left.path.localeCompare(right.path)),
         source.templates.slice().sort((left, right) => left.path.localeCompare(right.path)));
-    assertSplitPair(output, JSON.parse(readFileSync(join(directory, 'sample-cards.json'), 'utf8')));
-    assert.deepEqual(readdirSync(directory).sort(), ['sample-cards.json', 'sample-catalog.json']);
+    assertSnapshot(output);
+    assert.deepEqual(readdirSync(directory).sort(), ['sample-catalog.json']);
     const before = readFileSync(outputPath);
     env.CATALOG_TEST_NOW = '2026-09-18T10:00:00Z';
     const repeated = spawnSync(process.execPath, ['--input-type=module', '-e', code], {

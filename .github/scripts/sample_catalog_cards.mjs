@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 export const PATTERNS = [
@@ -136,7 +136,7 @@ export function buildCatalogWithCards(source, definitions) {
     };
 }
 
-export async function reconcileCardDefinitions(previous, source, definitions, chooseCard) {
+export async function reconcileCardDefinitions(previous, source, definitions, chooseCard, reviewNewCard) {
     buildCatalogWithCards(previous, definitions);
     const byPath = validateSource(source);
     assert.equal(source.repo, previous.repo, 'Incremental sync must use the same source repository');
@@ -175,6 +175,29 @@ export async function reconcileCardDefinitions(previous, source, definitions, ch
             const card = decision.card;
             assert.ok(card && typeof card === 'object', `New card is required for ${template.path}`);
             assert.match(card.id ?? '', /^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Invalid new card ID');
+            const comparable = candidates.filter(candidate => candidate.categoryId === card.categoryId);
+            if (comparable.length) {
+                assert.equal(typeof reviewNewCard, 'function', `New card reuse review required for ${template.path}`);
+                const review = await reviewNewCard({
+                    template: structuredClone(template), card: structuredClone(card), candidates: structuredClone(comparable),
+                });
+                assert.ok(review?.candidateReviews && typeof review.candidateReviews === 'object', 'candidateReviews required');
+                assert.deepEqual(Object.keys(review.candidateReviews).sort(), comparable.map(candidate => candidate.id).sort(), 'Review every compatible candidate');
+                for (const candidate of comparable) {
+                    const assessment = review.candidateReviews[candidate.id];
+                    assert.equal(typeof assessment?.sameTask, 'boolean', 'Candidate sameTask must be boolean');
+                    requireText(assessment.reason, `${candidate.id} reuse reason`);
+                    assert.ok(Array.isArray(assessment.evidence), `${candidate.id} reuse evidence required`);
+                    assert.ok(assessment.evidence.some(item => item.path === template.path), 'Reuse review must cite the new implementation');
+                    assert.ok(assessment.evidence.some(item => candidate.templatePaths.includes(item.path)), 'Reuse review must cite the candidate');
+                }
+                console.log(`Card reuse review: ${JSON.stringify({ templatePath: template.path, ...review })}`);
+                const target = comparable.find(candidate => review.candidateReviews[candidate.id].sameTask);
+                if (target) {
+                    target.templatePaths.push(template.path);
+                    continue;
+                }
+            }
             assert.equal(card.details?.requirements?.length, 1, 'New card Requirements must be one value');
             requireText(card.details.requirements[0], 'New card Requirements');
             assert.ok(card.details.requirements[0].trim().split(/\s+/).length <= 5, 'New card Requirements must total at most five words');
@@ -213,10 +236,24 @@ export async function reviewChangedCardDetails(previous, source, definitions, re
             card: structuredClone(card), previousCard: structuredClone(previousCard), addedPaths, removedPaths,
         });
         assert.ok(decision && typeof decision === 'object' && !Array.isArray(decision), `Missing Details review for ${card.id}`);
-        assert.ok(Object.keys(decision).every(key => ['detailsPatch', 'reason'].includes(key)), `Unexpected Details review property for ${card.id}`);
+        assert.ok(Object.keys(decision).every(key => ['detailsPatch', 'fieldReviews', 'reason'].includes(key)), `Unexpected Details review property for ${card.id}`);
         requireText(decision.reason, `${card.id} Details review reason`);
         const patch = decision.detailsPatch;
         assert.ok(patch && typeof patch === 'object' && !Array.isArray(patch), `Details patch must be an object for ${card.id}`);
+        const reviews = decision.fieldReviews;
+        assert.ok(reviews && typeof reviews === 'object' && !Array.isArray(reviews), `fieldReviews required for ${card.id}`);
+        assert.deepEqual(Object.keys(reviews).sort(), [...fields].sort(), `fieldReviews must cover every Details field for ${card.id}`);
+        for (const field of fields) {
+            const review = reviews[field];
+            const changed = Object.hasOwn(patch, field) && !isDeepStrictEqual(card.details[field], patch[field]);
+            assert.equal(review?.action, changed ? 'change' : 'keep', `${card.id}.${field} review and patch disagree`);
+            requireText(review.reason, `${card.id}.${field} review reason`);
+            assert.ok(Array.isArray(review.evidence) && review.evidence.length > 0, `${card.id}.${field} requires README evidence`);
+            for (const evidence of review.evidence) {
+                assert.ok(card.templatePaths.includes(evidence?.path), `${card.id}.${field} evidence must reference a final member`);
+                assert.ok(typeof evidence.quote === 'string' && evidence.quote.trim(), `${card.id}.${field} evidence quote required`);
+            }
+        }
         const changedFields = [];
         for (const [field, value] of Object.entries(patch)) {
             assert.ok(fields.has(field), `Unknown Details field: ${field}`);
@@ -235,46 +272,32 @@ export async function reviewChangedCardDetails(previous, source, definitions, re
                 changedFields.push(field);
             }
         }
-        console.log(`Card Details review: ${JSON.stringify({ cardId: card.id, addedPaths, removedPaths, changedFields, reason: decision.reason })}`);
+        console.log(`Card Details review: ${JSON.stringify({ cardId: card.id, addedPaths, removedPaths, changedFields, reason: decision.reason, fieldReviews: reviews })}`);
     }
     buildCatalogWithCards(source, result);
     return result;
 }
 
-export function writeCatalogWithCards(source, definitions, outputPath, definitionsPath = join(dirname(outputPath), 'sample-cards.json')) {
+export function writeCatalogWithCards(source, definitions, outputPath) {
     const catalog = buildCatalogWithCards(source, definitions);
-    const { patterns, cards, ...templates } = catalog;
-    const cardDocument = { sourceCommitSha: catalog.commitSha, patterns, cards };
     let previous;
     try {
         previous = JSON.parse(readFileSync(outputPath, 'utf8').replace(/^\uFEFF/, ''));
     } catch (error) {
         if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
     }
-    if (previous) {
-        const previousTemplates = Object.fromEntries(Object.keys(templates).map(key => [key, previous[key]]));
-        if (typeof previousTemplates.generatedAt === 'string' && Number.isFinite(Date.parse(previousTemplates.generatedAt)) &&
-            isDeepStrictEqual({ ...previousTemplates, generatedAt: templates.generatedAt }, templates)) {
-            templates.generatedAt = previousTemplates.generatedAt;
-            catalog.generatedAt = previousTemplates.generatedAt;
-        }
+    if (previous && typeof previous.generatedAt === 'string' && Number.isFinite(Date.parse(previous.generatedAt)) &&
+        isDeepStrictEqual({ ...previous, generatedAt: catalog.generatedAt }, catalog)) {
+        catalog.generatedAt = previous.generatedAt;
+        return catalog;
     }
-    const outputs = [[outputPath, templates], [definitionsPath, cardDocument]].filter(([filePath, content]) => {
-        try {
-            return !isDeepStrictEqual(JSON.parse(readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '')), content);
-        } catch (error) {
-            if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
-            return true;
-        }
-    });
+    const temporaryPath = `${outputPath}.${process.pid}.tmp`;
     try {
-        for (const [filePath, content] of outputs) {
-            mkdirSync(dirname(filePath), { recursive: true });
-            writeFileSync(`${filePath}.${process.pid}.tmp`, `${JSON.stringify(content, null, 4)}\n`, 'utf8');
-        }
-        for (const [filePath] of outputs) renameSync(`${filePath}.${process.pid}.tmp`, filePath);
+        mkdirSync(dirname(outputPath), { recursive: true });
+        writeFileSync(temporaryPath, `${JSON.stringify(catalog, null, 4)}\n`, 'utf8');
+        renameSync(temporaryPath, outputPath);
     } finally {
-        for (const [filePath] of outputs) rmSync(`${filePath}.${process.pid}.tmp`, { force: true });
+        rmSync(temporaryPath, { force: true });
     }
     return catalog;
 }
