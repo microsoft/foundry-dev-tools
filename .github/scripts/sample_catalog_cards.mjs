@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 export const PATTERNS = [
@@ -278,40 +278,26 @@ export async function reviewChangedCardDetails(previous, source, definitions, re
     return result;
 }
 
-export function writeCatalogWithCards(source, definitions, outputPath, definitionsPath = join(dirname(outputPath), 'sample-cards.json')) {
+export function writeCatalogWithCards(source, definitions, outputPath) {
     const catalog = buildCatalogWithCards(source, definitions);
-    const { patterns, cards, ...templates } = catalog;
-    const cardDocument = { sourceCommitSha: catalog.commitSha, patterns, cards };
     let previous;
     try {
         previous = JSON.parse(readFileSync(outputPath, 'utf8').replace(/^\uFEFF/, ''));
     } catch (error) {
         if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
     }
-    if (previous) {
-        const previousTemplates = Object.fromEntries(Object.keys(templates).map(key => [key, previous[key]]));
-        if (typeof previousTemplates.generatedAt === 'string' && Number.isFinite(Date.parse(previousTemplates.generatedAt)) &&
-            isDeepStrictEqual({ ...previousTemplates, generatedAt: templates.generatedAt }, templates)) {
-            templates.generatedAt = previousTemplates.generatedAt;
-            catalog.generatedAt = previousTemplates.generatedAt;
-        }
+    if (previous && typeof previous.generatedAt === 'string' && Number.isFinite(Date.parse(previous.generatedAt)) &&
+        isDeepStrictEqual({ ...previous, generatedAt: catalog.generatedAt }, catalog)) {
+        catalog.generatedAt = previous.generatedAt;
+        return catalog;
     }
-    const outputs = [[outputPath, templates], [definitionsPath, cardDocument]].filter(([filePath, content]) => {
-        try {
-            return !isDeepStrictEqual(JSON.parse(readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '')), content);
-        } catch (error) {
-            if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
-            return true;
-        }
-    });
+    const temporaryPath = `${outputPath}.${process.pid}.tmp`;
     try {
-        for (const [filePath, content] of outputs) {
-            mkdirSync(dirname(filePath), { recursive: true });
-            writeFileSync(`${filePath}.${process.pid}.tmp`, `${JSON.stringify(content, null, 4)}\n`, 'utf8');
-        }
-        for (const [filePath] of outputs) renameSync(`${filePath}.${process.pid}.tmp`, filePath);
+        mkdirSync(dirname(outputPath), { recursive: true });
+        writeFileSync(temporaryPath, `${JSON.stringify(catalog, null, 4)}\n`, 'utf8');
+        renameSync(temporaryPath, outputPath);
     } finally {
-        for (const [filePath] of outputs) rmSync(`${filePath}.${process.pid}.tmp`, { force: true });
+        rmSync(temporaryPath, { force: true });
     }
     return catalog;
 }

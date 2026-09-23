@@ -41,7 +41,6 @@ const SAMPLES_REPO_API = `https://api.github.com/repos/${repositoryPath}`;
 const SAMPLES_REPO_RAW = `https://raw.githubusercontent.com/${repositoryPath}`;
 const OUTPUT_PATH = join(REPO_ROOT, 'samples', 'hosted-agent', 'sample-catalog.json');
 const OVERRIDES_PATH = join(REPO_ROOT, 'samples', 'hosted-agent', 'sample-overrides.json');
-const CARDS_PATH = join(REPO_ROOT, 'samples', 'hosted-agent', 'sample-cards.json');
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 
@@ -1382,7 +1381,7 @@ async function syncCatalog(commitSha, definitions) {
     const added = scanned.filter(template => !previousPaths.has(template.path));
     const removed = previous.templates.filter(template => !scannedPaths.has(template.path));
     if (!added.length && !removed.length) {
-        console.log('No added or removed samples; preserving both catalog files and their source snapshot.');
+        console.log('No added or removed samples; preserving the catalog snapshot.');
         writeSummary(scanned.length);
         return;
     }
@@ -1485,8 +1484,8 @@ Respond ONLY with {"detailsPatch":{},"fieldReviews":{"summary":{"action":"keep",
         resolveReadmeEvidence(decision?.fieldReviews, implementations, `Details review for ${input.card.id}`);
         return decision;
     });
-    const output = writeCatalogWithCards(source, reviewed, OUTPUT_PATH, CARDS_PATH);
-    console.log(`Incremental sync: ${added.length} added, ${removed.length} removed; ${output.templates.length} templates, ${output.cards.length} cards. Updated both catalog files.`);
+    const output = writeCatalogWithCards(source, reviewed, OUTPUT_PATH);
+    console.log(`Incremental sync: ${added.length} added, ${removed.length} removed; ${output.templates.length} templates, ${output.cards.length} cards. Updated catalog snapshot.`);
     writeSummary(output.templates.length);
 }
 
@@ -1495,22 +1494,22 @@ async function main() {
     if (process.argv.length !== (incremental ? 4 : 3)) {
         throw new Error('Usage: node generate_sample_catalog.mjs <commitSha> | --from-existing | --sync <commitSha>');
     }
-    const definitions = JSON.parse(readFileSync(CARDS_PATH, 'utf-8').replace(/^\uFEFF/, ''));
+    const source = JSON.parse(readFileSync(OUTPUT_PATH, 'utf-8').replace(/^\uFEFF/, ''));
+    const definitions = { sourceCommitSha: source.commitSha, patterns: source.patterns, cards: source.cards };
     if (incremental) {
         await syncCatalog(process.argv[3], definitions);
         return;
     }
     if (process.argv[2] === '--from-existing') {
-        const source = JSON.parse(readFileSync(OUTPUT_PATH, 'utf-8').replace(/^\uFEFF/, ''));
-        const catalog = writeCatalogWithCards(source, definitions, OUTPUT_PATH, CARDS_PATH);
-        console.log(`Wrote template and card files: ${catalog.templates.length} templates, ${catalog.cards.length} cards (existing snapshot preserved)`);
+        const catalog = writeCatalogWithCards(source, definitions, OUTPUT_PATH);
+        console.log(`Wrote catalog snapshot: ${catalog.templates.length} templates, ${catalog.cards.length} cards (existing snapshot preserved)`);
         writeSummary(catalog.templates.length);
         return;
     }
 
     const commitSha = parseCommitShaArg();
     if (commitSha !== definitions.sourceCommitSha) {
-        throw new Error('Requested commit must match sample-cards.json sourceCommitSha; review template coverage and card content before changing the snapshot.');
+        throw new Error('Requested commit must match sample-catalog.json commitSha; review template coverage and card content before changing the snapshot.');
     }
     console.log(`Using commit: ${commitSha}`);
 
@@ -1550,8 +1549,8 @@ async function main() {
         templates: orderedTemplates,
     };
 
-    const output = writeCatalogWithCards(catalog, definitions, OUTPUT_PATH, CARDS_PATH);
-    console.log(`Wrote template and card files: ${output.templates.length} templates, ${output.cards.length} cards`);
+    const output = writeCatalogWithCards(catalog, definitions, OUTPUT_PATH);
+    console.log(`Wrote catalog snapshot: ${output.templates.length} templates, ${output.cards.length} cards`);
 
     writeSummary(templates.length);
 }
