@@ -1,5 +1,29 @@
 # What's New in Foundry Toolkit for VS Code
 
+## Version 1.6.14 - 23 September, 2026
+
+This release of Microsoft Foundry Toolkit for VS Code adds solution templates, skill-only toolboxes, and controls for active hosted-agent responses. It also updates model choices and Agent-to-Agent connections, and improves sign-in recovery, deployment guidance, and Agent Inspector.
+
+### Added
+
+- **Solution templates**: Browse reference solutions from **Create Agent**, compare their descriptions and capability tags, and create a local project with its README ready to use.
+- **Skill-only toolboxes**: Create and save toolboxes that contain skills without requiring a separate tool.
+- **Hosted agent playground**: Send follow-up instructions while a Responses run is active, stop active work, and reconnect to unfinished background responses.
+
+### Changed
+
+- **Agent-to-Agent (A2A) connections**: Added support for the generally available A2A format while retaining compatibility with existing preview connections. Connection names and endpoint settings are preserved when loading and saving prompt agents.
+- **Model choices**: Added newer Anthropic and Google models, with warnings for retired model selections in Playground, Agent Builder, and model comparison.
+
+### Fixed
+
+- **Model compatibility**: Updated thinking requests for newer Claude models and web search requests for Gemini models.
+- **Foundry models in VS Code Chat**: Use the Responses API when the model supports it, while respecting an explicit Chat Completions default. Responses requests now support Microsoft Entra ID authentication.
+- **Agent Inspector**: Function results remain on the original Chat tool card after an approval continuation.
+- **Foundry sign-in**: Improved recovery when authentication fails while loading models or agents. Sign-in recovery avoids duplicate prompts, and background operations do not open sign-in dialogs.
+- **Open in VS Code**: Fixed Foundry links that failed to open while the extension was starting.
+- **Hosted agent deployment**: ZIP deployment fetch failures now show network guidance instead of a generic error or an unrelated recommendation to change packaging methods.
+
 ## Version 1.6.13 - 16 September, 2026
 
 This release of Microsoft Foundry Toolkit for VS Code adds private container registry connections, Fara model support for AMD NPUs, and Aion fine-tuning adapter support. It also updates Windows ML tooling and improves model search, hosted agent validation, and Agent Inspector.
@@ -13,7 +37,7 @@ This release of Microsoft Foundry Toolkit for VS Code adds private container reg
 ### Changed
 
 - **WinML CLI**: Updated to 0.3.1 with a refreshed model catalog and conversion recipes ([microsoft/windows-ai-studio-templates#396](https://github.com/microsoft/windows-ai-studio-templates/pull/396)).
-- **Windows ML**: The Windows ML runtime now uses `windowsml` 2.3 with updated execution providers, without requiring the Windows App SDK. Existing projects need to be updated ([microsoft/olive-recipes#382](https://github.com/microsoft/olive-recipes/pull/382), [microsoft/olive-recipes#401](https://github.com/microsoft/olive-recipes/pull/401)).
+- **Windows ML**: The Windows ML runtime now uses `windowsml` 2.3 with updated execution providers (added WebGPU), without requiring the Windows App SDK. Existing projects need to be updated ([microsoft/olive-recipes#382](https://github.com/microsoft/olive-recipes/pull/382), [microsoft/olive-recipes#401](https://github.com/microsoft/olive-recipes/pull/401)).
 - **Hosted agent validation**: Target a specific hosted agent and open a single generated report in VS Code. If the required validation skill is missing, the workflow attempts installation and provides recovery steps if installation fails.
 - **Fine-tuning parameters**: Display template-provided suggestions alongside range hints and validate parameters with only a minimum or maximum limit.
 
