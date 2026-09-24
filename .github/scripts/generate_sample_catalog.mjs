@@ -21,7 +21,8 @@
  *   AZURE_OPENAI_*      Optional; when set, descriptions are LLM-generated.
  */
 
-import { readFileSync, existsSync, appendFileSync } from 'node:fs';
+import { readFileSync, existsSync, appendFileSync, mkdirSync, writeFileSync, renameSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogWithCards, reconcileCardDefinitions, reviewChangedCardDetails, writeCatalogWithCards } from './sample_catalog_cards.mjs';
@@ -1369,10 +1370,11 @@ function resolveReadmeEvidence(reviews, implementations, label) {
     }
 }
 
-async function syncCatalog(commitSha, definitions) {
+async function scanSyncCatalog(commitSha, definitions) {
     if (!/^[a-f0-9]{40}$/i.test(commitSha ?? '')) throw new Error('Incremental sync requires a full source commit SHA');
     if (AI_REFINE || IGNORE_EXISTING) throw new Error('Incremental sync cannot refine or replace existing entries');
-    const previous = JSON.parse(readFileSync(OUTPUT_PATH, 'utf8').replace(/^\uFEFF/, ''));
+    const baseline = readFileSync(OUTPUT_PATH);
+    const previous = JSON.parse(baseline.toString('utf8').replace(/^\uFEFF/, ''));
     buildCatalogWithCards(previous, definitions);
     if (previous.repo !== SAMPLES_REPO_URL) throw new Error('Incremental sync must use the existing source repository');
     const scanned = await scanTemplates(commitSha, previous.templates);
@@ -1383,8 +1385,15 @@ async function syncCatalog(commitSha, definitions) {
     if (!added.length && !removed.length) {
         console.log('No added or removed samples; preserving the catalog snapshot.');
         writeSummary(scanned.length);
-        return;
     }
+    return { commitSha, repo: SAMPLES_REPO_URL, baselineHash: createHash('sha256').update(baseline).digest('hex'),
+        previous, definitions, scanned, added, removed, noChanges: !added.length && !removed.length };
+}
+
+async function generateSyncMetadata(state) {
+    const { commitSha, previous, scanned, added } = state;
+    const scannedPaths = new Set(scanned.map(template => template.path));
+    const previousPaths = new Set(previous.templates.map(template => template.path));
     if (added.length && (!AZURE_OPENAI_ENDPOINT || !AZURE_OPENAI_API_KEY)) {
         throw new Error('New samples require the existing Azure OpenAI configuration; no files were updated.');
     }
@@ -1416,10 +1425,16 @@ async function syncCatalog(commitSha, definitions) {
             ],
         };
     }
-    const source = {
+    state.source = {
         ...previous, commitSha, generatedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'), dimensions, templates,
     };
-    const templatesByPath = new Map(templates.map(template => [template.path, template]));
+    state.readmes = [...readmes];
+}
+
+function syncEvidence(state) {
+    const { commitSha, source } = state;
+    const readmes = new Map(state.readmes);
+    const templatesByPath = new Map(source.templates.map(template => [template.path, template]));
     const loadImplementations = async templatePaths => {
         const implementations = [];
         for (const templatePath of new Set(templatePaths)) {
@@ -1432,6 +1447,12 @@ async function syncCatalog(commitSha, definitions) {
         }
         return implementations;
     };
+    return { readmes, templatesByPath, loadImplementations };
+}
+
+async function groupSyncCards(state) {
+    const { previous, source, definitions } = state;
+    const { readmes, templatesByPath, loadImplementations } = syncEvidence(state);
     const updated = await reconcileCardDefinitions(previous, source, definitions, async ({ template, candidates, patterns }) => {
         const systemPrompt = `You place a new hosted-agent sample in a curated catalog.
 Prefer an existing card when its core user task, title and Pattern fit this implementation. Details may need a minimal variant-specific correction, which a separate review will handle after grouping. Do not group unrelated tasks just because their Pattern is the same.
@@ -1460,6 +1481,13 @@ Return ONLY {"candidateReviews":{"candidate-id":{"sameTask":true,"reason":"speci
     resolveReadmeEvidence(review?.candidateReviews, implementations, `card reuse review for ${template.path}`);
     return review;
     });
+    state.updated = updated;
+    state.readmes = [...readmes];
+}
+
+async function generateSyncDetails(state) {
+    const { definitions, source, updated } = state;
+    const { readmes, loadImplementations } = syncEvidence(state);
     const reviewed = await reviewChangedCardDetails(definitions, source, updated, async input => {
         if (!AZURE_OPENAI_ENDPOINT || !AZURE_OPENAI_API_KEY) {
             throw new Error(`Changed card membership requires AI Details review: ${input.card.id}; no files were updated.`);
@@ -1484,12 +1512,63 @@ Respond ONLY with {"detailsPatch":{},"fieldReviews":{"summary":{"action":"keep",
         resolveReadmeEvidence(decision?.fieldReviews, implementations, `Details review for ${input.card.id}`);
         return decision;
     });
-    const output = writeCatalogWithCards(source, reviewed, OUTPUT_PATH);
-    console.log(`Incremental sync: ${added.length} added, ${removed.length} removed; ${output.templates.length} templates, ${output.cards.length} cards. Updated catalog snapshot.`);
+    state.reviewed = reviewed;
+    state.readmes = [...readmes];
+}
+
+function writeSyncCatalog(state) {
+    if (createHash('sha256').update(readFileSync(OUTPUT_PATH)).digest('hex') !== state.baselineHash) throw new Error('Catalog baseline changed during sync');
+    const output = writeCatalogWithCards(state.source, state.reviewed, OUTPUT_PATH);
+    console.log(`Incremental sync: ${state.added.length} added, ${state.removed.length} removed; ${output.templates.length} templates, ${output.cards.length} cards. Updated catalog snapshot.`);
     writeSummary(output.templates.length);
 }
 
+const SYNC_STAGES = ['scan', 'metadata', 'group', 'details', 'write'];
+const SYNC_HANDLERS = { metadata: generateSyncMetadata, group: groupSyncCards, details: generateSyncDetails, write: writeSyncCatalog };
+
+async function syncCatalog(commitSha, definitions) {
+    const state = await scanSyncCatalog(commitSha, definitions);
+    if (!state.noChanges) for (const stage of SYNC_STAGES.slice(1)) await SYNC_HANDLERS[stage](state);
+}
+
+async function runSyncStage(stage, commitSha) {
+    if (!SYNC_STAGES.includes(stage) || !/^[a-f0-9]{40}$/i.test(commitSha ?? '')) throw new Error('Invalid sync stage or source SHA');
+    if (AI_REFINE || IGNORE_EXISTING) throw new Error('Incremental sync cannot refine or replace existing entries');
+    const statePath = process.env.CATALOG_SYNC_STATE;
+    if (!statePath) throw new Error('CATALOG_SYNC_STATE is required');
+    let state;
+    if (stage === 'scan') {
+        const previous = JSON.parse(readFileSync(OUTPUT_PATH, 'utf8').replace(/^\uFEFF/, ''));
+        state = await scanSyncCatalog(commitSha, { sourceCommitSha: previous.commitSha, patterns: previous.patterns, cards: previous.cards });
+        if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `has_changes=${!state.noChanges}\n`);
+    } else {
+        state = JSON.parse(readFileSync(statePath, 'utf8'));
+        if (state.commitSha !== commitSha || state.repo !== SAMPLES_REPO_URL ||
+            state.baselineHash !== createHash('sha256').update(readFileSync(OUTPUT_PATH)).digest('hex')) throw new Error('Sync state does not match source or catalog baseline');
+        const required = SYNC_STAGES[SYNC_STAGES.indexOf(stage) - 1];
+        if (state.completedStage !== required) throw new Error(`Stage ${stage} requires completed ${required}`);
+        warnings.push(...state.warnings);
+        if (!state.noChanges) await SYNC_HANDLERS[stage](state);
+    }
+    state.completedStage = stage;
+    state.warnings = warnings;
+    mkdirSync(dirname(resolve(statePath)), { recursive: true });
+    const temporary = `${statePath}.${process.pid}.tmp`;
+    try {
+        writeFileSync(temporary, JSON.stringify(state));
+        renameSync(temporary, statePath);
+    } finally {
+        rmSync(temporary, { force: true });
+    }
+    console.log(`Catalog sync stage completed: ${stage}`);
+}
+
 async function main() {
+    if (process.argv[2] === '--sync-stage') {
+        if (process.argv.length !== 5) throw new Error('Usage: --sync-stage <scan|metadata|group|details|write> <sourceSha>');
+        await runSyncStage(process.argv[3], process.argv[4]);
+        return;
+    }
     const incremental = process.argv[2] === '--sync';
     if (process.argv.length !== (incremental ? 4 : 3)) {
         throw new Error('Usage: node generate_sample_catalog.mjs <commitSha> | --from-existing | --sync <commitSha>');

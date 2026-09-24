@@ -30,6 +30,10 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     env:
+      REPO_ROOT: ${{ github.workspace }}
+      AI_REFINE: 'false'
+      IGNORE_EXISTING: 'false'
+      AZURE_OPENAI_REASONING_EFFORT: ${{ vars.AZURE_OPENAI_REASONING_EFFORT }}
       PR_LABEL_CANDIDATES: |
         automated-pr
         area:samples
@@ -40,21 +44,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Generate GitHub App token
-        if: ${{ !inputs.validation_only }}
-        id: app-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.SYNC_APP_ID }}
-          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Resolve commit SHA
+      - name: Prepare sync paths
+        shell: bash
+        run: |
+          {
+            printf 'CATALOG_SYNC_STATE=%s/catalog-sync/state.json\n' "$RUNNER_TEMP"
+            printf 'CATALOG_REVIEW_REPORT_DIR=%s/catalog-review\n' "$RUNNER_TEMP"
+          } >> "$GITHUB_ENV"
+
+      - name: Resolve pinned source revision
         id: resolve-sha
         shell: bash
         env:
@@ -77,19 +82,43 @@ jobs:
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "- Pinned SHA: \`$sha\` ($source)" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Incrementally sync cards and catalog
+      - name: 1. Scan sample changes
+        id: scan
         env:
-          REPO_ROOT: ${{ github.workspace }}
           GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ steps.resolve-sha.outputs.sha }}
+        run: node .github/scripts/generate_sample_catalog.mjs --sync-stage scan "$SOURCE_SHA"
+
+      - name: 2. Generate new template metadata
+        if: ${{ steps.scan.outputs.has_changes == 'true' }}
+        env: &generation-env
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ steps.resolve-sha.outputs.sha }}
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-          AI_REFINE: 'false'
-          IGNORE_EXISTING: 'false'
-        run: node .github/scripts/generate_sample_catalog.mjs --sync "${{ steps.resolve-sha.outputs.sha }}"
+        run: node .github/scripts/generate_sample_catalog.mjs --sync-stage metadata "$SOURCE_SHA"
+
+      - name: 3. Group templates and review card reuse
+        if: ${{ steps.scan.outputs.has_changes == 'true' }}
+        env: *generation-env
+        run: node .github/scripts/generate_sample_catalog.mjs --sync-stage group "$SOURCE_SHA"
+
+      - name: 4. Update affected card Details
+        if: ${{ steps.scan.outputs.has_changes == 'true' }}
+        env: *generation-env
+        run: node .github/scripts/generate_sample_catalog.mjs --sync-stage details "$SOURCE_SHA"
+
+      - name: 5. Write structurally validated candidate
+        if: ${{ steps.scan.outputs.has_changes == 'true' }}
+        env:
+          SOURCE_SHA: ${{ steps.resolve-sha.outputs.sha }}
+        run: node .github/scripts/generate_sample_catalog.mjs --sync-stage write "$SOURCE_SHA"
 
       - name: Validate catalog snapshot
-        run: node --test .github/scripts/sample_catalog_cards.test.mjs
+        run: |
+          node --test .github/scripts/sample_catalog_cards.test.mjs
+          node .github/scripts/review_catalog_pr.mjs --sandbox-smoke-test
 
       - name: Detect catalog changes
         id: diff
@@ -146,6 +175,14 @@ jobs:
         run: |
           echo "Validation-only run: catalog generated and validated. No branch or PR was created." >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Generate GitHub App token
+        if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.SYNC_APP_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+
       - name: Resolve pull request labels
         if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         id: labels
@@ -180,11 +217,22 @@ jobs:
         if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         id: branch
         shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_BRANCH: ${{ github.ref_name }}
+          RUN_ID: ${{ github.run_id }}
         run: |
-          date_suffix=$(date -u +%Y%m%d)
-          echo "name=ci/sync-sample-catalog-${{ github.ref_name }}-${date_suffix}" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          branch="ci/sync-sample-catalog-${BASE_BRANCH}-${RUN_ID}"
+          existing=$(gh api "repos/${REPOSITORY}/git/matching-refs/heads/${branch}" --jq 'length')
+          if [[ "$existing" != '0' ]]; then
+            echo "This run already created a branch. Refusing to overwrite it; start a new run." >&2
+            exit 1
+          fi
+          echo "name=$branch" >> "$GITHUB_OUTPUT"
 
-      - name: Create draft pull request
+      - name: 6. Create draft pull request
         if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         id: cpr
         uses: peter-evans/create-pull-request@v8
@@ -217,6 +265,7 @@ jobs:
             - New cards are created only when no compatible candidate fits; their Details and one primary Pattern are AI-generated for review.
             - The catalog commitSha advances only when templates are added or removed. It also pins the implementations of surviving templates to that revision.
             - Failed AI generation/review, incomplete audits, unknown README references, incomplete scans, or invalid grouping stop the job before PR creation. Verified source references do not replace human review of semantic accuracy.
+            - A final bounded agent step reads the repository review skill and fixed-source evidence, then proposes prose corrections to this Draft PR. Trusted code validates scope, evidence references and tests before appending a commit. Failed or unresolved review leaves the Draft PR open and the workflow blocked; no approval or merge is automated.
 
             ## Reviewer Checks
             - Confirm the catalog is self-contained and card-only edits do not change template facts.
@@ -252,3 +301,27 @@ jobs:
               echo "- No pull request was created or updated (peter-evans/create-pull-request returned no URL)."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 7. Review with skill and commit verified corrections
+        if: ${{ !inputs.validation_only && steps.cpr.outputs.pull-request-number != '' }}
+        timeout-minutes: 50
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+          CATALOG_REVIEW_MODEL: ${{ vars.CATALOG_REVIEW_MODEL }}
+          CATALOG_REVIEW_PR: ${{ steps.cpr.outputs.pull-request-number }}
+          CATALOG_REVIEW_BRANCH: ${{ steps.branch.outputs.name }}
+          CATALOG_REVIEW_BASE: ${{ github.ref_name }}
+          CATALOG_REVIEW_HEAD: ${{ steps.cpr.outputs.pull-request-head-sha }}
+        run: node .github/scripts/review_catalog_pr.mjs
+
+      - name: Upload final review report
+        if: ${{ always() && !inputs.validation_only && steps.cpr.outputs.pull-request-number != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-review
+          path: ${{ runner.temp }}/catalog-review/
+          if-no-files-found: warn
+          retention-days: 7
