@@ -1,19 +1,25 @@
 ---
 name: review-sample-catalog
-description: 'Review and fix generated hosted-agent sample catalog pull requests against pinned implementation evidence. Use for sample-catalog.json, Sync Sample Catalog PRs, card grouping, Details accuracy, variant coverage, catalog promotion, and merge-readiness reviews. Supports the two-stage workflow: CI creates a Draft PR, then human-led AI review verifies and corrects the candidate.'
+description: 'Review and fix generated hosted-agent sample catalog pull requests against pinned implementation evidence. Use for sample-catalog.json, Sync Sample Catalog PRs, card grouping, Details accuracy, variant coverage, catalog promotion, and merge-readiness reviews. Supports CI-generated Draft PRs followed by bounded skill-driven automatic correction or maintainer-led review.'
 argument-hint: 'PR URL or number; review or fix; optional release target'
 user-invocable: true
 ---
 
 # Review Sample Catalog
 
-Help a maintainer turn an automatically generated catalog candidate into an
+Help turn an automatically generated catalog candidate into an
 accurate, narrowly scoped PR. Structural validity and AI approval are not proof
 of factual accuracy. A Draft PR is a review artifact, not permission to merge.
 
 ## Scope and Authority
 
 - `review` is read-only. Report findings before suggesting changes.
+- In the final CI fix step, the trusted wrapper authorizes automatic prose
+  corrections. Read this skill and the supplied scope and sources, then return
+  only the requested structured patch and unresolved findings. Do not ask for
+  human edits as a success outcome. The wrapper permits two repair passes and a
+  final verification pass, validates changes, runs tests and performs GitHub
+  writes; the agent itself must never execute commands or publish anything.
 - An explicit request to fix the data PR authorizes narrowly scoped catalog
   corrections during human-led review. Do not require a generator change merely
   to correct reviewed prose. If the user has prohibited direct data edits, ask
@@ -47,9 +53,11 @@ The intended process has two stages:
 1. CI scans a pinned source revision, generates an incremental candidate, checks
    structural contracts and opens a Draft PR. Read the current workflow's actual
    generation/review gates; do not assume it has no AI dependencies.
-2. A human uses AI to review the candidate against the source, resolve findings
-   and make the final approval decision. Semantic concerns remain merge blockers
-   even when CI successfully created the Draft PR.
+2. The final CI step uses this skill to review and automatically correct prose
+  against pinned source evidence, or a maintainer invokes it interactively.
+  Unresolved findings or failed verification block successful completion, but
+  preserve the Draft PR. Required human approval is still a separate merge gate,
+  not an expectation that humans finish routine corrections.
 
 ## 1. Establish the Review Snapshot
 
@@ -133,6 +141,12 @@ When fixing is requested, edit the candidate PR's catalog in place using minimal
 text changes. Preserve factual qualifications, warnings, Requirements, identity,
 membership and ordering. Generalize common behavior or explicitly qualify real
 differences; do not erase useful information merely to silence a reviewer.
+
+In sandboxed CI, propose these changes using the wrapper's structured output
+contract instead of editing files. Include the exact current value and a pinned
+source quote for each correction. Return all reviewed card/template IDs even
+when no changes are needed. Report grouping or protected-field defects as
+unresolved; never modify them to satisfy a prose review.
 
 Shorten overlong descriptions by rewriting the sentence, not truncating words.
 Do not format the entire JSON file or regenerate untouched content. Preserve the

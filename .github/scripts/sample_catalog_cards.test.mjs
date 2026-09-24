@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogWithCards, PATTERNS, reconcileCardDefinitions, reviewChangedCardDetails, writeCatalogWithCards } from './sample_catalog_cards.mjs';
+import { applyReview, assertReviewTarget, modelRequest, reviewScope, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
 
 function fixture() {
     const source = {
@@ -53,6 +54,85 @@ function fixture() {
     };
     return { source, definitions };
 }
+
+function reviewFixture() {
+    const { source, definitions } = fixture();
+    const candidate = buildCatalogWithCards(source, definitions);
+    const base = structuredClone(candidate);
+    base.templates.pop();
+    base.cards[0].templatePaths = [base.templates[0].path];
+    const scope = reviewScope(base, candidate);
+    const sourcePath = candidate.templates[1].path + '/README.md';
+    const sources = new Map([[sourcePath, 'The workflow drafts and reviews text.']]);
+    const response = { changes: [{ kind: 'card', id: candidate.cards[0].id, field: 'summary',
+        before: candidate.cards[0].details.summary, after: 'Draft and review text using the selected implementation.',
+        evidence: [{ path: sourcePath, quote: 'drafts and reviews text' }] }], unresolved: [], reviewedCards: scope.cards, reviewedTemplates: scope.templates };
+    return { base, candidate, scope, sources, response };
+}
+
+test('agent review applies only eligible prose without changing snapshot identity', () => {
+    const { candidate, scope, sources, response } = reviewFixture();
+    const result = applyReview(candidate, scope, response, sources);
+    validateReady(result, scope);
+    assert.equal(result.cards[0].details.summary, response.changes[0].after);
+    const normalized = structuredClone(result);
+    normalized.cards[0].details.summary = candidate.cards[0].details.summary;
+    assert.deepEqual(normalized, candidate);
+});
+
+for (const [name, mutate] of [
+    ['protected field', item => { item.response.changes[0].field = 'templatePaths'; }],
+    ['unreviewed card', item => { item.response.changes[0].id = 'other-card'; }],
+    ['stale value', item => { item.response.changes[0].before = 'Outdated'; }],
+    ['invented evidence', item => { item.response.changes[0].evidence[0].quote = 'No source says this'; }],
+    ['foreign source', item => { item.response.changes[0].evidence[0].path = 'samples/other/README.md'; }],
+    ['extra properties', item => { item.response.command = 'git push'; }],
+    ['duplicate patch', item => { item.response.changes.push(item.response.changes[0]); }],
+    ['missing coverage', item => { item.response.reviewedCards = []; }],
+    ['type change', item => { item.response.changes[0].after = ['Changed']; }],
+    ['markup', item => { item.response.changes[0].after = '<script>bad</script>'; }],
+]) {
+    test(`agent review rejects ${name}`, () => {
+        const item = reviewFixture();
+        const before = structuredClone(item.candidate);
+        mutate(item);
+        assert.throws(() => applyReview(item.candidate, item.scope, item.response, item.sources));
+        assert.deepEqual(item.candidate, before);
+    });
+}
+
+test('agent review enforces Requirements and final description limits', () => {
+    const { candidate, scope, sources, response } = reviewFixture();
+    response.changes[0] = { ...response.changes[0], field: 'requirements', before: candidate.cards[0].details.requirements, after: ['one two three four five six'] };
+    assert.throws(() => applyReview(candidate, scope, response, sources), /five words/);
+    response.changes[0].after = ['Model access, research client'];
+    assert.deepEqual(applyReview(candidate, scope, response, sources).cards[0].details.requirements, ['Model access, research client']);
+    candidate.templates[1].description = 'x'.repeat(101);
+    assert.throws(() => validateReady(candidate, scope), /1-100/);
+});
+
+test('review scope rejects changed surviving metadata or unchanged-card Details', () => {
+    const { base, candidate } = reviewFixture();
+    candidate.templates[0].requiresModel = false;
+    assert.throws(() => reviewScope(base, candidate), /metadata/);
+    const original = reviewFixture().candidate;
+    const changed = structuredClone(original);
+    changed.cards[0].details.summary = 'Changed without membership change';
+    assert.throws(() => reviewScope(original, changed), /Unchanged-membership/);
+});
+
+test('review target refuses forks, moved heads, ready or closed PRs', () => {
+    const expected = { repository: 'microsoft/foundry-dev-tools', branch: 'ci/catalog', base: 'template/dev', head: 'a'.repeat(40) };
+    const pr = { state: 'open', draft: true, head: { ref: expected.branch, sha: expected.head, repo: { full_name: expected.repository } },
+        base: { ref: expected.base, repo: { full_name: expected.repository } } };
+    assertReviewTarget(pr, expected);
+    for (const update of [item => { item.head.sha = 'b'.repeat(40); }, item => { item.head.repo.full_name = 'other/fork'; },
+        item => { item.draft = false; }, item => { item.state = 'closed'; }, item => { item.base.ref = 'main'; }]) {
+        const changed = structuredClone(pr);
+        update(changed);
+        assert.throws(() => assertReviewTarget(changed, expected));
+    }
+});
 
 function reviewedDetails(card, detailsPatch = {}, reason = 'Reviewed every final implementation.') {
     return {
@@ -455,7 +535,8 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
         const aiRequests = [];
         process.on('exit', () => console.log('SOURCE_REQUESTS=' + JSON.stringify(sourceRequests)));
         process.on('exit', () => console.log('AI_REQUESTS=' + JSON.stringify(aiRequests)));
-        process.argv = [process.execPath, ${JSON.stringify(fileURLToPath(generator))}, '--sync', ${JSON.stringify(targetSha)}];
+        process.argv = [process.execPath, ${JSON.stringify(fileURLToPath(generator))},
+            ...(scenario.syncStage ? ['--sync-stage', scenario.syncStage] : ['--sync']), ${JSON.stringify(targetSha)}];
         globalThis.fetch = async (resource, options) => {
             const url = String(resource);
             if (url.startsWith('https://catalog-ai.invalid/')) {
@@ -539,10 +620,64 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
         AI_REFINE: 'false', IGNORE_EXISTING: 'false', LLM_MAX_ATTEMPTS: String(scenario.maxAttempts ?? 1),
         AZURE_OPENAI_MAX_COMPLETION_TOKENS: String(scenario.initialBudget ?? 2000),
         AZURE_OPENAI_REASONING_EFFORT: scenario.reasoningEffort ?? '',
+        CATALOG_SYNC_STATE: join(root, 'sync-state.json'),
+        GITHUB_OUTPUT: join(root, 'step-output.txt'),
     };
     delete env.GITHUB_STEP_SUMMARY;
     return spawnSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8', env, timeout: 10000 });
 }
+
+test('separate sync steps publish only after complete generation and preserve credentials', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
+    const paths = [source.templates[0].path, `${source.templates[1].path}-new`];
+    const calls = { scan: [], metadata: ['metadata'], group: ['placement'], details: ['details'], write: [] };
+    for (const [syncStage, expected] of Object.entries(calls)) {
+        const result = runIncremental(root, source, paths, { syncStage });
+        assert.equal(result.status, 0, result.stderr);
+        const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+        assert.deepEqual(requests.map(request => request.stage), expected);
+        const stateText = readFileSync(join(root, 'sync-state.json'), 'utf8');
+        assert.ok(!stateText.includes('test-only'));
+        assert.equal(JSON.parse(stateText).completedStage, syncStage);
+        if (syncStage !== 'write') assert.deepEqual(readFileSync(outputPath), before);
+    }
+    assertSnapshot(JSON.parse(readFileSync(outputPath, 'utf8')));
+    assert.match(readFileSync(join(root, 'step-output.txt'), 'utf8'), /has_changes=true/);
+});
+
+for (const failure of ['wrong order', 'changed baseline', 'changed source']) {
+    test(`staged sync blocks ${failure}`, context => {
+        const { root, source, outputPath } = temporaryFixture(context);
+        const paths = [source.templates[0].path];
+        assert.equal(runIncremental(root, source, paths, { syncStage: 'scan' }).status, 0);
+        if (failure === 'changed baseline') writeFileSync(outputPath, readFileSync(outputPath, 'utf8') + '\n');
+        if (failure === 'changed source') {
+            const statePath = join(root, 'sync-state.json');
+            const state = JSON.parse(readFileSync(statePath, 'utf8'));
+            state.commitSha = 'c'.repeat(40);
+            writeFileSync(statePath, JSON.stringify(state));
+        }
+        const before = readFileSync(outputPath);
+        const result = runIncremental(root, source, paths, { syncStage: failure === 'wrong order' ? 'write' : 'metadata' });
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /requires completed|does not match/);
+        assert.deepEqual(readFileSync(outputPath), before);
+        assert.match(result.stdout, /AI_REQUESTS=\[\]/);
+    });
+}
+
+test('staged no-change sync skips all model calls and catalog writes', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
+    for (const syncStage of ['scan', 'metadata', 'group', 'details', 'write']) {
+        const result = runIncremental(root, source, source.templates.map(template => template.path), { syncStage });
+        assert.equal(result.status, 0, result.stderr);
+        assert.match(result.stdout, /AI_REQUESTS=\[\]/);
+        assert.deepEqual(readFileSync(outputPath), before);
+    }
+    assert.match(readFileSync(join(root, 'step-output.txt'), 'utf8'), /has_changes=false/);
+});
 
 for (const stage of ['metadata', 'placement']) {
     test(`incremental CLI retries token-exhausted ${stage} with a larger budget`, context => {
@@ -1058,4 +1193,41 @@ test('normal scanning writes templates and cards together using pinned source da
     });
     assert.equal(repeated.status, 0, repeated.stderr || repeated.error?.message);
     assert.deepEqual(readFileSync(outputPath), before, 'Unchanged scans must not refresh generatedAt');
+});
+
+test('model gateway accepts only inference routes and fixes deployment and budgets', () => {
+    const { route, request } = modelRequest('/v1/responses', { model: 'other', input: 'Review', stream: true, store: true,
+        max_output_tokens: 999999, tools: [{ type: 'function', name: 'view' }] }, 'catalog-deployment', 'low');
+    assert.equal(route, '/v1/responses');
+    assert.equal(request.model, 'catalog-deployment');
+    assert.equal(request.store, false);
+    assert.equal(request.max_output_tokens, 16000);
+    assert.deepEqual(request.reasoning, { effort: 'low' });
+    assert.throws(() => modelRequest('/v1/files', {}, 'model', 'low'));
+    assert.throws(() => modelRequest('/v1/responses?url=elsewhere', {}, 'model', 'low'));
+    assert.throws(() => modelRequest('/v1/responses', { tools: [{ type: 'web_search' }] }, 'model', 'low'));
+    assert.throws(() => modelRequest('/v1/responses', { callback_url: 'https://example.com' }, 'model', 'low'));
+    assert.equal(safeSourcePath('samples/python/main.py'), true);
+    for (const path of ['samples/../secret', '/etc/passwd', 'samples/test\\secret', 'samples/link/.env', 'samples//file']) assert.equal(safeSourcePath(path), false);
+});
+
+test('model proxy forwards SSE unchanged and never forwards caller credentials', async context => {
+    let received;
+    const sse = 'event: response.completed\ndata: {"type":"response.completed","response":{"model":"test-model","usage":{"total_tokens":42}}}\n\n';
+    const proxy = await startModelProxy('https://test.openai.azure.com', 'provider-secret', 'deployment', 'low', '127.0.0.1', async (url, options) => {
+        received = { url, options };
+        return new Response(sse, { headers: { 'Content-Type': 'text/event-stream' } });
+    });
+    context.after(() => { proxy.server.closeAllConnections(); proxy.server.close(); });
+    const base = `http://127.0.0.1:${proxy.port}`;
+    const denied = await fetch(base + '/v1/responses', { method: 'POST', body: '{}' });
+    assert.equal(denied.status, 502);
+    assert.equal(received, undefined);
+    const response = await fetch(base + '/v1/responses', { method: 'POST', headers: { Authorization: `Bearer ${proxy.token}`, 'Content-Type': 'application/json', 'x-leak': 'untrusted' },
+        body: JSON.stringify({ input: 'Review', stream: true }) });
+    assert.equal(await response.text(), sse);
+    assert.equal(received.url, 'https://test.openai.azure.com/openai/v1/responses');
+    assert.deepEqual(received.options.headers, { 'Content-Type': 'application/json', 'api-key': 'provider-secret' });
+    assert.equal(proxy.metrics.tokens, 42);
+    assert.equal(proxy.metrics.model, 'test-model');
 });
