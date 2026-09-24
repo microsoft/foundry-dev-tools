@@ -1143,7 +1143,7 @@
             "framework": "langgraph",
             "protocol": "responses",
             "displayName": "Location-Aware Host",
-            "description": "Location-aware chat agent that accepts custom location messages and client locale headers to adjust locale and units.",
+            "description": "Uses custom location messages and client locale headers to tailor replies and units.",
             "path": "samples/python/hosted-agents/langgraph/responses/12-custom-host",
             "requiresModel": true
         },
@@ -2162,10 +2162,10 @@
             "title": "Resume approval-gated tasks",
             "categoryId": "human-in-the-loop-async-events",
             "details": {
-                "summary": "Checkpoint a long-running plan and pause for human approval before irreversible steps.",
-                "whatItDoes": "Creates a plan, waits for approval or edits, and executes approved steps with checkpoints. Steps marked irreversible require a second confirmation. In the bring-your-own Invocations sample a resilient task store and per-step watermarks support recovery after interruption and an offline demo mode uses deterministic stand-ins; the LangGraph sample instead uses durable LangGraph checkpoints together with Agent Server durable invocation state for recovery.",
+                "summary": "Checkpoint long-running work and pause for approval of a plan or sensitive tool call, depending on the implementation.",
+                "whatItDoes": "The BYO Invocations sample creates a plan, waits for approval or edits, and requires a second confirmation for irreversible steps. A resilient task store and per-step watermarks support recovery; its offline demo mode uses deterministic stand-ins. The LangGraph sample runs flight and hotel searches automatically and pauses book_trip for approval or denial. It uses durable LangGraph checkpoints and Agent Server durable invocation state for recovery.",
                 "whyUseIt": "Explore durable human decisions during longer-running agent work.",
-                "exampleScenario": "Plan a release-preparation task, approve the plan, and review a publishing step before execution.",
+                "exampleScenario": "With the BYO sample, approve a release-preparation plan and confirm a publishing step. With LangGraph, approve or deny a proposed trip booking.",
                 "bestFit": "Developers evaluating resumable approval workflows and side-effect handling.",
                 "capabilities": [
                     "Requests plan and action approvals (bring-your-own); requests approval for sensitive tool calls (LangGraph)",
@@ -2173,7 +2173,7 @@
                     "Resumes interrupted execution from checkpoints",
                     "Exposes task status and cancellation"
                 ],
-                "whatItGenerates": "A Python BYO Invocations agent with a resilient multi-turn task and checkpoint storage. The client must implement the sample's action and polling contract. Review storage durability, authorization, and idempotency before replacing demonstration steps with real external actions.",
+                "whatItGenerates": "One Python Invocations project for the selected implementation: a BYO resilient approval-gate agent or a LangGraph trip-planning agent with durable checkpoints. Use the selected sample's client approval and recovery contract. Review storage durability, authorization, and idempotency before replacing demonstration steps with real external actions.",
                 "requirements": [
                     "Model access, approval client"
                 ]
@@ -2369,7 +2369,7 @@
                     "Distinguishes steering from user cancellation",
                     "Supports recovery after crashes; behavior varies by implementation (Responses: re-run from scratch; Agent Framework: resume from last committed checkpoint)"
                 ],
-                "whatItGenerates": "A Python BYO Responses demonstration with resilient-background and steerable-conversation options. Recovery requires stored background requests. Simulated output needs no model call; replace the simulation to integrate a real model, whose calls may repeat after recovery.",
+                "whatItGenerates": "One Responses project for the selected implementation: a Python BYO simulated-streaming agent or a C# Agent Framework deterministic workflow. Recovery uses stored background responses: Python re-runs an interrupted turn, while C# resumes from the last committed workflow checkpoint. Neither sample calls a model as provided; model calls added to the Python handler may repeat after recovery.",
                 "requirements": [
                     "Foundry project or stored responses"
                 ]
@@ -2491,7 +2491,7 @@
                     "Demonstrates ResilientBackground option for Responses",
                     "Shows requirement for stable executor identity (Agent Framework sample only)"
                 ],
-                "whatItGenerates": "A C# Agent Framework sample that implements a simulate_crash AIFunctionDeclaration, an Agent Executor configured to intercept unterminated function calls, and a Crash Tool Executor that terminates the process to demonstrate checkpoint restore and resumed FunctionResult delivery.",
+                "whatItGenerates": "One Responses project for the selected implementation: a C# Agent Framework workflow with a crash-simulating tool executor and durable workflow checkpoints, or a Python LangGraph trip-planning agent with durable graph checkpoints and background response recovery. Both include hosting configuration and a crash-recovery walkthrough.",
                 "requirements": [
                     "Model deployment"
                 ]
@@ -2544,7 +2544,7 @@
                     "Includes a protocol-aware local smoke client and azd deployment guidance",
                     "Documents Bridge 1.0 limitations (no DTMF, no image input, no hosted-agent handoff)"
                 ],
-                "whatItGenerates": "A Python hosted-agent sample that implements Voice Live Bridge Protocol 1.0 over invocations_ws, relays text and control events to a Foundry model, and streams response.output_text deltas back to Voice Live. The sample includes a protocol callback layer, response coordination, state management, a smoke test, and azd/azd-provision guidance; audio is simulated/managed by Voice Live, not performed by the agent.",
+                "whatItGenerates": "A Python hosted-agent sample that implements Voice Live Bridge Protocol 1.0 over invocations_ws, relays text and control events to a Foundry model, and streams response.output_text deltas back to Voice Live. The sample includes a protocol callback layer, response coordination, state management, a smoke test, and azd/azd-provision guidance. Production audio is managed externally by Voice Live; deterministic fake model streams are used in tests.",
                 "requirements": [
                     "Model deployment"
                 ]
@@ -2596,7 +2596,7 @@
                     "Routes model and local tool calls via a LangGraph StateGraph",
                     "Demonstrates barge-in, proactive responses, no-input handling, and response self-cancellation"
                 ],
-                "whatItGenerates": "A Python LangGraph hosted-agent implementation that exposes /invocations_ws, includes voice_runtime callbacks and a response coordinator, defines a StateGraph that routes between a Foundry Responses model node and a UTC-time tool, and streams assistant text deltas back to Voice Live. The sample includes a protocol-aware smoke test and azd-based provisioning/deploy guidance; audio handling is simulated by the Voice wrapper and not implemented in the agent.",
+                "whatItGenerates": "A Python LangGraph hosted-agent implementation that exposes /invocations_ws, includes voice_runtime callbacks and a response coordinator, defines a StateGraph that routes between a Foundry Responses model node and a UTC-time tool, and streams assistant text deltas back to Voice Live. The sample includes a protocol-aware smoke test and azd-based provisioning/deploy guidance. Production audio is managed externally by Voice Live; deterministic fake model streams are used in tests.",
                 "requirements": [
                     "Foundry model deployment"
                 ]
