@@ -35,6 +35,16 @@ export function reviewScope(base, candidate) {
     const templates = new Map(base.templates.map(template => [template.path, template]));
     for (const template of candidate.templates) if (templates.has(template.path)) assert.deepEqual(template, templates.get(template.path), 'Surviving template metadata must be preserved');
     const cards = new Map(base.cards.map(card => [card.id, card]));
+    const candidatePaths = new Set(candidate.templates.map(template => template.path));
+    const candidateCards = new Map(candidate.cards.map(card => [card.id, card]));
+    for (const card of base.cards) {
+        const surviving = card.templatePaths.filter(path => candidatePaths.has(path));
+        if (!surviving.length) continue;
+        const retained = candidateCards.get(card.id);
+        assert.ok(retained, `${card.id}: surviving card identity must be preserved`);
+        const members = new Set(retained.templatePaths);
+        assert.ok(surviving.every(path => members.has(path)), `${card.id}: surviving templates must retain their card`);
+    }
     const affected = candidate.cards.filter(card => !cards.has(card.id) || !isDeepStrictEqual(card.templatePaths, cards.get(card.id).templatePaths));
     for (const card of candidate.cards) {
         const old = cards.get(card.id);

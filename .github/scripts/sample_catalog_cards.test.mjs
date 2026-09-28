@@ -291,6 +291,39 @@ test('review scope permits only options added or removed with template values', 
     assert.throws(() => reviewScope(base, changed), /option metadata and order/);
 });
 
+test('review scope rejects renaming a card with surviving templates', () => {
+    const { candidate } = reviewFixture();
+    const base = structuredClone(candidate);
+    candidate.cards[0].id = 'renamed-card';
+    assert.throws(() => reviewScope(base, candidate), /surviving card identity/);
+});
+
+test('review scope rejects merging surviving cards into another existing card', () => {
+    const { candidate } = reviewFixture();
+    const base = structuredClone(candidate);
+    base.cards[0].templatePaths = [base.templates[0].path];
+    base.cards.push({ ...structuredClone(base.cards[0]), id: 'second-card', templatePaths: [base.templates[1].path] });
+    candidate.cards = [{ ...structuredClone(base.cards[1]), templatePaths: candidate.templates.map(template => template.path) }];
+    assert.throws(() => reviewScope(base, candidate), /surviving card identity/);
+});
+
+test('review scope rejects moving a surviving member while retaining the original card', () => {
+    const { candidate } = reviewFixture();
+    const base = structuredClone(candidate);
+    candidate.cards[0].templatePaths = [candidate.templates[0].path];
+    candidate.cards.push({ ...structuredClone(base.cards[0]), id: 'new-card', templatePaths: [candidate.templates[1].path] });
+    assert.throws(() => reviewScope(base, candidate), /surviving templates must retain their card/);
+});
+
+test('review scope permits removing a card only when all its templates are removed', () => {
+    const { candidate } = reviewFixture();
+    const base = structuredClone(candidate);
+    const removed = { ...base.templates[0], path: 'samples/deleted-template' };
+    base.templates.push(removed);
+    base.cards.push({ ...structuredClone(base.cards[0]), id: 'removed-card', templatePaths: [removed.path] });
+    assert.doesNotThrow(() => reviewScope(base, candidate));
+});
+
 test('review scope rejects changed surviving metadata or unchanged-card Details', () => {
     const { base, candidate } = reviewFixture();
     candidate.templates[0].requiresModel = false;
