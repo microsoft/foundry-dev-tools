@@ -101,6 +101,10 @@ jobs:
       stage: metadata
       source_sha: ${{ needs.scan.outputs.source_sha }}
       state_artifact: ${{ needs.scan.outputs.state_artifact }}
+    secrets:
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
 
   group:
     name: 3. Group templates and review reuse
@@ -110,6 +114,10 @@ jobs:
       stage: group
       source_sha: ${{ needs.metadata.outputs.source_sha }}
       state_artifact: ${{ needs.metadata.outputs.state_artifact }}
+    secrets:
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
 
   details:
     name: 4. Update affected card Details
@@ -119,6 +127,10 @@ jobs:
       stage: details
       source_sha: ${{ needs.group.outputs.source_sha }}
       state_artifact: ${{ needs.group.outputs.state_artifact }}
+    secrets:
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
 
   validate:
     name: 5. Write and validate catalog
@@ -225,7 +237,6 @@ jobs:
     needs: validate
     if: ${{ !inputs.validation_only && needs.validate.outputs.has_changes == 'true' }}
     runs-on: ubuntu-latest
-    environment: catalog-sync
     outputs:
       number: ${{ steps.cpr.outputs.pull-request-number }}
       head: ${{ steps.cpr.outputs.pull-request-head-sha }}
@@ -376,13 +387,12 @@ jobs:
     needs: publish
     if: ${{ needs.publish.outputs.number != '' }}
     runs-on: ubuntu-latest
-    environment: catalog-sync
     timeout-minutes: 50
     env:
       REPO_ROOT: ${{ github.workspace }}
       AZURE_OPENAI_REASONING_EFFORT: ${{ vars.AZURE_OPENAI_REASONING_EFFORT }}
     steps:
-      - name: Checkout trusted review implementation
+      - name: Checkout workflow-pinned review implementation
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.sha }}
