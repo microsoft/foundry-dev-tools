@@ -46,6 +46,9 @@ template metadata, new templates and baseline cards. Apply sections 3 and 4 to
 all of that scope using the pinned files under `sources/`. This reduces unrelated
 context, not variant coverage. Return unresolved findings for missing evidence
 or required protected-field changes; never silently narrow the supplied scope.
+Use `scope.json` files[].readPath to open a mounted evidence file. Its `path`
+is the repository-relative citation identifier, not its readable container path.
+Check the supplied readPath before concluding that a source is missing.
 
 For maintainer-led repository review, use the contracts below.
 

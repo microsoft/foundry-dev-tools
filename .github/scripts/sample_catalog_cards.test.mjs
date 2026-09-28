@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogWithCards, PATTERNS, reconcileCardDefinitions, reviewChangedCardDetails, writeCatalogWithCards } from './sample_catalog_cards.mjs';
-import { agentFailureMessage, applyReview, assertReviewTarget, collectSources, modelRequest, parseAgentOutput, resolveSourceEvidence, reviewInput, reviewScope, reviewWithFeedback, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
+import { agentFailureMessage, applyReview, assertReviewTarget, collectSources, modelRequest, parseAgentOutput, resolveSourceEvidence, reviewInput, reviewScope, reviewWithFeedback, safeSourcePath, sourceManifest, startModelProxy, validateReady } from './review_catalog_pr.mjs';
 
 function fixture() {
     const source = {
@@ -1400,6 +1400,10 @@ test('source evidence displays stable line markers while retaining original veri
         return blobs.get(path.split('/').at(-1));
     }, directory);
     assert.deepEqual(sources, originals);
+    assert.deepEqual(sourceManifest(sources), [
+        { path: `${member}/README.md`, readPath: `/input/sources/${member}/README.md`, lineCount: 2 },
+        { path: `${member}/azure.yaml`, readPath: `/input/sources/${member}/azure.yaml`, lineCount: 1 },
+    ]);
     assert.equal(readFileSync(join(directory, 'sources', member, 'README.md'), 'utf8'), 'L1: # Heading\r\nL2: Exact claim.\r\n');
     assert.equal(resolveSourceEvidence({ path: `${member}/README.md`, startLine: 2, endLine: 2 }, sources).quote, 'Exact claim.\r\n');
 });
