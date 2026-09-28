@@ -52,7 +52,10 @@ export function applyReview(candidate, scope, response, sources) {
     assert.ok(Array.isArray(response.changes) && response.changes.length <= 200, 'Bounded changes required');
     assert.ok(Array.isArray(response.unresolved) && response.unresolved.length <= 100, 'Bounded findings required');
     assert.deepEqual([...response.reviewedCards].sort(), [...scope.cards].sort(), 'Review every affected card');
-    assert.deepEqual([...response.reviewedTemplates].sort(), [...scope.templates].sort(), 'Review every new template');
+    const permittedReviews = new Set([...scope.templates, ...candidate.cards.filter(card => scope.cards.includes(card.id)).flatMap(card => card.templatePaths)]);
+    assert.ok(Array.isArray(response.reviewedTemplates) && response.reviewedTemplates.every(path => permittedReviews.has(path)), 'Reviewed template outside supplied scope');
+    assert.equal(new Set(response.reviewedTemplates).size, response.reviewedTemplates.length, 'Duplicate reviewed template');
+    assert.ok(scope.templates.every(path => response.reviewedTemplates.includes(path)), 'Review every new template');
     assert.ok(response.unresolved.every(finding => typeof finding === 'string' && finding.trim() && finding.length <= 2000), 'Findings must be concise text');
     const result = structuredClone(candidate);
     const changed = new Set();

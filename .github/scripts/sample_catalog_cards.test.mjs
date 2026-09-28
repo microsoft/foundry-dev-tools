@@ -66,7 +66,7 @@ function reviewFixture() {
     const sources = new Map([[sourcePath, 'The workflow drafts and reviews text.']]);
     const response = { changes: [{ kind: 'card', id: candidate.cards[0].id, field: 'summary',
         before: candidate.cards[0].details.summary, after: 'Draft and review text using the selected implementation.',
-        evidence: [{ path: sourcePath, quote: 'drafts and reviews text' }] }], unresolved: [], reviewedCards: scope.cards, reviewedTemplates: scope.templates };
+        evidence: [{ path: sourcePath, quote: 'drafts and reviews text' }] }], unresolved: [], reviewedCards: [...scope.cards], reviewedTemplates: [...scope.templates] };
     return { base, candidate, scope, sources, response };
 }
 
@@ -95,6 +95,16 @@ test('agent review applies only eligible prose without changing snapshot identit
     assert.deepEqual(normalized, candidate);
 });
 
+test('agent review may report existing members without granting edit permission', () => {
+    const { candidate, scope, sources, response } = reviewFixture();
+    const existing = candidate.templates.find(template => !scope.templates.includes(template.path));
+    response.reviewedTemplates.push(existing.path);
+    assert.doesNotThrow(() => applyReview(candidate, scope, response, sources));
+    response.changes.push({ kind: 'template', id: existing.path, field: 'description', before: existing.description,
+        after: 'Protected metadata must not change.', evidence: response.changes[0].evidence });
+    assert.throws(() => applyReview(candidate, scope, response, sources), /Change outside review scope/);
+});
+
 for (const [name, mutate] of [
     ['protected field', item => { item.response.changes[0].field = 'templatePaths'; }],
     ['unreviewed card', item => { item.response.changes[0].id = 'other-card'; }],
@@ -104,6 +114,9 @@ for (const [name, mutate] of [
     ['extra properties', item => { item.response.command = 'git push'; }],
     ['duplicate patch', item => { item.response.changes.push(item.response.changes[0]); }],
     ['missing coverage', item => { item.response.reviewedCards = []; }],
+    ['missing new template coverage', item => { item.response.reviewedTemplates = []; }],
+    ['unrelated reviewed template', item => { item.response.reviewedTemplates.push('samples/unrelated'); }],
+    ['duplicate reviewed template', item => { item.response.reviewedTemplates.push(item.response.reviewedTemplates[0]); }],
     ['type change', item => { item.response.changes[0].after = ['Changed']; }],
     ['markup', item => { item.response.changes[0].after = '<script>bad</script>'; }],
 ]) {
