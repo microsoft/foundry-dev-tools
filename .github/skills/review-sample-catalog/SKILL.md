@@ -34,6 +34,17 @@ of factual accuracy. A Draft PR is a review artifact, not permission to merge.
 
 ## Read the Current Contracts
 
+In sandboxed CI, the wrapper owns the full-catalog checks in sections 1 and 2,
+test execution and GitHub publication. Read `scope.json` and `review-input.json`
+instead of the complete catalogs and generator/test/workflow files, which are
+not mounted. The scoped input includes affected cards, every current member's
+template metadata, new templates and baseline cards. Apply sections 3 and 4 to
+all of that scope using the pinned files under `sources/`. This reduces unrelated
+context, not variant coverage. Return unresolved findings for missing evidence
+or required protected-field changes; never silently narrow the supplied scope.
+
+For maintainer-led repository review, use the contracts below.
+
 Use the PR's base and head versions, not an unrelated working branch:
 
 - [Catalog snapshot](../../../samples/hosted-agent/sample-catalog.json)
