@@ -20,6 +20,10 @@ of factual accuracy. A Draft PR is a review artifact, not permission to merge.
   human edits as a success outcome. The wrapper permits two repair passes and a
   final verification pass, validates changes, runs tests and performs GitHub
   writes; the agent itself must never execute commands or publish anything.
+  Rejected outputs consume the same three-attempt limit. Read `feedback.json`
+  when supplied: rejected patches were not applied, so use the current input's
+  values. Address the specific error without hiding factual concerns. After a
+  correction, the wrapper requires an independent clean review before publishing.
 - An explicit request to fix the data PR authorizes narrowly scoped catalog
   corrections during human-led review. Do not require a generator change merely
   to correct reviewed prose. If the user has prohibited direct data edits, ask
@@ -154,8 +158,14 @@ membership and ordering. Generalize common behavior or explicitly qualify real
 differences; do not erase useful information merely to silence a reviewer.
 
 In sandboxed CI, propose these changes using the wrapper's structured output
-contract instead of editing files. Include the exact current value and a pinned
-source quote for each correction. Return all reviewed card/template IDs even
+contract instead of editing files. Include the exact current value and evidence
+references `{path, startLine, endLine}` for each correction. Files under `sources/`
+have `L<number>:` markers for their original 1-based lines; use those inclusive
+line ranges and omit `sources/` from the path. Do not copy source quotations:
+the wrapper extracts the exact original text and preserves it in the report.
+Choose concise supporting ranges of at most 6000 characters per reference.
+A valid location proves provenance, not that the text supports the correction;
+verify the meaning and every applicable variant. Return all reviewed card/template IDs even
 when no changes are needed. Report grouping or protected-field defects as
 unresolved; never modify them to satisfy a prose review.
 

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -6,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogWithCards, PATTERNS, reconcileCardDefinitions, reviewChangedCardDetails, writeCatalogWithCards } from './sample_catalog_cards.mjs';
-import { agentFailureMessage, applyReview, assertReviewTarget, collectSources, modelRequest, parseAgentOutput, reviewInput, reviewScope, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
+import { agentFailureMessage, applyReview, assertReviewTarget, collectSources, modelRequest, parseAgentOutput, resolveSourceEvidence, reviewInput, reviewScope, reviewWithFeedback, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
 
 function fixture() {
     const source = {
@@ -66,7 +67,7 @@ function reviewFixture() {
     const sources = new Map([[sourcePath, 'The workflow drafts and reviews text.']]);
     const response = { changes: [{ kind: 'card', id: candidate.cards[0].id, field: 'summary',
         before: candidate.cards[0].details.summary, after: 'Draft and review text using the selected implementation.',
-        evidence: [{ path: sourcePath, quote: 'drafts and reviews text' }] }], unresolved: [], reviewedCards: [...scope.cards], reviewedTemplates: [...scope.templates] };
+        evidence: [{ path: sourcePath, startLine: 1, endLine: 1 }] }], unresolved: [], reviewedCards: [...scope.cards], reviewedTemplates: [...scope.templates] };
     return { base, candidate, scope, sources, response };
 }
 
@@ -87,8 +88,10 @@ test('scoped review input keeps every affected member and omits unrelated catalo
 
 test('agent review applies only eligible prose without changing snapshot identity', () => {
     const { candidate, scope, sources, response } = reviewFixture();
-    const result = applyReview(candidate, scope, response, sources);
+    const evidence = [];
+    const result = applyReview(candidate, scope, response, sources, evidence);
     validateReady(result, scope);
+    assert.equal(evidence[0].quote, 'The workflow drafts and reviews text.');
     assert.equal(result.cards[0].details.summary, response.changes[0].after);
     const normalized = structuredClone(result);
     normalized.cards[0].details.summary = candidate.cards[0].details.summary;
@@ -109,7 +112,7 @@ for (const [name, mutate] of [
     ['protected field', item => { item.response.changes[0].field = 'templatePaths'; }],
     ['unreviewed card', item => { item.response.changes[0].id = 'other-card'; }],
     ['stale value', item => { item.response.changes[0].before = 'Outdated'; }],
-    ['invented evidence', item => { item.response.changes[0].evidence[0].quote = 'No source says this'; }],
+    ['invented evidence', item => { item.response.changes[0].evidence[0].endLine = 99; }],
     ['foreign source', item => { item.response.changes[0].evidence[0].path = 'samples/other/README.md'; }],
     ['extra properties', item => { item.response.command = 'git push'; }],
     ['duplicate patch', item => { item.response.changes.push(item.response.changes[0]); }],
@@ -129,6 +132,30 @@ for (const [name, mutate] of [
     });
 }
 
+test('source line references preserve exact Markdown and line endings', () => {
+    const path = 'samples/test/README.md';
+    const sources = new Map([[path, '# Heading\r\n\r\n**Exact claim**.\r\nLast line']]);
+    assert.deepEqual(resolveSourceEvidence({ path, startLine: 3, endLine: 4 }, sources),
+        { path, startLine: 3, endLine: 4, quote: '**Exact claim**.\r\nLast line' });
+    for (const [startLine, endLine] of [[0, 1], [3, 2], [1, 5], [1.5, 2], ['1', 2], [2, 2]]) {
+        assert.throws(() => resolveSourceEvidence({ path, startLine, endLine }, sources));
+    }
+    assert.throws(() => resolveSourceEvidence({ path: 'samples/missing', startLine: 1, endLine: 1 }, sources), /unknown pinned source/);
+    assert.throws(() => resolveSourceEvidence({ path, quote: 'Invented' }, sources), /invalid properties/);
+    assert.throws(() => resolveSourceEvidence({ path, startLine: 1, endLine: 1 }, new Map([[path, 'x'.repeat(6001)]])), /narrower range/);
+});
+
+test('agent evidence failures identify the field, file and invalid range', () => {
+    const { candidate, scope, sources, response } = reviewFixture();
+    response.changes[0].evidence[0].endLine = 2;
+    assert.throws(() => applyReview(candidate, scope, response, sources),
+        /card\/writing-workflow\/summary\.evidence\[0\]: invalid range .*README.md:1-2; file has 1 lines/);
+    const foreign = 'samples/other/README.md';
+    sources.set(foreign, 'Unrelated source.');
+    response.changes[0].evidence = [{ path: foreign, startLine: 1, endLine: 1 }];
+    assert.throws(() => applyReview(candidate, scope, response, sources), /different card/);
+});
+
 test('agent review enforces Requirements and final description limits', () => {
     const { candidate, scope, sources, response } = reviewFixture();
     response.changes[0] = { ...response.changes[0], field: 'requirements', before: candidate.cards[0].details.requirements, after: ['one two three four five six'] };
@@ -137,6 +164,99 @@ test('agent review enforces Requirements and final description limits', () => {
     assert.deepEqual(applyReview(candidate, scope, response, sources).cards[0].details.requirements, ['Model access, research client']);
     candidate.templates[1].description = 'x'.repeat(101);
     assert.throws(() => validateReady(candidate, scope), /1-100/);
+});
+
+function reviewAttemptHarness(context, responses) {
+    const item = reviewFixture();
+    const before = structuredClone(item.candidate);
+    const reportDirectory = mkdtempSync(join(tmpdir(), 'catalog-review-feedback-'));
+    context.after(() => rmSync(reportDirectory, { recursive: true, force: true }));
+    const report = { rounds: [], unresolved: [] };
+    const calls = [];
+    const execute = () => reviewWithFeedback(item.candidate, item.scope, item.sources, {
+        report, reportDirectory, phase: value => { report.phase = value; },
+        requestReview: async request => {
+            const savedReport = JSON.parse(readFileSync(join(reportDirectory, 'review.json'), 'utf8'));
+            calls.push({ ...structuredClone(request), savedReport });
+            const response = responses(request, item);
+            return { rawResponse: typeof response === 'string' ? response : JSON.stringify(response), metrics: { calls: 1, tokens: 10 } };
+        },
+    });
+    return { item, before, report, calls, execute, saved: () => JSON.parse(readFileSync(join(reportDirectory, 'review.json'), 'utf8')) };
+}
+
+test('review recovery persists a rejected patch, feeds back its error and independently verifies the correction', async context => {
+    const harness = reviewAttemptHarness(context, ({ round }, item) => {
+        const response = structuredClone(item.response);
+        if (round === 0) response.changes[0].evidence[0].endLine = 99;
+        if (round === 2) response.changes = [];
+        return response;
+    });
+    const result = await harness.execute();
+    assert.equal(harness.calls.length, 3);
+    assert.deepEqual(harness.calls[1].candidate, harness.before);
+    assert.match(harness.calls[1].feedback.validationError, /summary.evidence\[0\]: invalid range/);
+    assert.equal(harness.calls[1].feedback.previousResponse.changes[0].evidence[0].endLine, 99);
+    assert.equal(harness.calls[1].savedReport.rounds[0].status, 'rejected');
+    assert.ok(harness.calls[1].savedReport.rounds[0].rawResponse.includes('99'));
+    assert.equal(harness.calls[2].feedback, null);
+    assert.equal(result.cards[0].details.summary, harness.item.response.changes[0].after);
+    assert.deepEqual(harness.item.candidate, harness.before);
+    assert.deepEqual(harness.saved().rounds.map(round => round.status), ['rejected', 'validated', 'validated']);
+    assert.equal(harness.saved().rounds[1].resolvedEvidence[0].quote, 'The workflow drafts and reviews text.');
+});
+
+test('review recovery retains malformed JSON and does not treat a feedback response as independent verification', async context => {
+    const harness = reviewAttemptHarness(context, ({ round }, item) => round === 0 ? 'Invalid JSON reply' : { ...item.response, changes: [] });
+    assert.deepEqual(await harness.execute(), harness.before);
+    assert.equal(harness.calls.length, 3);
+    assert.equal(harness.calls[1].feedback.previousResponse, 'Invalid JSON reply');
+    assert.equal(harness.calls[2].feedback, null);
+    assert.equal(harness.saved().rounds[0].rawResponse, 'Invalid JSON reply');
+});
+
+for (const failure of ['invalid evidence', 'protected edit', 'unresolved findings', 'last-pass change']) {
+    test(`review recovery remains blocked after three attempts for ${failure}`, async context => {
+        const harness = reviewAttemptHarness(context, ({ round }, item) => {
+            const response = structuredClone(item.response);
+            if (failure === 'invalid evidence' || failure === 'last-pass change' && round < 2) response.changes[0].evidence[0].endLine = 99;
+            if (failure === 'protected edit') response.changes[0].field = 'templatePaths';
+            if (failure === 'unresolved findings') { response.changes = []; response.unresolved = ['Missing evidence for the claim']; }
+            return response;
+        });
+        await assert.rejects(harness.execute());
+        assert.equal(harness.calls.length, 3);
+        assert.equal(harness.saved().rounds.length, 3);
+        assert.deepEqual(harness.item.candidate, harness.before);
+    });
+}
+
+test('review recovery accepts an initially clean review without additional calls', async context => {
+    const harness = reviewAttemptHarness(context, (_request, item) => ({ ...item.response, changes: [] }));
+    assert.deepEqual(await harness.execute(), harness.before);
+    assert.equal(harness.calls.length, 1);
+});
+
+test('review recovery records service failures without resetting the model budget', async context => {
+    const harness = reviewAttemptHarness(context, () => { throw new Error('Model token budget exhausted'); });
+    await assert.rejects(harness.execute(), /Model token budget exhausted/);
+    assert.equal(harness.calls.length, 1);
+    assert.equal(harness.saved().rounds[0].status, 'execution-failed');
+    assert.equal(harness.saved().rounds[0].error, 'Model token budget exhausted');
+});
+
+test('review recovery feeds description-limit failures back without accepting an incomplete review', async context => {
+    const harness = reviewAttemptHarness(context, ({ round }, item) => {
+        const response = { ...item.response, changes: [] };
+        if (round === 1) response.changes = [{ ...item.response.changes[0], kind: 'template', id: item.scope.templates[0],
+            field: 'description', before: 'x'.repeat(101), after: 'Draft and review text.' }];
+        return response;
+    });
+    harness.item.candidate.templates[1].description = 'x'.repeat(101);
+    const result = await harness.execute();
+    assert.match(harness.calls[1].feedback.validationError, /\.description:.*1-100/);
+    assert.equal(result.templates[1].description, 'Draft and review text.');
+    assert.equal(harness.calls.length, 3);
 });
 
 test('review scope rejects changed surviving metadata or unchanged-card Details', () => {
@@ -1255,6 +1375,33 @@ test('CLI result parsing rejects incomplete, failed and non-JSON final answers',
         [{ type: 'assistant.message', data: { content: '{"ok":true}', toolRequests: [{ name: 'view' }] } }, { type: 'result', exitCode: 0 }],
     ]) assert.throws(() => parseAgentOutput(events.map(event => JSON.stringify(event)).join('\n')));
     assert.throws(() => parseAgentOutput('not JSONL'));
+});
+
+test('source evidence displays stable line markers while retaining original verified bytes', async context => {
+    const { candidate } = reviewFixture();
+    const member = candidate.templates[1].path;
+    const originals = new Map([
+        [`${member}/README.md`, '# Heading\r\nExact claim.\r\n'],
+        [`${member}/azure.yaml`, 'name: sample\n'],
+    ]);
+    const blobs = new Map();
+    const entries = [...originals].map(([path, text]) => {
+        const bytes = Buffer.from(text);
+        const sha = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+        blobs.set(sha, { encoding: 'base64', content: bytes.toString('base64') });
+        return { path, sha, type: 'blob', mode: '100644', size: bytes.length };
+    });
+    const directory = mkdtempSync(join(tmpdir(), 'catalog-line-sources-'));
+    context.after(() => rmSync(directory, { recursive: true, force: true }));
+    const treeSha = 'b'.repeat(40);
+    const sources = await collectSources(candidate, { cards: [], templates: [member] }, async path => {
+        if (path.includes('/git/commits/')) return { sha: candidate.commitSha, tree: { sha: treeSha } };
+        if (path.includes('/git/trees/')) return { sha: treeSha, truncated: false, tree: entries };
+        return blobs.get(path.split('/').at(-1));
+    }, directory);
+    assert.deepEqual(sources, originals);
+    assert.equal(readFileSync(join(directory, 'sources', member, 'README.md'), 'utf8'), 'L1: # Heading\r\nL2: Exact claim.\r\n');
+    assert.equal(resolveSourceEvidence({ path: `${member}/README.md`, startLine: 2, endLine: 2 }, sources).quote, 'Exact claim.\r\n');
 });
 
 test('source evidence resolves the tree from the pinned commit', async () => {
