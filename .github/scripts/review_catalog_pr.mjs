@@ -248,6 +248,16 @@ function runAsync(file, args, options, deadlineMs) {
     });
 }
 
+export function parseAgentOutput(output) {
+    const events = output.split(/\r?\n/).filter(line => line.trim()).map(line => JSON.parse(line));
+    const result = events.at(-1);
+    assert.equal(result?.type, 'result', 'Agent output is incomplete');
+    assert.equal(result.exitCode, 0, 'Agent reported failure');
+    const message = events.findLast(event => event.type === 'assistant.message')?.data;
+    assert.ok(message && typeof message.content === 'string' && !message.toolRequests?.length, 'Final agent answer required');
+    return JSON.parse(message.content.trim().replace(/^```json\s*/, '').replace(/\s*```$/, ''));
+}
+
 async function runAgent(inputDirectory, trustedRoot, prompt, mockModel) {
     assert.equal(process.platform, 'linux', 'Agent step requires the Linux CI runner');
     const suffix = randomBytes(6).toString('hex');
@@ -284,11 +294,11 @@ async function runAgent(inputDirectory, trustedRoot, prompt, mockModel) {
             '-e', 'COPILOT_PROVIDER_WIRE_API=responses', '-e', `COPILOT_PROVIDER_API_KEY=${proxy.token}`,
             '-e', `COPILOT_MODEL=${process.env.CATALOG_REVIEW_MODEL || 'gpt-5-mini'}`,
             '-e', 'COPILOT_PROVIDER_MAX_OUTPUT_TOKENS=16000', '-e', 'COPILOT_PROVIDER_MAX_PROMPT_TOKENS=80000',
-            image, '-p', prompt, '--silent', '--stream=off', '--no-ask-user', '--no-custom-instructions', '--no-auto-update',
+            image, '-p', prompt, '--silent', '--output-format=json', '--stream=off', '--no-ask-user', '--no-custom-instructions', '--no-auto-update',
             '--no-remote', '--no-remote-export', '--disable-builtin-mcps', '--disallow-temp-dir',
             '--available-tools=view,grep,glob,skill', '--allow-tool=view', '--allow-tool=grep', '--allow-tool=glob', '--allow-tool=skill',
             '--reasoning-effort', effort, '--log-level=error'], {}, 12 * 60 * 1000);
-        return { response: JSON.parse(output.trim().replace(/^```json\s*/, '').replace(/\s*```$/, '')), metrics: proxy.metrics };
+        return { response: parseAgentOutput(output), metrics: proxy.metrics };
     } finally {
         try { command('docker', ['rm', '--force', name]); } catch {}
         if (proxy) { proxy.server.closeAllConnections(); proxy.server.close(); }
@@ -426,7 +436,9 @@ async function sandboxSmokeTest() {
             assert.ok(names.includes('view'), `Missing view tool: ${names.join(',')}`);
             assert.ok(names.every(name => ['view', 'grep', 'glob', 'skill'].includes(name)), `Unexpected agent tool: ${names.join(',')}`);
             if (requests > 1) assert.ok(JSON.stringify(request.input).includes('Review Sample Catalog'), 'Agent did not read the skill contents');
-            const output = requests === 1 ? [{ id: 'fc_smoke', type: 'function_call', name: 'view', call_id: 'call_read_skill',
+            const output = requests === 1 ? [{ id: 'msg_progress', type: 'message', role: 'assistant', status: 'completed',
+                content: [{ type: 'output_text', text: 'Running the skill review now.', annotations: [] }] },
+            { id: 'fc_smoke', type: 'function_call', name: 'view', call_id: 'call_read_skill',
                 arguments: JSON.stringify({ path: `/input/${SKILL_PATH}` }), status: 'completed' }]
                 : [{ id: 'msg_smoke', type: 'message', role: 'assistant', status: 'completed', content: [{ type: 'output_text', text: '{"ok":true}', annotations: [] }] }];
             const response = { id: `resp_smoke_${requests}`, object: 'response', created_at: 1, status: 'completed', model: 'test-model', output,

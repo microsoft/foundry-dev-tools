@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogWithCards, PATTERNS, reconcileCardDefinitions, reviewChangedCardDetails, writeCatalogWithCards } from './sample_catalog_cards.mjs';
-import { applyReview, assertReviewTarget, collectSources, modelRequest, reviewScope, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
+import { applyReview, assertReviewTarget, collectSources, modelRequest, parseAgentOutput, reviewScope, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
 
 function fixture() {
     const source = {
@@ -1193,6 +1193,29 @@ test('normal scanning writes templates and cards together using pinned source da
     });
     assert.equal(repeated.status, 0, repeated.stderr || repeated.error?.message);
     assert.deepEqual(readFileSync(outputPath), before, 'Unchanged scans must not refresh generatedAt');
+});
+
+test('CLI result parsing separates progress and tool output from the final answer', () => {
+    const output = [
+        { type: 'assistant.message', data: { content: 'Running the review now.', toolRequests: [{ name: 'view' }] } },
+        { type: 'tool.execution_complete', data: { result: { content: '{"untrusted":true}' } } },
+        { type: 'assistant.message', data: { content: '{"ok":true}', toolRequests: [] } },
+        { type: 'assistant.idle', data: {} },
+        { type: 'result', exitCode: 0 },
+    ].map(event => JSON.stringify(event)).join('\n');
+    assert.deepEqual(parseAgentOutput(output + '\n'), { ok: true });
+});
+
+test('CLI result parsing rejects incomplete, failed and non-JSON final answers', () => {
+    const answer = { type: 'assistant.message', data: { content: '{"ok":true}', toolRequests: [] } };
+    for (const events of [
+        [answer],
+        [answer, { type: 'result', exitCode: 1 }],
+        [{ type: 'result', exitCode: 0 }],
+        [answer, { type: 'assistant.message', data: { content: 'Still reviewing', toolRequests: [] } }, { type: 'result', exitCode: 0 }],
+        [{ type: 'assistant.message', data: { content: '{"ok":true}', toolRequests: [{ name: 'view' }] } }, { type: 'result', exitCode: 0 }],
+    ]) assert.throws(() => parseAgentOutput(events.map(event => JSON.stringify(event)).join('\n')));
+    assert.throws(() => parseAgentOutput('not JSONL'));
 });
 
 test('source evidence resolves the tree from the pinned commit', async () => {
