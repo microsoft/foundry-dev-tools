@@ -1,7 +1,7 @@
 {
-    "commitSha": "be4706c76acfe44e2ae99c2818efdc4c5ab25bd9",
+    "commitSha": "5642c45da33220d5bb95bbe08fa67f34373bd96d",
     "repo": "https://github.com/microsoft-foundry/foundry-samples/",
-    "generatedAt": "2026-09-23T05:22:25Z",
+    "generatedAt": "2026-09-28T05:38:26Z",
     "dimensions": {
         "language": {
             "title": "Select a Language",
@@ -1155,6 +1155,15 @@
             "description": "Agent that uses custom persistence stores for conversation chains and response records.",
             "path": "samples/python/hosted-agents/langgraph/responses/13-custom-store",
             "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "invocations",
+            "displayName": "Content Safety Guardrail",
+            "description": "This deliberately overlong end-to-end test description describes a hosted agent using an RAI content safety guardrail to screen prompts and responses against a configured Responsible AI policy.",
+            "path": "samples/python/hosted-agents/agent-framework/invocations/02-content-safety-guardrail",
+            "requiresModel": true
         }
     ],
     "patterns": [
@@ -2091,13 +2100,13 @@
             "categoryId": "security-governance-ops",
             "details": {
                 "summary": "Apply a Responsible AI policy to check prompts and responses in the hosting platform.",
-                "whatItDoes": "Associates an RAI policy with the hosted agent so the platform applies configured input and output checks. These checks reduce risk but do not guarantee safe outputs.",
+                "whatItDoes": "Associates an RAI policy with the hosted agent so the platform applies configured input and output checks. These checks reduce risk but do not guarantee safe outputs. On the Responses protocol the platform knows the message shape and screens input/output automatically; on the Invocations protocol you must declare an invocationsModeration block with inputPaths, outputPaths and (for streaming) streamSelectors so the platform can find and screen text.",
                 "whyUseIt": "Explore definition-level safety configuration separately from application code.",
-                "exampleScenario": "Compare how the configured policy handles permitted and blocked test prompts.",
+                "exampleScenario": "Compare how the configured policy handles permitted and blocked test prompts; for the Invocations protocol, verify that the declared input/output paths and stream selectors are correct and observe the streamed-error event behavior.",
                 "bestFit": "Teams evaluating platform safety configuration for hosted agents.",
                 "capabilities": [
                     "References an RAI policy",
-                    "Applies configured platform checks",
+                    "Applies configured platform checks (responses: automatic; invocations: requires invocationsModeration)",
                     "Separates policy setup from basic chat code"
                 ],
                 "whatItGenerates": "A Python chat agent with policy-aware hosting configuration. Merely copying the code does not activate a cloud policy.",
@@ -2106,7 +2115,8 @@
                 ]
             },
             "templatePaths": [
-                "samples/python/hosted-agents/agent-framework/responses/16-content-safety-guardrail"
+                "samples/python/hosted-agents/agent-framework/responses/16-content-safety-guardrail",
+                "samples/python/hosted-agents/agent-framework/invocations/02-content-safety-guardrail"
             ]
         },
         {
