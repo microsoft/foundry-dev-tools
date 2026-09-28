@@ -103,7 +103,7 @@ export function safeSourcePath(path) {
     return typeof path === 'string' && path.startsWith('samples/') && path.split('/').every(part => /^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(part));
 }
 
-async function collectSources(candidate, scope, github, directory) {
+export async function collectSources(candidate, scope, github, directory) {
     const url = new URL(candidate.repo);
     const repository = url.pathname.replace(/^\//, '').replace(/\/$/, '');
     assert.equal(url.origin, 'https://github.com', 'Only GitHub sources are allowed');
@@ -112,9 +112,12 @@ async function collectSources(candidate, scope, github, directory) {
     const members = new Set(candidate.cards.filter(card => scope.cards.includes(card.id)).flatMap(card => card.templatePaths));
     scope.templates.forEach(path => members.add(path));
     for (const member of members) assert.ok(safeSourcePath(member), 'Unsafe sample path');
-    const tree = await github(`repos/${repository}/git/trees/${candidate.commitSha}?recursive=1`);
+    const commit = await github(`repos/${repository}/git/commits/${candidate.commitSha}`);
+    assert.equal(commit.sha, candidate.commitSha, 'Source commit revision mismatch');
+    assert.match(commit.tree.sha, /^[a-f0-9]{40}$/i);
+    const tree = await github(`repos/${repository}/git/trees/${commit.tree.sha}?recursive=1`);
     assert.equal(tree.truncated, false, 'Incomplete source tree');
-    assert.equal(tree.sha, candidate.commitSha, 'Source tree revision mismatch');
+    assert.equal(tree.sha, commit.tree.sha, 'Source tree revision mismatch');
     const files = tree.tree.filter(entry => entry.type === 'blob' && entry.mode !== '120000' && safeSourcePath(entry.path))
         .filter(entry => [...members].some(member => entry.path.startsWith(`${member}/`)))
         .filter(entry => /\.(md|py|cs|ts|js|json|ya?ml|toml|txt)$|(^|\/)Dockerfile$/.test(entry.path))
@@ -274,7 +277,7 @@ async function runAgent(inputDirectory, trustedRoot, prompt, mockModel) {
         }
         const output = await runAsync('docker', ['run', '--rm', '--name', name, '--network', network, '--read-only', '--cap-drop=ALL',
             '--user', `${process.getuid()}:${process.getgid()}`,
-            '--security-opt=no-new-privileges', '--pids-limit=128', '--memory=2g', '--cpus=2', '--tmpfs', '/tmp:rw,nosuid,nodev,size=256m,mode=1777',
+            '--security-opt=no-new-privileges', '--pids-limit=128', '--memory=2g', '--cpus=2', '--tmpfs', '/tmp:rw,exec,nosuid,nodev,size=256m,mode=1777',
             '--mount', `type=bind,src=${inputDirectory},dst=/input,readonly`,
             '-e', `COPILOT_PROVIDER_BASE_URL=http://${gateway}:${proxy.port}/v1`, '-e', 'COPILOT_PROVIDER_TYPE=openai',
             '-e', 'COPILOT_PROVIDER_WIRE_API=responses', '-e', `COPILOT_PROVIDER_API_KEY=${proxy.token}`,

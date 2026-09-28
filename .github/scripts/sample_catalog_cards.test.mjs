@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogWithCards, PATTERNS, reconcileCardDefinitions, reviewChangedCardDetails, writeCatalogWithCards } from './sample_catalog_cards.mjs';
-import { applyReview, assertReviewTarget, modelRequest, reviewScope, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
+import { applyReview, assertReviewTarget, collectSources, modelRequest, reviewScope, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
 
 function fixture() {
     const source = {
@@ -1194,6 +1194,34 @@ test('normal scanning writes templates and cards together using pinned source da
     assert.equal(repeated.status, 0, repeated.stderr || repeated.error?.message);
     assert.deepEqual(readFileSync(outputPath), before, 'Unchanged scans must not refresh generatedAt');
 });
+
+test('source evidence resolves the tree from the pinned commit', async () => {
+    const { candidate } = reviewFixture();
+    const treeSha = 'b'.repeat(40);
+    const requests = [];
+    const sources = await collectSources(candidate, { cards: [], templates: [] }, async path => {
+        requests.push(path);
+        return requests.length === 1 ? { sha: candidate.commitSha, tree: { sha: treeSha } }
+            : { sha: treeSha, truncated: false, tree: [] };
+    }, tmpdir());
+    assert.deepEqual(requests, [
+        `repos/microsoft-foundry/foundry-samples/git/commits/${candidate.commitSha}`,
+        `repos/microsoft-foundry/foundry-samples/git/trees/${treeSha}?recursive=1`,
+    ]);
+    assert.equal(sources.size, 0);
+});
+
+for (const mismatch of ['commit', 'tree', 'truncated']) {
+    test(`source evidence rejects ${mismatch} mismatch`, async () => {
+        const { candidate } = reviewFixture();
+        const treeSha = 'b'.repeat(40);
+        await assert.rejects(collectSources(candidate, { cards: [], templates: [] }, async path =>
+            path.includes('/git/commits/')
+                ? { sha: mismatch === 'commit' ? 'c'.repeat(40) : candidate.commitSha, tree: { sha: treeSha } }
+                : { sha: mismatch === 'tree' ? candidate.commitSha : treeSha, truncated: mismatch === 'truncated', tree: [] }, tmpdir()),
+        /Source (commit|tree) revision mismatch|Incomplete source tree/);
+    });
+}
 
 test('model gateway accepts only inference routes and fixes deployment and budgets', () => {
     const { route, request } = modelRequest('/v1/responses', { model: 'other', input: 'Review', stream: true, store: true,
