@@ -12,13 +12,6 @@ on:
       state_artifact:
         required: true
         type: string
-    secrets:
-      AZURE_OPENAI_ENDPOINT:
-        required: true
-      AZURE_OPENAI_API_KEY:
-        required: true
-      AZURE_OPENAI_DEPLOYMENT:
-        required: true
     outputs:
       source_sha:
         value: ${{ jobs.stage.outputs.source_sha }}
@@ -32,6 +25,7 @@ jobs:
   stage:
     name: ${{ inputs.stage }}
     runs-on: ubuntu-latest
+    environment: catalog-sync
     outputs:
       source_sha: ${{ inputs.source_sha }}
       state_artifact: ${{ format('catalog-sync-{0}-{1}-{2}', inputs.stage, github.run_id, github.run_attempt) }}
