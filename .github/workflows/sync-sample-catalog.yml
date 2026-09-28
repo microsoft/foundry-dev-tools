@@ -41,17 +41,20 @@ jobs:
 
     steps:
       - name: Checkout repository
+        id: checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Node.js
+        id: node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Prepare sync paths
+        id: paths
         shell: bash
         run: |
           {
@@ -90,6 +93,7 @@ jobs:
         run: node .github/scripts/generate_sample_catalog.mjs --sync-stage scan "$SOURCE_SHA"
 
       - name: 2. Generate new template metadata
+        id: metadata
         if: ${{ steps.scan.outputs.has_changes == 'true' }}
         env: &generation-env
           GITHUB_TOKEN: ${{ github.token }}
@@ -100,25 +104,31 @@ jobs:
         run: node .github/scripts/generate_sample_catalog.mjs --sync-stage metadata "$SOURCE_SHA"
 
       - name: 3. Group templates and review card reuse
+        id: group
         if: ${{ steps.scan.outputs.has_changes == 'true' }}
         env: *generation-env
         run: node .github/scripts/generate_sample_catalog.mjs --sync-stage group "$SOURCE_SHA"
 
       - name: 4. Update affected card Details
+        id: details
         if: ${{ steps.scan.outputs.has_changes == 'true' }}
         env: *generation-env
         run: node .github/scripts/generate_sample_catalog.mjs --sync-stage details "$SOURCE_SHA"
 
       - name: 5. Write structurally validated candidate
+        id: write
         if: ${{ steps.scan.outputs.has_changes == 'true' }}
         env:
           SOURCE_SHA: ${{ steps.resolve-sha.outputs.sha }}
         run: node .github/scripts/generate_sample_catalog.mjs --sync-stage write "$SOURCE_SHA"
 
-      - name: Validate catalog snapshot
-        run: |
-          node --test .github/scripts/sample_catalog_cards.test.mjs
-          node .github/scripts/review_catalog_pr.mjs --sandbox-smoke-test
+      - name: Run catalog regression tests
+        id: tests
+        run: node --test .github/scripts/sample_catalog_cards.test.mjs
+
+      - name: Verify isolated CLI transport (offline)
+        id: sandbox
+        run: node .github/scripts/review_catalog_pr.mjs --sandbox-smoke-test
 
       - name: Detect catalog changes
         id: diff
@@ -303,6 +313,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: 7. Review with skill and commit verified corrections
+        id: review
         if: ${{ !inputs.validation_only && steps.cpr.outputs.pull-request-number != '' }}
         timeout-minutes: 50
         env:
@@ -325,3 +336,45 @@ jobs:
           path: ${{ runner.temp }}/catalog-review/
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Report pipeline step outcomes
+        if: ${{ always() }}
+        env:
+          STEP_OUTCOMES: ${{ toJSON(steps) }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+          const outcomes = JSON.parse(process.env.STEP_OUTCOMES);
+          const stages = [
+            ['checkout', 'Checkout repository'],
+            ['node', 'Set up Node.js'],
+            ['paths', 'Prepare sync paths'],
+            ['resolve-sha', 'Resolve pinned source revision'],
+            ['scan', '1. Scan sample changes'],
+            ['metadata', '2. Generate new template metadata'],
+            ['group', '3. Group templates and review card reuse'],
+            ['details', '4. Update affected card Details'],
+            ['write', '5. Write structurally validated candidate'],
+            ['tests', 'Run catalog regression tests'],
+            ['sandbox', 'Verify isolated CLI transport (offline)'],
+            ['diff', 'Detect catalog changes'],
+            ['app-token', 'Generate GitHub App token'],
+            ['labels', 'Resolve pull request labels'],
+            ['branch', 'Generate PR branch name'],
+            ['cpr', '6. Create draft pull request'],
+            ['review', '7. Review with skill and commit verified corrections'],
+          ];
+          const failed = stages.filter(([id]) => outcomes[id]?.outcome === 'failure');
+          const url = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+          const summary = [
+            '## Pipeline Step Outcomes',
+            failed.length ? `Failed step(s): **${failed.map(([, name]) => name).join('; ')}**` : 'No tracked step failed. Check skipped/cancelled stages below for coverage.',
+            `[Open the sync job for step logs](${url})`,
+            '| Step | Outcome |',
+            '| --- | --- |',
+            ...stages.map(([id, name]) => `| ${name} | ${outcomes[id]?.outcome ?? 'not run'} |`),
+          ].join('\n');
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n${summary}\n`);
+          console.log(summary);
+          for (const [, name] of failed) console.log(`::error title=Pipeline step failed::${name}`);
+          NODE

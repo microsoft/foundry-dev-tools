@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogWithCards, PATTERNS, reconcileCardDefinitions, reviewChangedCardDetails, writeCatalogWithCards } from './sample_catalog_cards.mjs';
-import { agentFailureMessage, applyReview, assertReviewTarget, collectSources, modelRequest, parseAgentOutput, reviewScope, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
+import { agentFailureMessage, applyReview, assertReviewTarget, collectSources, modelRequest, parseAgentOutput, reviewInput, reviewScope, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
 
 function fixture() {
     const source = {
@@ -69,6 +69,21 @@ function reviewFixture() {
         evidence: [{ path: sourcePath, quote: 'drafts and reviews text' }] }], unresolved: [], reviewedCards: scope.cards, reviewedTemplates: scope.templates };
     return { base, candidate, scope, sources, response };
 }
+
+test('scoped review input keeps every affected member and omits unrelated catalog content', () => {
+    const { base, candidate, scope } = reviewFixture();
+    candidate.templates.push({ ...candidate.templates[0], path: 'samples/unrelated' });
+    candidate.cards.push({ ...candidate.cards[0], id: 'unrelated', templatePaths: ['samples/unrelated'] });
+    const before = structuredClone(candidate);
+    const input = reviewInput(base, candidate, scope);
+    assert.deepEqual(input.cards, [candidate.cards[0]]);
+    assert.deepEqual(input.templates, candidate.templates.slice(0, 2));
+    assert.deepEqual(input.baselineCards, base.cards);
+    assert.equal(input.commitSha, candidate.commitSha);
+    assert.equal(input.repo, candidate.repo);
+    input.cards[0].details.summary = 'Edited in model input';
+    assert.deepEqual(candidate, before);
+});
 
 test('agent review applies only eligible prose without changing snapshot identity', () => {
     const { candidate, scope, sources, response } = reviewFixture();
@@ -1273,6 +1288,33 @@ test('model gateway accepts only inference routes and fixes deployment and budge
     assert.equal(safeSourcePath('samples/python/main.py'), true);
     for (const path of ['samples/../secret', '/etc/passwd', 'samples/test\\secret', 'samples/link/.env', 'samples//file']) assert.equal(safeSourcePath(path), false);
 });
+
+for (const stream of [false, true]) {
+    test(`model proxy blocks retries after token exhaustion with stream=${stream}`, async context => {
+        let upstreamCalls = 0;
+        const proxy = await startModelProxy('https://test.openai.azure.com', 'provider-secret', 'deployment', 'low', '127.0.0.1', async () => {
+            upstreamCalls++;
+            const data = { model: 'test-model', usage: { total_tokens: 300001 } };
+            return stream
+                ? new Response(`data: ${JSON.stringify({ response: data })}\n\n`)
+                : Response.json(data);
+        });
+        context.after(() => { proxy.server.closeAllConnections(); proxy.server.close(); });
+        const request = () => fetch(`http://127.0.0.1:${proxy.port}/v1/responses`, {
+            method: 'POST', headers: { Authorization: `Bearer ${proxy.token}` }, body: JSON.stringify({ input: 'Review', stream }),
+        });
+        if (stream) await assert.rejects(async () => (await request()).text());
+        else assert.equal((await request()).status, 502);
+        for (let retry = 0; retry < 5; retry++) {
+            const response = await request();
+            assert.equal(response.status, 502);
+            assert.equal((await response.json()).error.message, 'Model token budget exhausted');
+        }
+        assert.equal(upstreamCalls, 1);
+        assert.equal(proxy.metrics.calls, 1);
+        assert.equal(proxy.metrics.tokens, 300001);
+    });
+}
 
 test('model proxy forwards SSE unchanged and never forwards caller credentials', async context => {
     let received;
