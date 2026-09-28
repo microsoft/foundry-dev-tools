@@ -115,6 +115,22 @@ jobs:
           SOURCE_SHA: ${{ steps.resolve-sha.outputs.sha }}
         run: node .github/scripts/generate_sample_catalog.mjs --sync-stage write "$SOURCE_SHA"
 
+      - name: Inject temporary correction-path test fixture
+        if: ${{ steps.scan.outputs.has_changes == 'true' }}
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const path = 'samples/hosted-agent/sample-catalog.json';
+          const catalog = JSON.parse(readFileSync(path, 'utf8'));
+          assert.equal(catalog.commitSha, '5642c45da33220d5bb95bbe08fa67f34373bd96d');
+          const template = catalog.templates.find(item => item.path === 'samples/python/hosted-agents/agent-framework/invocations/02-content-safety-guardrail');
+          assert.ok(template, 'Expected new template is missing');
+          template.description = 'This deliberately overlong end-to-end test description describes a hosted agent using an RAI content safety guardrail to screen prompts and responses against a configured Responsible AI policy.';
+          assert.ok(template.description.length > 100, 'The test must require a correction');
+          writeFileSync(path, JSON.stringify(catalog, null, 4) + '\n');
+          NODE
+
       - name: Validate catalog snapshot
         run: |
           node --test .github/scripts/sample_catalog_cards.test.mjs
