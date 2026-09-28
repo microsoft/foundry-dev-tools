@@ -1225,10 +1225,11 @@ for (const mismatch of ['commit', 'tree', 'truncated']) {
 
 test('model gateway accepts only inference routes and fixes deployment and budgets', () => {
     const { route, request } = modelRequest('/v1/responses', { model: 'other', input: 'Review', stream: true, store: true,
-        max_output_tokens: 999999, tools: [{ type: 'function', name: 'view' }] }, 'catalog-deployment', 'low');
+        prompt_cache_key: 'cli-session-cache-key', max_output_tokens: 999999, tools: [{ type: 'function', name: 'view' }] }, 'catalog-deployment', 'low');
     assert.equal(route, '/v1/responses');
     assert.equal(request.model, 'catalog-deployment');
     assert.equal(request.store, false);
+    assert.equal(Object.hasOwn(request, 'prompt_cache_key'), false);
     assert.equal(request.max_output_tokens, 16000);
     assert.deepEqual(request.reasoning, { effort: 'low' });
     assert.throws(() => modelRequest('/v1/files', {}, 'model', 'low'));

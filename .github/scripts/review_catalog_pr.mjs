@@ -151,10 +151,11 @@ export function modelRequest(path, body, deployment, effort) {
     assert.ok(['/v1/responses', '/v1/chat/completions'].includes(route), 'Unsupported model route');
     assert.ok(body && typeof body === 'object' && !Array.isArray(body), 'Invalid model request');
     const allowed = new Set(['model', 'input', 'instructions', 'messages', 'tools', 'tool_choice', 'parallel_tool_calls', 'stream', 'stream_options',
-        'max_output_tokens', 'max_completion_tokens', 'max_tokens', 'reasoning', 'reasoning_effort', 'text', 'response_format', 'temperature', 'top_p', 'store', 'include']);
+        'max_output_tokens', 'max_completion_tokens', 'max_tokens', 'reasoning', 'reasoning_effort', 'text', 'response_format', 'temperature', 'top_p', 'store', 'include', 'prompt_cache_key']);
     assert.ok(Object.keys(body).every(key => allowed.has(key)), 'Unexpected model request property');
     if (body.tools) assert.ok(Array.isArray(body.tools) && body.tools.every(tool => tool.type === 'function'), 'Provider-hosted tools are not allowed');
     const request = { ...body, model: deployment, store: false };
+    delete request.prompt_cache_key;
     if (route === '/v1/responses') {
         request.max_output_tokens = 16000;
         request.reasoning = { effort };
