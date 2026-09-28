@@ -1,7 +1,7 @@
 {
-    "commitSha": "be4706c76acfe44e2ae99c2818efdc4c5ab25bd9",
+    "commitSha": "5642c45da33220d5bb95bbe08fa67f34373bd96d",
     "repo": "https://github.com/microsoft-foundry/foundry-samples/",
-    "generatedAt": "2026-09-23T05:22:25Z",
+    "generatedAt": "2026-09-28T06:51:41Z",
     "dimensions": {
         "language": {
             "title": "Select a Language",
@@ -1155,6 +1155,15 @@
             "description": "Agent that uses custom persistence stores for conversation chains and response records.",
             "path": "samples/python/hosted-agents/langgraph/responses/13-custom-store",
             "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "invocations",
+            "displayName": "Content Safety Guardrail",
+            "description": "Filters requests and responses against a Responsible AI policy to block harmful content.",
+            "path": "samples/python/hosted-agents/agent-framework/invocations/02-content-safety-guardrail",
+            "requiresModel": true
         }
     ],
     "patterns": [
@@ -2097,8 +2106,9 @@
                 "bestFit": "Teams evaluating platform safety configuration for hosted agents.",
                 "capabilities": [
                     "References an RAI policy",
-                    "Applies configured platform checks",
-                    "Separates policy setup from basic chat code"
+                    "Applies configured platform checks (input and/or output gates)",
+                    "Separates policy setup from basic chat code",
+                    "Supports stream selectors for Invocations protocol"
                 ],
                 "whatItGenerates": "A Python chat agent with policy-aware hosting configuration. Merely copying the code does not activate a cloud policy.",
                 "requirements": [
@@ -2106,7 +2116,8 @@
                 ]
             },
             "templatePaths": [
-                "samples/python/hosted-agents/agent-framework/responses/16-content-safety-guardrail"
+                "samples/python/hosted-agents/agent-framework/responses/16-content-safety-guardrail",
+                "samples/python/hosted-agents/agent-framework/invocations/02-content-safety-guardrail"
             ]
         },
         {
