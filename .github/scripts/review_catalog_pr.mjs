@@ -233,6 +233,17 @@ export async function startModelProxy(endpoint, key, deployment, effort, expecte
     return { server, token, metrics, port: server.address().port };
 }
 
+export function agentFailureMessage(output) {
+    let message = 'No structured CLI error was emitted';
+    for (const line of output.split(/\r?\n/)) {
+        try {
+            const event = JSON.parse(line);
+            if (event.type === 'session.error' && typeof event.data?.message === 'string') message = event.data.message.slice(-2000);
+        } catch {}
+    }
+    return message;
+}
+
 function runAsync(file, args, options, deadlineMs) {
     return new Promise((resolve, reject) => {
         const child = spawn(file, args, { ...options, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -244,7 +255,7 @@ function runAsync(file, args, options, deadlineMs) {
         });
         child.stderr.on('data', chunk => { errorOutput = (errorOutput + chunk).slice(-2000); });
         child.on('error', error => { clearTimeout(timer); reject(error); });
-        child.on('close', code => { clearTimeout(timer); code === 0 ? resolve(output) : reject(new Error(`Agent exited ${code}: ${errorOutput}`)); });
+        child.on('close', code => { clearTimeout(timer); code === 0 ? resolve(output) : reject(new Error(`Agent exited ${code}: ${errorOutput.trim() || agentFailureMessage(output)}`)); });
     });
 }
 
@@ -299,6 +310,9 @@ async function runAgent(inputDirectory, trustedRoot, prompt, mockModel) {
             '--available-tools=view,grep,glob,skill', '--allow-tool=view', '--allow-tool=grep', '--allow-tool=glob', '--allow-tool=skill',
             '--reasoning-effort', effort, '--log-level=error'], {}, 12 * 60 * 1000);
         return { response: parseAgentOutput(output), metrics: proxy.metrics };
+    } catch (error) {
+        if (proxy) error.message = error.message.replaceAll(proxy.token, '[redacted]') + ` (model calls: ${proxy.metrics.calls}; reported tokens: ${proxy.metrics.tokens})`;
+        throw error;
     } finally {
         try { command('docker', ['rm', '--force', name]); } catch {}
         if (proxy) { proxy.server.closeAllConnections(); proxy.server.close(); }

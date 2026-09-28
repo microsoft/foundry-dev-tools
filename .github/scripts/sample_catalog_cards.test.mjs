@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogWithCards, PATTERNS, reconcileCardDefinitions, reviewChangedCardDetails, writeCatalogWithCards } from './sample_catalog_cards.mjs';
-import { applyReview, assertReviewTarget, collectSources, modelRequest, parseAgentOutput, reviewScope, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
+import { agentFailureMessage, applyReview, assertReviewTarget, collectSources, modelRequest, parseAgentOutput, reviewScope, safeSourcePath, startModelProxy, validateReady } from './review_catalog_pr.mjs';
 
 function fixture() {
     const source = {
@@ -1193,6 +1193,17 @@ test('normal scanning writes templates and cards together using pinned source da
     });
     assert.equal(repeated.status, 0, repeated.stderr || repeated.error?.message);
     assert.deepEqual(readFileSync(outputPath), before, 'Unchanged scans must not refresh generatedAt');
+});
+
+test('CLI failures retain structured errors without logging ordinary source output', () => {
+    const output = [
+        { type: 'tool.execution_complete', data: { result: { content: 'Untrusted source contents' } } },
+        { type: 'session.error', data: { errorType: 'query', message: '400 Probe rejected request', statusCode: 400 } },
+        { type: 'result', exitCode: 1 },
+    ].map(event => JSON.stringify(event)).join('\n');
+    assert.equal(agentFailureMessage(output), '400 Probe rejected request');
+    assert.equal(agentFailureMessage(output + '\npartial'), '400 Probe rejected request');
+    assert.equal(agentFailureMessage('unstructured output'), 'No structured CLI error was emitted');
 });
 
 test('CLI result parsing separates progress and tool output from the final answer', () => {
