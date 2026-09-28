@@ -62,6 +62,11 @@ function reviewFixture() {
     const base = structuredClone(candidate);
     base.templates.pop();
     base.cards[0].templatePaths = [base.templates[0].path];
+    for (const catalog of [base, candidate]) {
+        for (const [id, dimension] of Object.entries(catalog.dimensions)) {
+            dimension.options = dimension.options.filter(option => catalog.templates.some(template => template[id] === option.id));
+        }
+    }
     const scope = reviewScope(base, candidate);
     const sourcePath = candidate.templates[1].path + '/README.md';
     const sources = new Map([[sourcePath, 'The workflow drafts and reviews text.']]);
@@ -257,6 +262,33 @@ test('review recovery feeds description-limit failures back without accepting an
     assert.match(harness.calls[1].feedback.validationError, /\.description:.*1-100/);
     assert.equal(result.templates[1].description, 'Draft and review text.');
     assert.equal(harness.calls.length, 3);
+});
+
+for (const [name, change] of [
+    ['picker label', candidate => { candidate.templateSelection.title = 'Changed'; }],
+    ['dimension label', candidate => { candidate.dimensions.language.title = 'Changed'; }],
+    ['dimension placeholder', candidate => { candidate.dimensions.language.placeholder = 'Changed'; }],
+    ['option label', candidate => { candidate.dimensions.language.options[0].displayName = 'Changed'; }],
+    ['option order', candidate => { candidate.dimensions.language.options.reverse(); }],
+    ['unused option', candidate => { candidate.dimensions.language.options.push({ id: 'unused', displayName: 'Unused' }); }],
+    ['used option removal', candidate => { candidate.dimensions.language.options.shift(); }],
+    ['option identity', candidate => { candidate.dimensions.language.options[0].id = 'renamed'; }],
+]) {
+    test(`review scope rejects protected ${name} changes`, () => {
+        const candidate = reviewFixture().candidate;
+        const base = structuredClone(candidate);
+        change(candidate);
+        assert.throws(() => reviewScope(base, candidate));
+    });
+}
+
+test('review scope permits only options added or removed with template values', () => {
+    const { base, candidate } = reviewFixture();
+    assert.doesNotThrow(() => reviewScope(base, candidate));
+    assert.doesNotThrow(() => reviewScope(candidate, base));
+    const changed = structuredClone(candidate);
+    changed.dimensions.language.options.unshift(changed.dimensions.language.options.pop());
+    assert.throws(() => reviewScope(base, changed), /option metadata and order/);
 });
 
 test('review scope rejects changed surviving metadata or unchanged-card Details', () => {

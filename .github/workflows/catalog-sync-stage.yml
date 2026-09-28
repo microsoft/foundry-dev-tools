@@ -42,18 +42,18 @@ jobs:
       AZURE_OPENAI_REASONING_EFFORT: ${{ vars.AZURE_OPENAI_REASONING_EFFORT }}
     steps:
       - name: Checkout pinned workflow revision
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '20'
 
       - name: Download previous stage state
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ inputs.state_artifact }}
           path: ${{ runner.temp }}/catalog-sync
@@ -73,7 +73,7 @@ jobs:
           node .github/scripts/generate_sample_catalog.mjs --sync-stage "$SYNC_STAGE" "$SOURCE_SHA"
 
       - name: Upload completed stage state
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ${{ format('catalog-sync-{0}-{1}-{2}', inputs.stage, github.run_id, github.run_attempt) }}
           path: ${{ runner.temp }}/catalog-sync/state.json

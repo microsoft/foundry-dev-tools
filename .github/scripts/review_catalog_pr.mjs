@@ -17,6 +17,21 @@ const DETAIL_FIELDS = ['summary', 'whatItDoes', 'whyUseIt', 'exampleScenario', '
 export function reviewScope(base, candidate) {
     buildCatalogWithCards(candidate, { sourceCommitSha: candidate.commitSha, patterns: candidate.patterns, cards: candidate.cards });
     assert.equal(candidate.repo, base.repo, 'Source repository must not change');
+    assert.deepEqual(candidate.templateSelection, base.templateSelection, 'Template selection metadata must be preserved');
+    assert.deepEqual(Object.keys(candidate.dimensions).sort(), Object.keys(base.dimensions).sort(), 'Dimension identities must be preserved');
+    for (const [id, dimension] of Object.entries(candidate.dimensions)) {
+        const { options: previousOptions, ...previousMetadata } = base.dimensions[id];
+        const { options, ...metadata } = dimension;
+        assert.deepEqual(metadata, previousMetadata, `${id}: dimension metadata must be preserved`);
+        const used = new Set(candidate.templates.map(template => template[id]));
+        assert.deepEqual(new Set(options.map(option => option.id)), used, `${id}: options must match used template values`);
+        const existingIds = new Set(previousOptions.map(option => option.id));
+        const expected = [
+            ...previousOptions.filter(option => used.has(option.id)),
+            ...options.filter(option => !existingIds.has(option.id)),
+        ];
+        assert.deepEqual(options, expected, `${id}: existing option metadata and order must be preserved`);
+    }
     const templates = new Map(base.templates.map(template => [template.path, template]));
     for (const template of candidate.templates) if (templates.has(template.path)) assert.deepEqual(template, templates.get(template.path), 'Surviving template metadata must be preserved');
     const cards = new Map(base.cards.map(card => [card.id, card]));
