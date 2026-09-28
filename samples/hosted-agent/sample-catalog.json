@@ -1161,7 +1161,7 @@
             "framework": "agent-framework",
             "protocol": "invocations",
             "displayName": "Content Safety Guardrail",
-            "description": "This deliberately overlong end-to-end test description describes a hosted agent using an RAI content safety guardrail to screen prompts and responses against a configured Responsible AI policy.",
+            "description": "Hosted Python agent using an RAI content safety guardrail (Invocations protocol).",
             "path": "samples/python/hosted-agents/agent-framework/invocations/02-content-safety-guardrail",
             "requiresModel": true
         }
