@@ -27,40 +27,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  sync:
+  scan:
+    name: 1. Scan sample changes
     runs-on: ubuntu-latest
+    outputs:
+      source_sha: ${{ steps.resolve-sha.outputs.sha }}
+      has_changes: ${{ steps.scan.outputs.has_changes }}
+      state_artifact: ${{ format('catalog-sync-scan-{0}-{1}', github.run_id, github.run_attempt) }}
     env:
       REPO_ROOT: ${{ github.workspace }}
       AI_REFINE: 'false'
       IGNORE_EXISTING: 'false'
-      AZURE_OPENAI_REASONING_EFFORT: ${{ vars.AZURE_OPENAI_REASONING_EFFORT }}
-      PR_LABEL_CANDIDATES: |
-        automated-pr
-        area:samples
-        area:hosted-agent
 
     steps:
       - name: Checkout repository
-        id: checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up Node.js
-        id: node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Prepare sync paths
-        id: paths
-        shell: bash
-        run: |
-          {
-            printf 'CATALOG_SYNC_STATE=%s/catalog-sync/state.json\n' "$RUNNER_TEMP"
-            printf 'CATALOG_REVIEW_REPORT_DIR=%s/catalog-review\n' "$RUNNER_TEMP"
-          } >> "$GITHUB_ENV"
 
       - name: Resolve pinned source revision
         id: resolve-sha
@@ -90,44 +79,102 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ steps.resolve-sha.outputs.sha }}
-        run: node .github/scripts/generate_sample_catalog.mjs --sync-stage scan "$SOURCE_SHA"
+        run: |
+          export CATALOG_SYNC_STATE="$RUNNER_TEMP/catalog-sync/state.json"
+          node .github/scripts/generate_sample_catalog.mjs --sync-stage scan "$SOURCE_SHA"
 
-      - name: 2. Generate new template metadata
-        id: metadata
+      - name: Upload scan state
         if: ${{ steps.scan.outputs.has_changes == 'true' }}
-        env: &generation-env
-          GITHUB_TOKEN: ${{ github.token }}
-          SOURCE_SHA: ${{ steps.resolve-sha.outputs.sha }}
-          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-        run: node .github/scripts/generate_sample_catalog.mjs --sync-stage metadata "$SOURCE_SHA"
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ format('catalog-sync-scan-{0}-{1}', github.run_id, github.run_attempt) }}
+          path: ${{ runner.temp }}/catalog-sync/state.json
+          if-no-files-found: error
+          retention-days: 7
 
-      - name: 3. Group templates and review card reuse
-        id: group
-        if: ${{ steps.scan.outputs.has_changes == 'true' }}
-        env: *generation-env
-        run: node .github/scripts/generate_sample_catalog.mjs --sync-stage group "$SOURCE_SHA"
+  metadata:
+    name: 2. Generate template metadata
+    needs: scan
+    if: ${{ needs.scan.outputs.has_changes == 'true' }}
+    uses: ./.github/workflows/catalog-sync-stage.yml
+    with:
+      stage: metadata
+      source_sha: ${{ needs.scan.outputs.source_sha }}
+      state_artifact: ${{ needs.scan.outputs.state_artifact }}
+    secrets:
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
 
-      - name: 4. Update affected card Details
-        id: details
-        if: ${{ steps.scan.outputs.has_changes == 'true' }}
-        env: *generation-env
-        run: node .github/scripts/generate_sample_catalog.mjs --sync-stage details "$SOURCE_SHA"
+  group:
+    name: 3. Group templates and review reuse
+    needs: metadata
+    uses: ./.github/workflows/catalog-sync-stage.yml
+    with:
+      stage: group
+      source_sha: ${{ needs.metadata.outputs.source_sha }}
+      state_artifact: ${{ needs.metadata.outputs.state_artifact }}
+    secrets:
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
 
-      - name: 5. Write structurally validated candidate
-        id: write
-        if: ${{ steps.scan.outputs.has_changes == 'true' }}
+  details:
+    name: 4. Update affected card Details
+    needs: group
+    uses: ./.github/workflows/catalog-sync-stage.yml
+    with:
+      stage: details
+      source_sha: ${{ needs.group.outputs.source_sha }}
+      state_artifact: ${{ needs.group.outputs.state_artifact }}
+    secrets:
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+
+  validate:
+    name: 5. Write and validate catalog
+    needs: [scan, details]
+    if: ${{ !cancelled() && needs.scan.result == 'success' && (needs.details.result == 'success' || needs.scan.outputs.has_changes == 'false') }}
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.diff.outputs.has_changes }}
+      catalog_artifact: ${{ format('validated-sample-catalog-{0}-{1}', github.run_id, github.run_attempt) }}
+    env:
+      REPO_ROOT: ${{ github.workspace }}
+      AI_REFINE: 'false'
+      IGNORE_EXISTING: 'false'
+    steps:
+      - name: Checkout pinned workflow revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Download completed Details state
+        if: ${{ needs.scan.outputs.has_changes == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.details.outputs.state_artifact }}
+          path: ${{ runner.temp }}/catalog-sync
+
+      - name: Write structurally validated candidate
+        if: ${{ needs.scan.outputs.has_changes == 'true' }}
         env:
-          SOURCE_SHA: ${{ steps.resolve-sha.outputs.sha }}
-        run: node .github/scripts/generate_sample_catalog.mjs --sync-stage write "$SOURCE_SHA"
+          SOURCE_SHA: ${{ needs.scan.outputs.source_sha }}
+        run: |
+          export CATALOG_SYNC_STATE="$RUNNER_TEMP/catalog-sync/state.json"
+          node .github/scripts/generate_sample_catalog.mjs --sync-stage write "$SOURCE_SHA"
 
       - name: Run catalog regression tests
-        id: tests
         run: node --test .github/scripts/sample_catalog_cards.test.mjs
 
       - name: Verify isolated CLI transport (offline)
-        id: sandbox
         run: node .github/scripts/review_catalog_pr.mjs --sandbox-smoke-test
 
       - name: Detect catalog changes
@@ -173,7 +220,7 @@ jobs:
       - name: Upload validated catalog
         uses: actions/upload-artifact@v4
         with:
-          name: validated-sample-catalog
+          name: ${{ format('validated-sample-catalog-{0}-{1}', github.run_id, github.run_attempt) }}
           path: |
             samples/hosted-agent/sample-catalog.json
           if-no-files-found: error
@@ -185,8 +232,35 @@ jobs:
         run: |
           echo "Validation-only run: catalog generated and validated. No branch or PR was created." >> "$GITHUB_STEP_SUMMARY"
 
+  publish:
+    name: 6. Create draft pull request
+    needs: validate
+    if: ${{ !inputs.validation_only && needs.validate.outputs.has_changes == 'true' }}
+    runs-on: ubuntu-latest
+    outputs:
+      number: ${{ steps.cpr.outputs.pull-request-number }}
+      head: ${{ steps.cpr.outputs.pull-request-head-sha }}
+      branch: ${{ steps.branch.outputs.name }}
+    env:
+      PR_LABEL_CANDIDATES: |
+        automated-pr
+        area:samples
+        area:hosted-agent
+    steps:
+      - name: Checkout pinned workflow revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download validated catalog
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.validate.outputs.catalog_artifact }}
+          path: samples/hosted-agent
+
       - name: Generate GitHub App token
-        if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         id: app-token
         uses: actions/create-github-app-token@v1
         with:
@@ -194,7 +268,6 @@ jobs:
           private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
 
       - name: Resolve pull request labels
-        if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         id: labels
         shell: bash
         env:
@@ -224,7 +297,6 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Generate PR branch name
-        if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         id: branch
         shell: bash
         env:
@@ -243,7 +315,6 @@ jobs:
           echo "name=$branch" >> "$GITHUB_OUTPUT"
 
       - name: 6. Create draft pull request
-        if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
@@ -290,7 +361,6 @@ jobs:
             samples/hosted-agent/sample-catalog.json
 
       - name: Report PR result
-        if: ${{ !inputs.validation_only && steps.diff.outputs.has_changes == 'true' }}
         shell: bash
         env:
           PR_OPERATION: ${{ steps.cpr.outputs.pull-request-operation }}
@@ -312,69 +382,54 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: 7. Review with skill and commit verified corrections
-        id: review
-        if: ${{ !inputs.validation_only && steps.cpr.outputs.pull-request-number != '' }}
-        timeout-minutes: 50
+  review:
+    name: 7. AI review and commit corrections
+    needs: publish
+    if: ${{ needs.publish.outputs.number != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      REPO_ROOT: ${{ github.workspace }}
+      AZURE_OPENAI_REASONING_EFFORT: ${{ vars.AZURE_OPENAI_REASONING_EFFORT }}
+    steps:
+      - name: Checkout trusted review implementation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.SYNC_APP_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+
+      - name: Review with skill and commit verified corrections
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
           CATALOG_REVIEW_MODEL: ${{ vars.CATALOG_REVIEW_MODEL }}
-          CATALOG_REVIEW_PR: ${{ steps.cpr.outputs.pull-request-number }}
-          CATALOG_REVIEW_BRANCH: ${{ steps.branch.outputs.name }}
+          CATALOG_REVIEW_PR: ${{ needs.publish.outputs.number }}
+          CATALOG_REVIEW_BRANCH: ${{ needs.publish.outputs.branch }}
           CATALOG_REVIEW_BASE: ${{ github.ref_name }}
-          CATALOG_REVIEW_HEAD: ${{ steps.cpr.outputs.pull-request-head-sha }}
-        run: node .github/scripts/review_catalog_pr.mjs
+          CATALOG_REVIEW_HEAD: ${{ needs.publish.outputs.head }}
+        run: |
+          export CATALOG_REVIEW_REPORT_DIR="$RUNNER_TEMP/catalog-review"
+          node .github/scripts/review_catalog_pr.mjs
 
       - name: Upload final review report
-        if: ${{ always() && !inputs.validation_only && steps.cpr.outputs.pull-request-number != '' }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: catalog-review
           path: ${{ runner.temp }}/catalog-review/
           if-no-files-found: warn
           retention-days: 7
-
-      - name: Report pipeline step outcomes
-        if: ${{ always() }}
-        env:
-          STEP_OUTCOMES: ${{ toJSON(steps) }}
-        run: |
-          node --input-type=module <<'NODE'
-          import { appendFileSync } from 'node:fs';
-          const outcomes = JSON.parse(process.env.STEP_OUTCOMES);
-          const stages = [
-            ['checkout', 'Checkout repository'],
-            ['node', 'Set up Node.js'],
-            ['paths', 'Prepare sync paths'],
-            ['resolve-sha', 'Resolve pinned source revision'],
-            ['scan', '1. Scan sample changes'],
-            ['metadata', '2. Generate new template metadata'],
-            ['group', '3. Group templates and review card reuse'],
-            ['details', '4. Update affected card Details'],
-            ['write', '5. Write structurally validated candidate'],
-            ['tests', 'Run catalog regression tests'],
-            ['sandbox', 'Verify isolated CLI transport (offline)'],
-            ['diff', 'Detect catalog changes'],
-            ['app-token', 'Generate GitHub App token'],
-            ['labels', 'Resolve pull request labels'],
-            ['branch', 'Generate PR branch name'],
-            ['cpr', '6. Create draft pull request'],
-            ['review', '7. Review with skill and commit verified corrections'],
-          ];
-          const failed = stages.filter(([id]) => outcomes[id]?.outcome === 'failure');
-          const url = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-          const summary = [
-            '## Pipeline Step Outcomes',
-            failed.length ? `Failed step(s): **${failed.map(([, name]) => name).join('; ')}**` : 'No tracked step failed. Check skipped/cancelled stages below for coverage.',
-            `[Open the sync job for step logs](${url})`,
-            '| Step | Outcome |',
-            '| --- | --- |',
-            ...stages.map(([id, name]) => `| ${name} | ${outcomes[id]?.outcome ?? 'not run'} |`),
-          ].join('\n');
-          appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n${summary}\n`);
-          console.log(summary);
-          for (const [, name] of failed) console.log(`::error title=Pipeline step failed::${name}`);
-          NODE
