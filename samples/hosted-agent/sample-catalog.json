@@ -1,7 +1,7 @@
 {
-    "commitSha": "19b441d474ec963c61a509692fdd81d5fb707d71",
+    "commitSha": "be4706c76acfe44e2ae99c2818efdc4c5ab25bd9",
     "repo": "https://github.com/microsoft-foundry/foundry-samples/",
-    "generatedAt": "2026-05-27T06:40:47Z",
+    "generatedAt": "2026-09-23T05:22:25Z",
     "dimensions": {
         "language": {
             "title": "Select a Language",
@@ -32,6 +32,10 @@
                 {
                     "id": "bring-your-own",
                     "displayName": "Bring Your Own"
+                },
+                {
+                    "id": "langgraph",
+                    "displayName": "LangGraph"
                 }
             ]
         },
@@ -41,11 +45,19 @@
             "options": [
                 {
                     "id": "responses",
-                    "displayName": "Responses API"
+                    "displayName": "Responses"
                 },
                 {
                     "id": "invocations",
-                    "displayName": "Invocations API"
+                    "displayName": "Invocations"
+                },
+                {
+                    "id": "invocations_ws",
+                    "displayName": "Invocations (WebSocket)"
+                },
+                {
+                    "id": "activity",
+                    "displayName": "Activity"
                 }
             ]
         }
@@ -58,45 +70,45 @@
         {
             "language": "python",
             "framework": "agent-framework",
-            "protocol": "invocations",
-            "displayName": "Basic",
-            "description": "Agent with in-memory session management for multi-turn conversations.",
-            "path": "samples/python/hosted-agents/agent-framework/invocations/01-basic",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "Basic",
-            "description": "Agent that supports multi-turn conversations with response tracking.",
+            "displayName": "Basic Hosted Agent",
+            "description": "Minimal hosted agent that supports basic request/response and multi-turn conversations.",
             "path": "samples/python/hosted-agents/agent-framework/responses/01-basic",
             "requiresModel": true
         },
         {
             "language": "python",
-            "framework": "agent-framework",
+            "framework": "copilot-sdk",
+            "protocol": "invocations",
+            "displayName": "Event Stream Agent",
+            "description": "Streams raw session events and supports multi-turn session resume across requests.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/github-copilot",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
             "protocol": "responses",
-            "displayName": "Tools",
-            "description": "Agent with custom tools like weather lookup callable during conversation.",
-            "path": "samples/python/hosted-agents/agent-framework/responses/02-tools",
+            "displayName": "Tool-Enabled Chat Agent",
+            "description": "Multi-turn chat agent with local time and calculator tools.",
+            "path": "samples/python/hosted-agents/langgraph/responses/01-langgraph-chat",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "MCP Toolbox ReAct Agent",
+            "description": "Agent that uses a toolbox to call web_search and the Microsoft Learn MCP.",
+            "path": "samples/python/hosted-agents/langgraph/responses/02-langgraph-toolbox",
             "requiresModel": true
         },
         {
             "language": "python",
             "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "MCP",
-            "description": "Agent that dynamically discovers and invokes tools from a remote GitHub Copilot MCP server.",
-            "path": "samples/python/hosted-agents/agent-framework/responses/03-mcp",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "agent-framework",
-            "protocol": "responses",
-            "displayName": "Foundry Toolbox",
-            "description": "Agent that discovers and invokes centrally managed tools from a Foundry Toolbox.",
+            "displayName": "MCP Toolbox Integration",
+            "description": "Agent that discovers and invokes tools from a Foundry Toolbox via MCP.",
             "path": "samples/python/hosted-agents/agent-framework/responses/04-foundry-toolbox",
             "requiresModel": true
         },
@@ -104,260 +116,71 @@
             "language": "python",
             "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "Workflows",
-            "description": "Processes requests through slogan writing, legal review, and formatting agents in sequence.",
+            "displayName": "Multi-Agent Workflow (Agent Framework)",
+            "description": "Chained agents that write a slogan, perform legal review, and format the final output.",
             "path": "samples/python/hosted-agents/agent-framework/responses/05-workflows",
             "requiresModel": true
         },
         {
             "language": "python",
-            "framework": "agent-framework",
+            "framework": "langgraph",
             "protocol": "responses",
-            "displayName": "Files",
-            "description": "Agent that lists, reads, and interprets files using shell and code tools.",
-            "path": "samples/python/hosted-agents/agent-framework/responses/06-files",
+            "displayName": "Multi-Agent Workflow (LangGraph)",
+            "description": "Sequential agents that write, legally review, and format a final message.",
+            "path": "samples/python/hosted-agents/langgraph/responses/05-workflows",
             "requiresModel": true
         },
         {
             "language": "python",
             "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "Skills",
-            "description": "Agent that discovers and runs local file-based skills like generating PDF travel guides.",
-            "path": "samples/python/hosted-agents/agent-framework/responses/07-skills",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "agent-framework",
-            "protocol": "responses",
-            "displayName": "Observability",
-            "description": "Agent with built-in observability and telemetry for diagnostics and monitoring.",
-            "path": "samples/python/hosted-agents/agent-framework/responses/08-observability",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "agent-framework",
-            "protocol": "responses",
-            "displayName": "Declarative Customer Support",
-            "description": "Customer support triage agent that routes requests to specialized agents based on conversation history.",
-            "path": "samples/python/hosted-agents/agent-framework/responses/09-declarative-customer-support",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "agent-framework",
-            "protocol": "responses",
-            "displayName": "Downstream Azure",
-            "description": "Agent performs data operations on Blob Storage and Service Bus using its own identity.",
-            "path": "samples/python/hosted-agents/agent-framework/responses/10-downstream-azure",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "agent-framework",
-            "protocol": "responses",
-            "displayName": "Azure Search RAG",
-            "description": "Answers questions using product documentation and cites sources from a search index.",
+            "displayName": "Azure AI Search RAG",
+            "description": "Agent that searches Azure AI Search and cites source documents in responses.",
             "path": "samples/python/hosted-agents/agent-framework/responses/11-azure-search-rag",
             "requiresModel": true
         },
         {
             "language": "python",
-            "framework": "agent-framework",
-            "protocol": "responses",
-            "displayName": "Foundry Skills",
-            "description": "Agent that loads behavioral guidelines from Foundry Skills at startup for dynamic updates.",
-            "path": "samples/python/hosted-agents/agent-framework/responses/12-foundry-skills",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "agent-framework",
-            "protocol": "responses",
-            "displayName": "Foundry Memory",
-            "description": "Agent that remembers user facts across sessions using persistent semantic memory.",
-            "path": "samples/python/hosted-agents/agent-framework/responses/13-foundry-memory",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
             "framework": "bring-your-own",
             "protocol": "invocations",
-            "displayName": "AG UI",
-            "description": "Agent that streams AG-UI lifecycle events in response to user input.",
-            "path": "samples/python/hosted-agents/bring-your-own/invocations/ag-ui",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "invocations",
-            "displayName": "Claude Agent SDK",
-            "description": "Agent that streams responses from a Claude model for plain text input.",
+            "displayName": "Claude Streaming Agent",
+            "description": "Agent that streams assistant text responses in real time.",
             "path": "samples/python/hosted-agents/bring-your-own/invocations/claude-agent-sdk",
             "requiresModel": false
         },
         {
             "language": "python",
             "framework": "bring-your-own",
-            "protocol": "invocations",
-            "displayName": "Event Grid Trigger",
-            "description": "Agent triggered by Azure Storage events that summarizes uploaded blobs and saves results separately.",
-            "path": "samples/python/hosted-agents/bring-your-own/invocations/event-grid-trigger",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "copilot-sdk",
-            "protocol": "invocations",
-            "displayName": "GitHub Copilot",
-            "description": "Agent streams Copilot session events with support for multi-turn conversations.",
-            "path": "samples/python/hosted-agents/bring-your-own/invocations/github-copilot",
-            "requiresModel": false
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "invocations",
-            "displayName": "Hello World",
-            "description": "Hosted agent that streams a model's reply as a server-sent event.",
-            "path": "samples/python/hosted-agents/bring-your-own/invocations/hello-world",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "invocations",
-            "displayName": "Human In The Loop",
-            "description": "Agent that generates proposals and waits for human approval before proceeding.",
-            "path": "samples/python/hosted-agents/bring-your-own/invocations/human-in-the-loop",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "invocations",
-            "displayName": "Langgraph Chat",
-            "description": "Conversational agent with session history and built-in time and calculator tools.",
-            "path": "samples/python/hosted-agents/bring-your-own/invocations/langgraph-chat",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "invocations",
-            "displayName": "Notetaking Agent",
-            "description": "Agent that saves and retrieves notes with per-session isolation and streaming responses.",
-            "path": "samples/python/hosted-agents/bring-your-own/invocations/notetaking-agent",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "invocations",
-            "displayName": "Toolbox",
-            "description": "Agent connects to a toolbox server and enables tool discovery and invocation during chat.",
-            "path": "samples/python/hosted-agents/bring-your-own/invocations/toolbox",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
             "protocol": "responses",
-            "displayName": "Background Agent",
-            "description": "Handles long-running research analysis requests with background processing and streaming updates.",
-            "path": "samples/python/hosted-agents/bring-your-own/responses/background-agent",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "responses",
-            "displayName": "Bring Your Own Toolbox",
-            "description": "Agent connects to a remote toolbox and enables tool invocation during conversations.",
-            "path": "samples/python/hosted-agents/bring-your-own/responses/bring-your-own-toolbox",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "responses",
-            "displayName": "Env Vars Agent",
-            "description": "Agent that reveals environment variable values with safety policies based on their type.",
-            "path": "samples/python/hosted-agents/bring-your-own/responses/env-vars-agent",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "responses",
-            "displayName": "Hello World",
-            "description": "Hosted agent that returns a hello world message from a Foundry model using a custom backend.",
-            "path": "samples/python/hosted-agents/bring-your-own/responses/hello-world",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "responses",
-            "displayName": "Langgraph Chat",
-            "description": "Conversational agent with built-in calculator and time tools, streaming responses.",
-            "path": "samples/python/hosted-agents/bring-your-own/responses/langgraph-chat",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "responses",
-            "displayName": "Langgraph Toolbox",
-            "description": "Agent that dynamically loads tools from a remote toolbox and handles incoming requests.",
-            "path": "samples/python/hosted-agents/bring-your-own/responses/langgraph-toolbox",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "responses",
-            "displayName": "Langgraph Toolbox User Identity",
-            "description": "Agent that accesses mail, calendar, and GitHub tools for user-identity scenarios.",
-            "path": "samples/python/hosted-agents/bring-your-own/responses/langgraph-toolbox-user-identity",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "responses",
-            "displayName": "Notetaking Agent",
-            "description": "Agent that saves and retrieves notes with per-session isolation and streaming responses.",
-            "path": "samples/python/hosted-agents/bring-your-own/responses/notetaking-agent",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "responses",
-            "displayName": "OpenAI Agents SDK",
-            "description": "Minimal agent that streams text responses from a Foundry model.",
+            "displayName": "Foundry Streaming Agent",
+            "description": "Minimal hosted agent that streams model text deltas from a Foundry deployment.",
             "path": "samples/python/hosted-agents/bring-your-own/responses/openai-agents-sdk",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "invocations",
-            "displayName": "Hello World Invocations Voicelive",
-            "description": "Minimal hosted agent for real-time voice interactions with audio transcription streaming.",
-            "path": "samples/python/hosted-agents/bring-your-own/voicelive/hello-world-invocations-voicelive",
             "requiresModel": true
         },
         {
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "Agent Skills",
-            "description": "Agent that loads behavioral guidelines from Foundry Skills at startup for dynamic updates.",
+            "displayName": "Delegation Caller",
+            "description": "Caller agent that delegates questions to a remote specialist and summarizes the reply.",
+            "path": "samples/csharp/hosted-agents/agent-framework/a2a/01-delegation/caller",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Math Executor Agent",
+            "description": "Agent that answers arithmetic and math questions.",
+            "path": "samples/csharp/hosted-agents/agent-framework/a2a/01-delegation/executor",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Foundry Skills Agent",
+            "description": "Agent that loads behavioral guidelines from Foundry Skills at startup.",
             "path": "samples/csharp/hosted-agents/agent-framework/agent-skills",
             "requiresModel": true
         },
@@ -366,7 +189,7 @@
             "framework": "agent-framework",
             "protocol": "responses",
             "displayName": "Azure Search RAG",
-            "description": "Support agent answers questions using a keyword-indexed knowledge base for grounding.",
+            "description": "Support agent that grounds answers using Azure AI Search retrieval.",
             "path": "samples/csharp/hosted-agents/agent-framework/azure-search-rag",
             "requiresModel": true
         },
@@ -374,8 +197,26 @@
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "File Tools",
-            "description": "Agent answers questions using bundled and user-uploaded files as knowledge sources.",
+            "displayName": "Browser Automation",
+            "description": "Automates browsing, web scraping, and form filling using a remote Chromium session with live view.",
+            "path": "samples/csharp/hosted-agents/agent-framework/browser-automation",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Egress Control",
+            "description": "Agent that tests managed egress proxy policies by making outbound requests and returning status and headers.",
+            "path": "samples/csharp/hosted-agents/agent-framework/egress-control",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Agent with File Tools",
+            "description": "Agent that answers questions over bundled and session file sources using scoped file tools.",
             "path": "samples/csharp/hosted-agents/agent-framework/file-tools",
             "requiresModel": true
         },
@@ -384,7 +225,7 @@
             "framework": "agent-framework",
             "protocol": "responses",
             "displayName": "Foundry Memory RAG",
-            "description": "Personal coach agent that remembers user preferences and goals across sessions.",
+            "description": "Personal coach agent with persistent per-user memory and RAG-grounded responses.",
             "path": "samples/csharp/hosted-agents/agent-framework/foundry-memory-rag",
             "requiresModel": true
         },
@@ -392,8 +233,17 @@
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "Foundry Toolbox Server Side",
-            "description": "Agent that uses tools from a Foundry Toolbox, invoked server-side by the platform.",
+            "displayName": "MCP Toolbox Skills",
+            "description": "Agent that discovers and invokes skills from a Foundry Toolbox via MCP.",
+            "path": "samples/csharp/hosted-agents/agent-framework/foundry-toolbox-mcp-skills",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Foundry MCP Toolbox (Platform-Managed)",
+            "description": "Agent that uses a Foundry Toolbox's server-side tools through the MCP proxy.",
             "path": "samples/csharp/hosted-agents/agent-framework/foundry-toolbox-server-side",
             "requiresModel": true
         },
@@ -401,8 +251,35 @@
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "Hello World",
-            "description": "Minimal hosted agent that responds to user questions and supports multi-turn conversation.",
+            "displayName": "Harness Data Processing",
+            "description": "Hosts a data-processing harness that analyzes a bundled CSV and requires approval for file changes.",
+            "path": "samples/csharp/hosted-agents/agent-framework/harness-data-processing",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Research Harness",
+            "description": "Agent plans and runs a research workflow, browsing the web, tracking todos, and saving findings.",
+            "path": "samples/csharp/hosted-agents/agent-framework/harness-research",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Scaling Capabilities",
+            "description": "Personal-finance agent with skills, a confined shell, CodeAct, and background research.",
+            "path": "samples/csharp/hosted-agents/agent-framework/harness-scaling-capabilities",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Hello World Agent",
+            "description": "Minimal hosted agent that responds to simple text queries.",
             "path": "samples/csharp/hosted-agents/agent-framework/hello-world",
             "requiresModel": true
         },
@@ -410,8 +287,8 @@
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "invocations",
-            "displayName": "Invocations Echo Agent",
-            "description": "Echoes back input messages with a simple prefix for testing agent hosting.",
+            "displayName": "Echo Agent",
+            "description": "Agent that echoes the request message back prefixed with Echo:",
             "path": "samples/csharp/hosted-agents/agent-framework/invocations-echo-agent",
             "requiresModel": false
         },
@@ -419,8 +296,8 @@
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "Local Tools",
-            "description": "Hotel search assistant that uses local function tools for queries.",
+            "displayName": "Agent with Local Tools",
+            "description": "Agent with local function tools for hotel search.",
             "path": "samples/csharp/hosted-agents/agent-framework/local-tools",
             "requiresModel": true
         },
@@ -428,8 +305,8 @@
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "MCP Tools",
-            "description": "Agent answers questions by searching documentation using integrated tool providers.",
+            "displayName": "MCP Documentation Tools",
+            "description": "Agent that integrates client- and server-side tools for documentation search.",
             "path": "samples/csharp/hosted-agents/agent-framework/mcp-tools",
             "requiresModel": true
         },
@@ -437,8 +314,17 @@
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "responses",
+            "displayName": "Observability Agent",
+            "description": "Agent with built-in tracing, metrics, and logs for end-to-end observability.",
+            "path": "samples/csharp/hosted-agents/agent-framework/observability",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
             "displayName": "Simple Agent",
-            "description": "General-purpose AI assistant that replies to user input with model-generated responses.",
+            "description": "Minimal hosted agent that routes input to a configured model and returns its reply.",
             "path": "samples/csharp/hosted-agents/agent-framework/simple-agent",
             "requiresModel": true
         },
@@ -446,8 +332,17 @@
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "responses",
+            "displayName": "Teams Activity Agent",
+            "description": "Agent that answers Teams and calendar questions and accepts file attachments.",
+            "path": "samples/csharp/hosted-agents/agent-framework/teams-activity",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
             "displayName": "Text Search RAG",
-            "description": "Agent answers support questions using retrieved passages from external documents.",
+            "description": "Support agent that grounds answers using text-search retrieval from a knowledge base.",
             "path": "samples/csharp/hosted-agents/agent-framework/text-search-rag",
             "requiresModel": true
         },
@@ -455,8 +350,17 @@
             "language": "csharp",
             "framework": "agent-framework",
             "protocol": "responses",
-            "displayName": "Workflows",
-            "description": "Workflow chains three translation agents to show intermediate language outputs.",
+            "displayName": "Toolbox Auth Paths",
+            "description": "Demonstrates how toolbox tools authenticate to upstream servers using different paths.",
+            "path": "samples/csharp/hosted-agents/agent-framework/toolbox-auth-paths",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Translation Workflow",
+            "description": "Chains three translation agents English→French→Spanish→English and returns each translation.",
             "path": "samples/csharp/hosted-agents/agent-framework/workflows",
             "requiresModel": true
         },
@@ -464,8 +368,8 @@
             "language": "csharp",
             "framework": "bring-your-own",
             "protocol": "invocations",
-            "displayName": "HelloWorld",
-            "description": "Hosted agent that returns a streaming hello world response from a Foundry model.",
+            "displayName": "Hello World Agent",
+            "description": "Minimal agent that calls a model and returns the reply as an SSE event stream.",
             "path": "samples/csharp/hosted-agents/bring-your-own/invocations/HelloWorld",
             "requiresModel": true
         },
@@ -473,8 +377,8 @@
             "language": "csharp",
             "framework": "bring-your-own",
             "protocol": "invocations",
-            "displayName": "Human In The Loop",
-            "description": "Agent that generates proposals and waits for human approval before proceeding.",
+            "displayName": "Human Approval Gate",
+            "description": "Agent that generates proposals and pauses for human approval, revision, or rejection.",
             "path": "samples/csharp/hosted-agents/bring-your-own/invocations/human-in-the-loop",
             "requiresModel": true
         },
@@ -482,17 +386,26 @@
             "language": "csharp",
             "framework": "bring-your-own",
             "protocol": "invocations",
-            "displayName": "Notetaking Agent",
-            "description": "Agent that saves and retrieves session-persistent notes with real-time streaming responses.",
+            "displayName": "Note-Taking Agent",
+            "description": "Agent that creates, retrieves, and stores session-persistent notes with real-time responses.",
             "path": "samples/csharp/hosted-agents/bring-your-own/invocations/notetaking-agent",
             "requiresModel": true
         },
         {
             "language": "csharp",
             "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Voice Live Hello World",
+            "description": "Minimal real-time voice agent that bridges browser audio to a managed Voice Live session.",
+            "path": "samples/csharp/hosted-agents/bring-your-own/invocations_ws/HelloWorld",
+            "requiresModel": false
+        },
+        {
+            "language": "csharp",
+            "framework": "bring-your-own",
             "protocol": "responses",
-            "displayName": "HelloWorld",
-            "description": "Minimal hosted agent that returns a greeting from a Foundry model using the Responses API.",
+            "displayName": "Hello World Agent",
+            "description": "Minimal hosted agent that calls a model and returns the reply.",
             "path": "samples/csharp/hosted-agents/bring-your-own/responses/HelloWorld",
             "requiresModel": true
         },
@@ -501,7 +414,7 @@
             "framework": "bring-your-own",
             "protocol": "responses",
             "displayName": "Background Agent",
-            "description": "Handles research analysis requests asynchronously with background processing and streaming updates.",
+            "description": "Background agent that streams multi-section research results and supports asynchronous processing.",
             "path": "samples/csharp/hosted-agents/bring-your-own/responses/background-agent",
             "requiresModel": true
         },
@@ -509,8 +422,17 @@
             "language": "csharp",
             "framework": "bring-your-own",
             "protocol": "responses",
+            "displayName": "Browser Automation Agent",
+            "description": "Agent that runs Playwright CLI commands on a remote Chromium and streams a live view.",
+            "path": "samples/csharp/hosted-agents/bring-your-own/responses/browser-automation",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "bring-your-own",
+            "protocol": "responses",
             "displayName": "Env Vars Agent",
-            "description": "Agent retrieves environment variable values with safety policies based on their type.",
+            "description": "Agent that exposes env vars injected from connections and returns kind-aware responses.",
             "path": "samples/csharp/hosted-agents/bring-your-own/responses/env-vars-agent",
             "requiresModel": true
         },
@@ -518,10 +440,2224 @@
             "language": "csharp",
             "framework": "bring-your-own",
             "protocol": "responses",
-            "displayName": "Notetaking Agent",
-            "description": "Agent that saves and retrieves session-persistent notes for each user.",
+            "displayName": "Note-Taking Agent",
+            "description": "Agent that captures and retrieves session-persistent notes stored locally.",
             "path": "samples/csharp/hosted-agents/bring-your-own/responses/notetaking-agent",
             "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Delegating Caller",
+            "description": "Agent that delegates user questions to a remote specialist and summarizes the reply.",
+            "path": "samples/python/hosted-agents/agent-framework/a2a/01-delegation/caller",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Math Expert",
+            "description": "Agent that answers arithmetic and math questions for a caller.",
+            "path": "samples/python/hosted-agents/agent-framework/a2a/01-delegation/executor",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "invocations",
+            "displayName": "Session Management Agent",
+            "description": "Agent that maintains per-session conversation history in memory.",
+            "path": "samples/python/hosted-agents/agent-framework/invocations/01-basic",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Agent with Local Tools",
+            "description": "Agent that provides local tools the model can invoke during conversations.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/02-tools",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "File Tools Agent",
+            "description": "Agent with local file tools and a code interpreter for inspecting and manipulating files.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/06-files",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Local Skills Provider",
+            "description": "Agent that discovers and runs local file-based skills and generates a PDF travel guide.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/07-skills",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Teams Activity Agent",
+            "description": "Agent that interacts via Teams, handles file attachments, and answers calendar queries.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/07-teams-activity",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Agent Observability",
+            "description": "Instrumented agent that captures telemetry, traces, metrics, and logs via env vars.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/08-observability",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Declarative Customer Support",
+            "description": "Declarative multi-turn customer support workflow that triages and routes requests to agents.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/09-declarative-customer-support",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Per-Agent Azure Identity",
+            "description": "Agent that accesses Blob Storage and Service Bus using a per-agent Microsoft Entra identity.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/10-downstream-azure",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Foundry Skills Agent",
+            "description": "Agent that loads and applies behavioral guidelines from Foundry Skills.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/12-foundry-skills",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Foundry Semantic Memory",
+            "description": "Agent with persistent semantic memory backed by an Azure Foundry memory store.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/13-foundry-memory",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Browser Automation Agent",
+            "description": "Agent that controls a remote browser for browsing, scraping, and form filling.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/14-browser-automation-agent",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Travel Request Approver",
+            "description": "Agent that approves travel requests by checking policy, cost, and manager authorization.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/15-optimization-travel-approver",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Content Safety Guardrail",
+            "description": "Agent with a Responsible AI content safety guardrail to filter harmful prompts and responses.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/16-content-safety-guardrail",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Foundry IQ Knowledge Base",
+            "description": "Agent that answers questions from a Foundry IQ knowledge base via a Foundry Toolbox.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/17-foundry-iq-toolbox",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Egress Policy Tester",
+            "description": "Agent that exercises egress proxy policies by making outbound requests and returning responses.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/18-egress-control",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Research Harness",
+            "description": "Agent that plans research, tracks todos, searches the web, and saves sourced notes.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/19-harness-research",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Harness Data Processing",
+            "description": "Hosts a data-processing harness that analyzes a bundled CSV and requests approval before writes.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/20-harness-data-processing",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Harness Scaling Capabilities",
+            "description": "Hosts a personal-finance harness agent with on-demand skills, a confined shell, and CodeAct.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/21-harness-scaling-capabilities",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Foundry Toolbox MCP Skills",
+            "description": "Discovers Agent Skills on a Foundry Toolbox via MCP and exposes them to the model.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/22-foundry-toolbox-mcp-skills",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "activity",
+            "displayName": "Echo Agent",
+            "description": "Agent that echoes incoming messages back to the sender.",
+            "path": "samples/python/hosted-agents/bring-your-own/activity/echo",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "activity",
+            "displayName": "GitHub Copilot",
+            "description": "Conversational assistant using GitHub Copilot with to-do and shared-file reading tools.",
+            "path": "samples/python/hosted-agents/bring-your-own/activity/github-copilot",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Automatic UI Events",
+            "description": "Agent that streams UI events and handles the full run lifecycle.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/ag-ui",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Diagnostic Agent",
+            "description": "Agent that runs network probes and returns a structured reachability report.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/diagnostic-agent",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Event Grid Trigger",
+            "description": "Agent triggered by Event Grid that summarizes uploaded blobs and writes JSON summaries.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/event-grid-trigger",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Hello World Agent",
+            "description": "Minimal agent that calls a Foundry model and streams the reply.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/hello-world",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Human in the Loop",
+            "description": "Agent that generates proposals and pauses for human approval, revision, or rejection.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/human-in-the-loop",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Tool-Enabled Multi-Turn Chat",
+            "description": "Multi-turn conversational agent with conditional tool calling and session state.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/langgraph-chat",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Note-Taking Agent",
+            "description": "Note-taking agent that saves and retrieves per-session notes via session files.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/notetaking-agent",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Resilient Approval Gate",
+            "description": "Long-running, crash-resilient agent that gates plans and irreversible actions on human approval.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/resilient-approval-gate",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Resilient Research",
+            "description": "Long-running, crash-resilient research agent that checkpoints work and streams resumable progress.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/resilient-research",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "MCP Tool Calling Agent",
+            "description": "Agent that discovers toolbox tools via MCP and lets the model call them.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations/toolbox",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Voice Live Duplex Agent",
+            "description": "Real-time voice agent with low-latency conversation and parallel background workers.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations_ws/duplex-live-agent",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Voice Live Hello World",
+            "description": "Real-time agent that forwards browser audio to Voice Live for STT and TTS.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations_ws/hello-world",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "LiveKit Voice Agent",
+            "description": "Voice agent that uses LiveKit to receive audio, transcribe, generate responses, and synthesize speech.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations_ws/livekit-server",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Pipecat Real-Time Voice Agent (WebRTC)",
+            "description": "Real-time voice agent hosted as a bring-your-own container with multi-agent pipeline.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations_ws/pipecat-webrtc",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Pipecat Real-Time Voice Agent (WebSocket)",
+            "description": "Real-time voice agent that transcribes, routes to LLM sub-agents, and streams speech output.",
+            "path": "samples/python/hosted-agents/bring-your-own/invocations_ws/pipecat-ws-server",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Background Agent",
+            "description": "Background agent that processes requests asynchronously and streams partial results.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/background-agent",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "MCP Toolbox Integration (BYO)",
+            "description": "Agent that connects to a Foundry toolbox and discovers and invokes tools via MCP.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/bring-your-own-toolbox",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Browser Automation",
+            "description": "Agent that automates browsers with lazy sessions, multi-session control, and on-demand skills.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/browser-automation",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Environment Variable Injection",
+            "description": "Agent exposing a tool to return connection-backed env vars with kind-aware safety.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/env-vars-agent",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Hello World Agent",
+            "description": "Minimal hosted agent that calls a Foundry model and returns the reply.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/hello-world",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Multi-Turn Chat",
+            "description": "Conversational agent with server-side history and conditional tool calling.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/langgraph-chat",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "MCP Toolbox Agent (LangGraph)",
+            "description": "Agent that loads tools from a remote Foundry toolbox and responds to incoming requests.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/langgraph-toolbox",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "MCP User-Identity OAuth Agent",
+            "description": "Agent that uses a Foundry toolbox via MCP to access user-identity OAuth tools.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/langgraph-toolbox-user-identity",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Note-Taking Agent",
+            "description": "Agent that saves and retrieves per-session notes with persistent session storage.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/notetaking-agent",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Customer Support Agent",
+            "description": "Customer support agent for consumer electronics handling inquiries and troubleshooting.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/optimization-customer-support",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Agent Optimizer Hello World",
+            "description": "Minimal agent demonstrating Agent Optimizer for response optimization.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/optimization-hello-world",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Resilient Steering",
+            "description": "Crash-resilient, steerable agent for recoverable long-running responses.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/resilient-steering",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Resilient Streaming",
+            "description": "Streams multi-stage responses with checkpoints so interruptions resume without data loss.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/resilient-streaming",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Session Multiplexing",
+            "description": "Agent showing multiple users sharing an agent session while isolating response chains.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/session-multiplexing",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "uv Project Setup",
+            "description": "Minimal agent that forwards user input to a Foundry model and returns model responses.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/uv-pyproject",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Foreground Background Agents",
+            "description": "Router agent delegates long tasks to a background worker and manages task status.",
+            "path": "samples/python/hosted-agents/bring-your-own/voicelive/foreground-background-agents-responses-voicelive",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "Customer Support Handoff",
+            "description": "Multi-agent customer support handoff optimized for voice-first interactions.",
+            "path": "samples/python/hosted-agents/bring-your-own/voicelive/handoff-langgraph-responses-voicelive",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Voice Live Invocations Agent",
+            "description": "Agent that streams model audio transcriptions for real-time VoiceLive interactions.",
+            "path": "samples/python/hosted-agents/bring-your-own/voicelive/hello-world-invocations-voicelive",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations",
+            "displayName": "Hotel Booking Agent",
+            "description": "Voice-enabled hotel booking agent with multi-turn state and UI actions.",
+            "path": "samples/python/hosted-agents/bring-your-own/voicelive/hotel-booking-invocations-voicelive",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "A2A Caller",
+            "description": "Concierge agent that delegates specialist questions to a remote A2A executor.",
+            "path": "samples/python/hosted-agents/langgraph/a2a/a2a-caller",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Math Expert Executor",
+            "description": "Executor agent that answers arithmetic questions and exposes an incoming agent endpoint.",
+            "path": "samples/python/hosted-agents/langgraph/a2a/a2a-executor",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "invocations",
+            "displayName": "Chat With Local Tools",
+            "description": "Multi-turn chat agent with two local tools and per-session memory.",
+            "path": "samples/python/hosted-agents/langgraph/invocations/01-langgraph-chat",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "File Manipulation Agent",
+            "description": "Agent that manipulates uploaded files using filesystem tools and a code interpreter.",
+            "path": "samples/python/hosted-agents/langgraph/responses/06-files",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Human in the Loop",
+            "description": "Agent that pauses for human review and supports approve, revise, or reject decisions.",
+            "path": "samples/python/hosted-agents/langgraph/responses/07-human-in-the-loop",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Automatic Tracing",
+            "description": "Agent with automatic OpenTelemetry tracing across LLM calls, nodes, and tools.",
+            "path": "samples/python/hosted-agents/langgraph/responses/08-observability",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Resilient Workflow",
+            "description": "Hosts a workflow that survives agent crashes and resumes pending tool calls after process restart.",
+            "path": "samples/csharp/hosted-agents/agent-framework/resilient-workflow",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Steerable Workflow",
+            "description": "Deterministic workflow that supports resilient background execution and steerable conversations.",
+            "path": "samples/csharp/hosted-agents/agent-framework/steerable-workflow",
+            "requiresModel": false
+        },
+        {
+            "language": "csharp",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Steerable Conversations",
+            "description": "Hosts an agent that queues new inputs to steer ongoing persisted conversations.",
+            "path": "samples/csharp/hosted-agents/agent-framework/steering",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Managed Audio Offload",
+            "description": "Agent that receives text and control events while audio input and playback are managed externally.",
+            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/basic",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Hosted Audio Target",
+            "description": "Hosted agent that provides managed audio interactions and streams assistant text to callers.",
+            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langchain",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "invocations_ws",
+            "displayName": "Voice Live Bridge",
+            "description": "Hosted agent that provides a managed voice experience and streams assistant text.",
+            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langgraph",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "VoiceLive Copilot Integration",
+            "description": "Voice-friendly agent that streams assistant text and tool-status messages for VoiceLive synthesis.",
+            "path": "samples/python/hosted-agents/bring-your-own/voicelive/github-copilot-responses-voicelive",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "invocations",
+            "displayName": "Resilient Agent",
+            "description": "Agent that preserves workflow state across restarts and supports background execution and recovery.",
+            "path": "samples/python/hosted-agents/langgraph/invocations/02-resilient",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "invocations",
+            "displayName": "Config-Driven Hosting",
+            "description": "Hosts an agent with session persistence via Foundry checkpointing and a config entrypoint.",
+            "path": "samples/python/hosted-agents/langgraph/invocations/03-run",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "invocations",
+            "displayName": "Location Aware Host",
+            "description": "Location-aware agent that reads client locale and location messages to tailor responses.",
+            "path": "samples/python/hosted-agents/langgraph/invocations/04-custom-host",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "User Identity Toolbox",
+            "description": "Agent that loads toolbox tools using per-user identity for mail, calendar, and GitHub.",
+            "path": "samples/python/hosted-agents/langgraph/responses/03-langgraph-toolbox-user-identity",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Resilient Recovery",
+            "description": "Durable agent that preserves conversation state and resumes interrupted turns after restarts.",
+            "path": "samples/python/hosted-agents/langgraph/responses/09-resilient",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Config-Driven Hosting",
+            "description": "Expose an exported agent graph as a hosted endpoint.",
+            "path": "samples/python/hosted-agents/langgraph/responses/10-run",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Deep Research Agent",
+            "description": "Coordinator that delegates subagents, aggregates citations, and produces a final report.",
+            "path": "samples/python/hosted-agents/langgraph/responses/11-deep-agents",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Location-Aware Host",
+            "description": "Uses custom location messages and client locale headers to tailor replies and units.",
+            "path": "samples/python/hosted-agents/langgraph/responses/12-custom-host",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Custom State Stores",
+            "description": "Agent that uses custom persistence stores for conversation chains and response records.",
+            "path": "samples/python/hosted-agents/langgraph/responses/13-custom-store",
+            "requiresModel": true
+        }
+    ],
+    "patterns": [
+        {
+            "id": "just-the-basics",
+            "displayName": "Just the basics"
+        },
+        {
+            "id": "tools-mcp-skills",
+            "displayName": "Tools, MCP & Skills"
+        },
+        {
+            "id": "knowledge-rag-memory",
+            "displayName": "Knowledge, RAG & Memory"
+        },
+        {
+            "id": "files-documents",
+            "displayName": "Files & Documents"
+        },
+        {
+            "id": "human-in-the-loop-async-events",
+            "displayName": "Human-in-the-Loop, Async & Events"
+        },
+        {
+            "id": "multi-agent-orchestration",
+            "displayName": "Multi-Agent & Orchestration"
+        },
+        {
+            "id": "browser-computer-use",
+            "displayName": "Browser & Computer Use"
+        },
+        {
+            "id": "other-sdks-adapters",
+            "displayName": "Other SDKs & Adapters"
+        },
+        {
+            "id": "observability-tracing",
+            "displayName": "Observability & Tracing"
+        },
+        {
+            "id": "security-governance-ops",
+            "displayName": "Security, Governance & Ops"
+        },
+        {
+            "id": "agent-optimization",
+            "displayName": "Agent Optimization"
+        },
+        {
+            "id": "teams-m365-channel",
+            "displayName": "Teams / M365 Channel"
+        },
+        {
+            "id": "voice-realtime",
+            "displayName": "Voice & Realtime"
+        }
+    ],
+    "cards": [
+        {
+            "id": "chat-agent-basics",
+            "title": "Build your first chat agent",
+            "categoryId": "just-the-basics",
+            "details": {
+                "summary": "Connect text input to a model and return replies through a hosted agent endpoint.",
+                "whatItDoes": "Accepts text, runs the selected model or agent SDK, and returns replies through Responses or Invocations. Streaming events and history persistence vary by implementation. The Claude adapter requires account-scoped model access.",
+                "whyUseIt": "Explore the request-to-reply path before adding application-specific retrieval or workflows.",
+                "exampleScenario": "Ask for a short explanation of a technical concept and adjust the agent's instructions to change its tone.",
+                "bestFit": "First hosted-agent projects and developers comparing conversational SDK integrations.",
+                "capabilities": [
+                    "Accepts text requests and returns model-backed replies",
+                    "Provides an editable starting point for conversational behavior",
+                    "Exposes the selected implementation's response or streaming-event contract"
+                ],
+                "whatItGenerates": "A Python or C# agent project with an entry point, dependencies, and hosting configuration for the selected framework and protocol. Cloud deployment is separate.",
+                "requirements": [
+                    "Model access"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/agent-framework/responses/01-basic",
+                "samples/python/hosted-agents/bring-your-own/invocations/github-copilot",
+                "samples/python/hosted-agents/bring-your-own/invocations/claude-agent-sdk",
+                "samples/python/hosted-agents/bring-your-own/responses/openai-agents-sdk",
+                "samples/csharp/hosted-agents/agent-framework/hello-world",
+                "samples/python/hosted-agents/agent-framework/invocations/01-basic",
+                "samples/python/hosted-agents/langgraph/invocations/03-run",
+                "samples/python/hosted-agents/langgraph/responses/10-run"
+            ]
+        },
+        {
+            "id": "time-calculator-chat",
+            "title": "Chat with local tools",
+            "categoryId": "tools-mcp-skills",
+            "details": {
+                "summary": "Answer time and arithmetic questions using a UTC lookup and calculator.",
+                "whatItDoes": "Uses a LangGraph tool-calling loop to select local functions, consume their results, and answer follow-up questions. Conversation storage and streaming formats vary by protocol and host.",
+                "whyUseIt": "Learn tool registration and multi-turn reasoning with two small, concrete tools.",
+                "exampleScenario": "Ask for the current time, calculate 42 multiplied by 17, and ask to add 100 to the result.",
+                "bestFit": "Developers learning local tools or comparing framework-hosted and BYO integration.",
+                "capabilities": [
+                    "Looks up the current UTC time",
+                    "Evaluates simple arithmetic expressions",
+                    "Continues multi-turn tool conversations"
+                ],
+                "whatItGenerates": "A Python LangGraph project with time and calculator tools and the chosen protocol's hosting code.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/langgraph/responses/01-langgraph-chat",
+                "samples/python/hosted-agents/bring-your-own/invocations/langgraph-chat",
+                "samples/python/hosted-agents/bring-your-own/responses/langgraph-chat",
+                "samples/python/hosted-agents/langgraph/invocations/01-langgraph-chat"
+            ]
+        },
+        {
+            "id": "mcp-toolbox-integration",
+            "title": "Use Foundry Toolbox",
+            "categoryId": "tools-mcp-skills",
+            "details": {
+                "summary": "Connect an agent to centrally managed tools and use their results in conversation.",
+                "whatItDoes": "Makes configured Toolbox tools available to the model and uses their results in replies. Tool discovery and execution run in the agent or the platform, depending on the implementation.",
+                "whyUseIt": "Reuse managed remote tools while choosing a framework-managed or custom agent loop.",
+                "exampleScenario": "Connect a documentation Toolbox and ask the agent to retrieve guidance relevant to a support question.",
+                "bestFit": "Agent Framework, LangGraph, and BYO projects that need shared MCP tools.",
+                "capabilities": [
+                    "Connects to configured Toolbox tools",
+                    "Lets the model select relevant tool calls",
+                    "Uses returned tool output in conversational answers"
+                ],
+                "whatItGenerates": "A Python or C# agent with Toolbox integration, dependencies, and hosting configuration. Some variants include resource definitions; scaffolding does not provision the remote tools.",
+                "requirements": [
+                    "Model deployment, Toolbox"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/langgraph/responses/02-langgraph-toolbox",
+                "samples/python/hosted-agents/agent-framework/responses/04-foundry-toolbox",
+                "samples/csharp/hosted-agents/agent-framework/foundry-toolbox-server-side",
+                "samples/python/hosted-agents/bring-your-own/invocations/toolbox",
+                "samples/python/hosted-agents/bring-your-own/responses/bring-your-own-toolbox"
+            ]
+        },
+        {
+            "id": "content-review-workflow",
+            "title": "Multi-Agent Workflow",
+            "categoryId": "multi-agent-orchestration",
+            "details": {
+                "summary": "Chain agents to write a slogan, review the draft, and format the final output.",
+                "whatItDoes": "Passes a request through a slogan writer, a legal-review role, and a formatter, with each stage receiving the previous output. Model-generated review is not legal approval.",
+                "whyUseIt": "Separate drafting, review, and presentation into stages with distinct instructions.",
+                "exampleScenario": "Draft a slogan for an affordable electric SUV, review the draft, and format the final suggestion.",
+                "bestFit": "Teams prototyping sequential writing and review workflows.",
+                "capabilities": [
+                    "Runs three specialized agents in order",
+                    "Passes intermediate output between stages",
+                    "Returns only the final formatted result"
+                ],
+                "whatItGenerates": "A Python workflow project with agent instructions and hosting configuration for Agent Framework or LangGraph.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/agent-framework/responses/05-workflows",
+                "samples/python/hosted-agents/langgraph/responses/05-workflows"
+            ]
+        },
+        {
+            "id": "azure-search-rag",
+            "title": "Ground in Azure AI Search",
+            "categoryId": "knowledge-rag-memory",
+            "details": {
+                "summary": "Answer questions from product documents and cite sources retrieved from a search index.",
+                "whatItDoes": "Searches a configured index, injects retrieved content into the model context, and instructs the agent to cite source documents.",
+                "whyUseIt": "Explore RAG with a maintained knowledge base rather than relying only on model training data.",
+                "exampleScenario": "Answer questions about Contoso Outdoors return windows, shipping times, and tent care.",
+                "bestFit": "Documentation-based support prototypes and Agent Framework RAG integrations.",
+                "capabilities": [
+                    "Retrieves matching documents before model calls",
+                    "Adds retrieved text to the agent context",
+                    "Includes source references in answers"
+                ],
+                "whatItGenerates": "An Agent Framework RAG project with search integration and hosting configuration. Preparing the populated search index is a separate step.",
+                "requirements": [
+                    "Model deployment, Azure AI Search"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/agent-framework/responses/11-azure-search-rag",
+                "samples/csharp/hosted-agents/agent-framework/azure-search-rag"
+            ]
+        },
+        {
+            "id": "a2a-delegation-caller",
+            "title": "Delegate to a remote specialist",
+            "categoryId": "multi-agent-orchestration",
+            "details": {
+                "summary": "Send questions to an A2A math agent through a Toolbox and summarize its answers.",
+                "whatItDoes": "Discovers a specialist through a Foundry Toolbox and forwards suitable questions over A2A. Tool execution is client-side or platform-managed, depending on the implementation.",
+                "whyUseIt": "Connect independently hosted agents while keeping the user-facing conversation in a caller agent.",
+                "exampleScenario": "Ask the concierge to multiply 15 by 23 and receive the remote specialist's result.",
+                "bestFit": "Teams prototyping cross-agent delegation with Agent Framework or LangGraph.",
+                "capabilities": [
+                    "Discovers delegation tools",
+                    "Calls a remote A2A specialist",
+                    "Summarizes the returned answer"
+                ],
+                "whatItGenerates": "A caller project and connection configuration for the chosen framework. The executor remains a separate deployment.",
+                "requirements": [
+                    "Model deployment, Toolbox, A2A executor"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/a2a/01-delegation/caller",
+                "samples/python/hosted-agents/agent-framework/a2a/01-delegation/caller",
+                "samples/python/hosted-agents/langgraph/a2a/a2a-caller"
+            ]
+        },
+        {
+            "id": "a2a-math-executor",
+            "title": "Host an A2A math expert",
+            "categoryId": "multi-agent-orchestration",
+            "details": {
+                "summary": "Make an arithmetic specialist available to remote agents through an A2A endpoint.",
+                "whatItDoes": "Answers math questions through Responses and supports incoming A2A after the relevant endpoint and agent-card configuration is applied.",
+                "whyUseIt": "Explore the specialist half of an agent-to-agent delegation flow.",
+                "exampleScenario": "Deploy the math expert, then connect the companion concierge as an A2A caller.",
+                "bestFit": "Developers exposing an agent's specialist capability to remote callers.",
+                "capabilities": [
+                    "Answers arithmetic questions",
+                    "Advertises a specialist agent card",
+                    "Accepts A2A requests when configured"
+                ],
+                "whatItGenerates": "A specialist agent project with framework-specific hosting and incoming-A2A setup artifacts.",
+                "requirements": [
+                    "Model deployment, A2A setup"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/a2a/01-delegation/executor",
+                "samples/python/hosted-agents/agent-framework/a2a/01-delegation/executor",
+                "samples/python/hosted-agents/langgraph/a2a/a2a-executor"
+            ]
+        },
+        {
+            "id": "foundry-skills",
+            "title": "Use Foundry Skills",
+            "categoryId": "tools-mcp-skills",
+            "details": {
+                "summary": "Load shared support guidelines from Foundry Skills and apply them when relevant.",
+                "whatItDoes": "Retrieves Skills from Foundry at startup and exposes their instructions through progressive disclosure.",
+                "whyUseIt": "Update shared behavioral guidance separately from the agent's application code.",
+                "exampleScenario": "Answer a routine return-policy question using support-style guidance and use escalation-policy guidance for an exceptional refund.",
+                "bestFit": "Teams sharing instruction-only Skills across Agent Framework agents.",
+                "capabilities": [
+                    "Downloads named Skills",
+                    "Advertises available guidance",
+                    "Loads relevant Skill instructions on demand"
+                ],
+                "whatItGenerates": "An agent project with sample Skill sources and download/provider wiring. Skills must also exist in the target Foundry project.",
+                "requirements": [
+                    "Model deployment, Foundry Skills"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/agent-skills",
+                "samples/python/hosted-agents/agent-framework/responses/12-foundry-skills"
+            ]
+        },
+        {
+            "id": "browser-automation",
+            "title": "Automate browser tasks",
+            "categoryId": "browser-computer-use",
+            "details": {
+                "summary": "Navigate websites, read page content, and interact with forms through remote Chromium.",
+                "whatItDoes": "Connects model-selected browser actions to remote Chromium sessions through Foundry Toolbox and browser tooling. Multi-session, live-view, CLI, and Skill capabilities vary by implementation.",
+                "whyUseIt": "Prototype browser-based tasks without running a browser inside the agent container.",
+                "exampleScenario": "Visit a documentation site, find a relevant page, and summarize information from it.",
+                "bestFit": "Browser workflow prototypes using Agent Framework or BYO hosting.",
+                "capabilities": [
+                    "Navigates remote web pages",
+                    "Retrieves page information",
+                    "Performs browser interactions through tools"
+                ],
+                "whatItGenerates": "A browser-agent project with tool integration and hosting configuration. Browser services and Toolbox resources must be provisioned separately.",
+                "requirements": [
+                    "Model deployment, Toolbox, remote browser"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/browser-automation",
+                "samples/csharp/hosted-agents/bring-your-own/responses/browser-automation",
+                "samples/python/hosted-agents/agent-framework/responses/14-browser-automation-agent",
+                "samples/python/hosted-agents/bring-your-own/responses/browser-automation"
+            ]
+        },
+        {
+            "id": "network-diagnostics",
+            "title": "Check network access and policies",
+            "categoryId": "security-governance-ops",
+            "details": {
+                "summary": "Probe outbound connectivity and inspect how hosted-agent egress policies affect requests.",
+                "whatItDoes": "Sends requests to authorized test destinations and reports network outcomes. The BYO Invocations service probes DNS, TCP, TLS, and HTTP without a model; Agent Framework variants use model-directed HTTP tools to test egress allow/deny rules, transforms, and rewrites.",
+                "whyUseIt": "Distinguish network reachability failures from configured outbound policy behavior.",
+                "exampleScenario": "Check an allowed endpoint and compare its response with a destination blocked by a test egress policy.",
+                "bestFit": "Operators diagnosing controlled hosted-agent network configurations.",
+                "capabilities": [
+                    "Tests outbound network access",
+                    "Returns diagnostic request outcomes",
+                    "Tests managed egress policies in the Agent Framework variants"
+                ],
+                "whatItGenerates": "A BYO network probe or an Agent Framework egress-test agent with hosting artifacts. Egress variants include layered RAI-policy infrastructure and need model and policy-management access; policies apply to the deployed host. Restrict diagnostic access and do not share sensitive headers or internal topology.",
+                "requirements": [
+                    "Network targets, model (Agent Framework)"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/egress-control",
+                "samples/python/hosted-agents/agent-framework/responses/18-egress-control",
+                "samples/python/hosted-agents/bring-your-own/invocations/diagnostic-agent"
+            ]
+        },
+        {
+            "id": "file-qa-analysis",
+            "title": "Work with files",
+            "categoryId": "files-documents",
+            "details": {
+                "summary": "Read bundled or session files and use their contents to answer questions.",
+                "whatItDoes": "Lists and reads accessible files, then uses their contents in a model response. The Python variants also delegate calculations to a Toolbox code interpreter.",
+                "whyUseIt": "Ground answers in supplied documents and explore file-tool integration.",
+                "exampleScenario": "Ask the agent to summarize a supplied report and identify the passages supporting its answer.",
+                "bestFit": "Document Q&A prototypes using Agent Framework or LangGraph.",
+                "capabilities": [
+                    "Locates and reads files through tools",
+                    "Uses file contents to answer questions",
+                    "Supports code-interpreter calculations in the Python variants"
+                ],
+                "whatItGenerates": "A Python or C# agent with file tools and hosting configuration. The Python implementations include Toolbox integration for numerical analysis.",
+                "requirements": [
+                    "Model deployment, code interpreter (Python)"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/file-tools",
+                "samples/python/hosted-agents/agent-framework/responses/06-files",
+                "samples/python/hosted-agents/langgraph/responses/06-files"
+            ]
+        },
+        {
+            "id": "personalized-memory-assistant",
+            "title": "Remember user preferences",
+            "categoryId": "knowledge-rag-memory",
+            "details": {
+                "summary": "Store user facts in Foundry Memory and recall them across conversations.",
+                "whatItDoes": "Records relevant information in Foundry Memory and retrieves it as context for later model requests.",
+                "whyUseIt": "Explore user-scoped personalization beyond the current conversation's message history.",
+                "exampleScenario": "Share a scheduling preference, then ask for a suggestion in a later conversation that takes it into account.",
+                "bestFit": "Agent Framework prototypes evaluating semantic memory and personalization.",
+                "capabilities": [
+                    "Records user-provided facts",
+                    "Retrieves relevant memories",
+                    "Adds remembered context to model requests"
+                ],
+                "whatItGenerates": "A Python or C# Agent Framework project with a memory context provider and hosting configuration. The C# variant includes a personal-coach scenario, not professional advice.",
+                "requirements": [
+                    "Model deployments, Foundry Memory"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/foundry-memory-rag",
+                "samples/python/hosted-agents/agent-framework/responses/13-foundry-memory"
+            ]
+        },
+        {
+            "id": "toolbox-mcp-skills",
+            "title": "Load Skills from a Toolbox",
+            "categoryId": "tools-mcp-skills",
+            "details": {
+                "summary": "Discover Skills over MCP and load their instructions when the agent needs them.",
+                "whatItDoes": "Discovers Skill metadata over MCP and retrieves relevant instruction bodies when the agent needs them.",
+                "whyUseIt": "Deliver centrally managed guidance through a Toolbox rather than downloading all instructions into the project.",
+                "exampleScenario": "Apply support-style and escalation instructions while answering a customer question.",
+                "bestFit": "Agent Framework projects using MCP-delivered Skills.",
+                "capabilities": [
+                    "Discovers available Skills",
+                    "Advertises Skill descriptions",
+                    "Loads instruction content on demand"
+                ],
+                "whatItGenerates": "A Python or C# Agent Framework project with an MCP Skills provider and hosting configuration. The C# variant consumes an existing Toolbox; the Python variant also includes Skill sources, a Toolbox definition, and provisioning hooks.",
+                "requirements": [
+                    "Model deployment, Toolbox with Skills"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/foundry-toolbox-mcp-skills",
+                "samples/python/hosted-agents/agent-framework/responses/22-foundry-toolbox-mcp-skills"
+            ]
+        },
+        {
+            "id": "approved-data-processing",
+            "title": "Approve data file changes",
+            "categoryId": "files-documents",
+            "details": {
+                "summary": "Analyze a CSV and review proposed file changes before the agent writes or deletes data.",
+                "whatItDoes": "Uses an Agent Framework harness to inspect bundled sales data through file tools. Reads run immediately; writes and deletes pause for a structured approval response before changing session files.",
+                "whyUseIt": "Explore data analysis with explicit user control over file mutations.",
+                "exampleScenario": "Summarize sales by region, then approve writing a filtered CSV to the session workspace.",
+                "bestFit": "Teams prototyping file-based analysis with approval-gated outputs.",
+                "capabilities": [
+                    "Reads and analyzes CSV data",
+                    "Requests approval before file writes or deletes",
+                    "Stores approved output in session files"
+                ],
+                "whatItGenerates": "A Python or C# data-processing harness with seed data, scoped file tools, and Responses hosting. Directory layouts differ; the client must support structured approval responses. Hosted file lifetime follows the session, not permanent storage.",
+                "requirements": [
+                    "Model deployment, approval client"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/harness-data-processing",
+                "samples/python/hosted-agents/agent-framework/responses/20-harness-data-processing"
+            ]
+        },
+        {
+            "id": "background-research-report",
+            "title": "Research a topic",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Explore a topic and produce a research summary through a hosted agent workflow.",
+                "whatItDoes": "Runs topic-focused research using background Responses, a plan-and-execute harness, or a resilient Invocations task. Harness variants request plan approval, search the web, track todos, and save notes; the resilient variant checkpoints model sub-calls and supports steering and stream reconnection.",
+                "whyUseIt": "Choose a research workflow that fits the application's planning, progress, and recovery needs.",
+                "exampleScenario": "Research a technology trend and ask for a summary of the key findings.",
+                "bestFit": "Applications prototyping research assistants and longer-running analysis.",
+                "capabilities": [
+                    "Accepts a research topic",
+                    "Produces a generated research result",
+                    "Supports planning, background execution, or checkpointed work according to the selected variant"
+                ],
+                "whatItGenerates": "A Python or C# research project with variant-specific hosting and state handling. Harnesses require network access and suitable model capacity; clients must support the chosen approval or progress contract. The resilient Invocations variant provides end-to-end per-sub-call checkpointed crash recovery and resumable streaming, with an optional offline demo mode; other samples may persist checkpoints or state but do not implement the same per-sub-call recovery and SSE reconnection behavior.",
+                "requirements": [
+                    "Model access, research client"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/harness-research",
+                "samples/csharp/hosted-agents/bring-your-own/responses/background-agent",
+                "samples/python/hosted-agents/agent-framework/responses/19-harness-research",
+                "samples/python/hosted-agents/bring-your-own/invocations/resilient-research",
+                "samples/python/hosted-agents/bring-your-own/responses/background-agent",
+                "samples/python/hosted-agents/langgraph/responses/11-deep-agents"
+            ]
+        },
+        {
+            "id": "finance-harness",
+            "title": "Analyze a portfolio with tools",
+            "categoryId": "tools-mcp-skills",
+            "details": {
+                "summary": "Explore portfolio analysis with finance Skills, file tools, and background ticker research.",
+                "whatItDoes": "Combines valuation and risk-scoring Skills, a confined shell, CodeAct, and research workers in a personal-finance harness. The C# variant gates writes, shell commands, and simulated trades on approval; the Python variant temporarily bypasses those approvals because of an upstream issue.",
+                "whyUseIt": "Explore how Skills and specialized tools combine in a concrete multi-capability agent.",
+                "exampleScenario": "Read the sample portfolio, score its risk, and gather recent information about its tickers.",
+                "bestFit": "Developers evaluating harness capabilities with trusted financial sample data.",
+                "capabilities": [
+                    "Loads finance Skills on demand",
+                    "Reads portfolio files and organizes confirmations",
+                    "Delegates ticker research to background agents",
+                    "Runs CodeAct where the selected runtime supports it"
+                ],
+                "whatItGenerates": "A Python or C# finance harness with Skills, tools, seed data, and Responses hosting. C# CodeAct uses Hyperlight and needs hardware virtualization, which may be unavailable in hosted containers; Python uses Monty. Shell restrictions are not a security boundary. Use trusted inputs; trades are simulated and output is not financial advice.",
+                "requirements": [
+                    "Model deployment, virtualization (C# CodeAct)"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/harness-scaling-capabilities",
+                "samples/python/hosted-agents/agent-framework/responses/21-harness-scaling-capabilities"
+            ]
+        },
+        {
+            "id": "invocations-echo",
+            "title": "Test with an echo agent",
+            "categoryId": "just-the-basics",
+            "details": {
+                "summary": "Return incoming messages through a hosted endpoint without calling a language model.",
+                "whatItDoes": "Receives a message and echoes its text through C# Invocations or Python Activity hosting. The Activity variant includes channel delivery and a conversation welcome handler.",
+                "whyUseIt": "Isolate the hosting and request-routing path from model authentication and inference.",
+                "exampleScenario": "Send a test message and verify that the endpoint returns the expected echo.",
+                "bestFit": "Hosting smoke tests and developers learning Invocations or Activity handlers.",
+                "capabilities": [
+                    "Receives text messages",
+                    "Echoes input without model inference"
+                ],
+                "whatItGenerates": "A C# Invocations echo agent or a Python Activity echo agent with hosting configuration. The Activity deployment also needs the documented Bot and Teams setup; no model is required for either echo handler.",
+                "requirements": [
+                    "No model required"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/invocations-echo-agent",
+                "samples/python/hosted-agents/bring-your-own/activity/echo"
+            ]
+        },
+        {
+            "id": "hotel-search-tools",
+            "title": "Find hotels with local tools",
+            "categoryId": "tools-mcp-skills",
+            "details": {
+                "summary": "Use local hotel-search functions to answer requests about dates, locations, and prices.",
+                "whatItDoes": "Registers hotel-search tools with Agent Framework and combines their results into a natural-language answer.",
+                "whyUseIt": "Learn function-tool integration through an example with location, dates, and price constraints.",
+                "exampleScenario": "Find hotels in Seattle for a specified date range and nightly budget.",
+                "bestFit": "C# developers prototyping model-directed local tools.",
+                "capabilities": [
+                    "Registers local function tools",
+                    "Accepts hotel-search constraints",
+                    "Explains returned search results"
+                ],
+                "whatItGenerates": "A C# Agent Framework sample with hotel-search functions and Responses hosting configuration, not a live booking-service integration.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/local-tools"
+            ]
+        },
+        {
+            "id": "mcp-documentation-assistant",
+            "title": "Search documentation with MCP",
+            "categoryId": "tools-mcp-skills",
+            "details": {
+                "summary": "Retrieve documentation through MCP tools and use the results to answer questions.",
+                "whatItDoes": "Lets the model request documentation through configured remote tools and use the returned material in an answer.",
+                "whyUseIt": "Explore documentation retrieval through MCP with either Agent Framework integration or a BYO LangGraph host.",
+                "exampleScenario": "Ask for Microsoft service guidance and summarize the relevant documentation returned by the tools.",
+                "bestFit": "Developers prototyping tool-backed documentation assistants.",
+                "capabilities": [
+                    "Connects remote documentation tools",
+                    "Selects tool calls in response to user questions",
+                    "Uses retrieved tool output in answers"
+                ],
+                "whatItGenerates": "A C# Agent Framework documentation agent or a Python LangGraph agent wrapped by a BYO Responses host, with MCP integration and hosting artifacts.",
+                "requirements": [
+                    "Model deployment, MCP tools"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/mcp-tools",
+                "samples/python/hosted-agents/bring-your-own/responses/langgraph-toolbox"
+            ]
+        },
+        {
+            "id": "agent-observability",
+            "title": "Trace agent activity",
+            "categoryId": "observability-tracing",
+            "details": {
+                "summary": "Capture agent, model, and tool traces to investigate request behavior.",
+                "whatItDoes": "Demonstrates instrumentation for agent, model, and tool execution using the selected framework's telemetry integration. Trace coverage varies; review sensitive-content capture before enabling it.",
+                "whyUseIt": "See how requests are composed and identify where to investigate failures or slow operations.",
+                "exampleScenario": "Invoke a tool-enabled request and inspect its agent, model, and tool spans.",
+                "bestFit": "Developers adding observability to Agent Framework or LangGraph projects.",
+                "capabilities": [
+                    "Produces execution traces",
+                    "Associates model and tool work with requests",
+                    "Connects telemetry to the configured observability backend"
+                ],
+                "whatItGenerates": "An instrumented agent project with framework-specific dependencies and telemetry configuration.",
+                "requirements": [
+                    "Model deployment, telemetry backend"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/observability",
+                "samples/python/hosted-agents/agent-framework/responses/08-observability",
+                "samples/python/hosted-agents/langgraph/responses/08-observability"
+            ]
+        },
+        {
+            "id": "minimal-chat-integration",
+            "title": "Host a minimal chat handler",
+            "categoryId": "just-the-basics",
+            "details": {
+                "summary": "Use minimal model-calling code to serve text replies through a hosted endpoint.",
+                "whatItDoes": "Connects incoming text to a Foundry model through a BYO handler or the C# inline Agent Framework construction API. Conversation storage and streaming vary by protocol and handler.",
+                "whyUseIt": "Focus on model configuration and the hosting boundary without adding custom tools or orchestration.",
+                "exampleScenario": "Send a short question and inspect where the sample constructs the model request and returns the answer.",
+                "bestFit": "Developers learning minimal BYO hosting or inline C# agent construction.",
+                "capabilities": [
+                    "Accepts text input",
+                    "Calls a configured Foundry model",
+                    "Returns replies using the selected hosting contract"
+                ],
+                "whatItGenerates": "A minimal Python or C# BYO handler, or a C# inline Agent Framework agent, with dependencies and Responses or Invocations hosting configuration.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/simple-agent",
+                "samples/csharp/hosted-agents/bring-your-own/invocations/HelloWorld",
+                "samples/csharp/hosted-agents/bring-your-own/responses/HelloWorld",
+                "samples/python/hosted-agents/bring-your-own/invocations/hello-world",
+                "samples/python/hosted-agents/bring-your-own/responses/hello-world"
+            ]
+        },
+        {
+            "id": "teams-work-iq",
+            "title": "Teams Activity Agent",
+            "categoryId": "teams-m365-channel",
+            "details": {
+                "summary": "Bring a model-backed assistant to Teams with conversational tools and file attachments.",
+                "whatItDoes": "Serves conversations and attachments through a Teams integration. Agent Framework variants use Work IQ for Teams and calendar queries; the Python BYO Activity variant uses Copilot SDK for task lists, shared files, and generated downloads.",
+                "whyUseIt": "Explore a Teams assistant with hosted-agent logic and channel integration already connected.",
+                "exampleScenario": "Share a document in a Teams conversation and ask the assistant about its contents.",
+                "bestFit": "Teams and Microsoft 365 assistant prototypes using Agent Framework or Copilot SDK.",
+                "capabilities": [
+                    "Responds to Teams conversations when published",
+                    "Handles shared file attachments",
+                    "Uses Work IQ or task and file tools, depending on the implementation"
+                ],
+                "whatItGenerates": "An Agent Framework project or a Python Copilot SDK Activity host with channel and hosting configuration. Work IQ authorization applies to the framework variants; the Activity variant needs Bot/Teams setup and uses a Foundry model rather than GitHub authentication.",
+                "requirements": [
+                    "Model deployment, Teams"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/teams-activity",
+                "samples/python/hosted-agents/agent-framework/responses/07-teams-activity",
+                "samples/python/hosted-agents/bring-your-own/activity/github-copilot"
+            ]
+        },
+        {
+            "id": "knowledge-base-qa",
+            "title": "Query a knowledge base",
+            "categoryId": "knowledge-rag-memory",
+            "details": {
+                "summary": "Retrieve relevant documents through a text-search provider or Foundry IQ to ground answers.",
+                "whatItDoes": "Retrieves supporting content through a C# text-search context provider or a Python Foundry IQ knowledge-base tool and makes it available to the model.",
+                "whyUseIt": "Explore document-grounded Q&A through different retrieval integrations.",
+                "exampleScenario": "Ask a question about the selected sample's document collection and examine the grounding material used in the reply.",
+                "bestFit": "Agent Framework projects evaluating retrieval-backed question answering.",
+                "capabilities": [
+                    "Retrieves relevant knowledge",
+                    "Provides grounding material to the model",
+                    "Produces document-informed answers"
+                ],
+                "whatItGenerates": "A C# TextSearchProvider example or a Python Foundry IQ Toolbox integration, with hosting configuration and variant-specific setup artifacts. Resource provisioning and source ingestion are separate.",
+                "requirements": [
+                    "Model deployment, knowledge source"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/text-search-rag",
+                "samples/python/hosted-agents/agent-framework/responses/17-foundry-iq-toolbox"
+            ]
+        },
+        {
+            "id": "toolbox-authentication-paths",
+            "title": "Configure Toolbox authentication",
+            "categoryId": "security-governance-ops",
+            "details": {
+                "summary": "Connect managed tools to upstream services using connection-based authentication.",
+                "whatItDoes": "Uses platform-managed Toolbox calls while placing upstream authentication differences in connection configuration.",
+                "whyUseIt": "Separate agent behavior from credential handling and evaluate the intended authentication model.",
+                "exampleScenario": "Configure different supported authentication paths for test MCP connections and compare their tool calls.",
+                "bestFit": "Developers validating managed tool authentication and connection configuration.",
+                "capabilities": [
+                    "Registers platform-managed tools",
+                    "Demonstrates connection authentication choices",
+                    "Keeps upstream authentication outside agent business logic"
+                ],
+                "whatItGenerates": "A C# hosted agent and Toolbox connection examples, not real credentials or completed authorization grants.",
+                "requirements": [
+                    "Model deployment, authenticated Toolbox"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/toolbox-auth-paths"
+            ]
+        },
+        {
+            "id": "translation-chain",
+            "title": "Chain translation agents",
+            "categoryId": "multi-agent-orchestration",
+            "details": {
+                "summary": "Translate text from English to French to Spanish and back, returning each stage.",
+                "whatItDoes": "Runs three translation agents in sequence and returns the intermediate translations. Generated translations require accuracy review.",
+                "whyUseIt": "Observe a simple multi-agent pipeline whose stage outputs are easy to compare.",
+                "exampleScenario": "Send an English announcement and compare how its wording changes across the translation chain.",
+                "bestFit": "C# developers learning sequential Agent Framework workflows.",
+                "capabilities": [
+                    "Runs three translation stages",
+                    "Feeds each result into the next agent",
+                    "Returns intermediate translated text"
+                ],
+                "whatItGenerates": "A C# translation workflow project with agent instructions and hosting configuration.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/workflows"
+            ]
+        },
+        {
+            "id": "proposal-human-approval",
+            "title": "Add a human approval step",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Pause generated proposals for approval, revision, or rejection before finalizing them.",
+                "whatItDoes": "Creates a proposal, waits for a decision, and either finalizes it, produces a revision, or stops the flow. BYO file persistence and LangGraph checkpoints have different recovery behavior.",
+                "whyUseIt": "Explore explicit human decisions before treating generated content as final.",
+                "exampleScenario": "Draft a product announcement, request a shorter revision, and approve the updated text.",
+                "bestFit": "Teams prototyping review workflows with a compatible approval client.",
+                "capabilities": [
+                    "Generates a proposal",
+                    "Pauses for approval or rejection",
+                    "Accepts revision feedback"
+                ],
+                "whatItGenerates": "An approval-flow agent project with the selected protocol and state-handling implementation. The approval client is a separate integration.",
+                "requirements": [
+                    "Model deployment, approval client"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/bring-your-own/invocations/human-in-the-loop",
+                "samples/python/hosted-agents/bring-your-own/invocations/human-in-the-loop",
+                "samples/python/hosted-agents/langgraph/responses/07-human-in-the-loop"
+            ]
+        },
+        {
+            "id": "session-notes",
+            "title": "Save conversation notes",
+            "categoryId": "files-documents",
+            "details": {
+                "summary": "Save and retrieve notes with local tools that keep each session's files separate.",
+                "whatItDoes": "Calls local save and retrieve tools backed by per-session JSONL files, then explains the result in a reply. Data lifetime follows the configured session storage.",
+                "whyUseIt": "Explore tool-driven file persistence with a clear, small user task.",
+                "exampleScenario": "Save a reminder to book dinner, add a shopping note, and ask for all notes in the session.",
+                "bestFit": "Developers learning session storage and model function calling.",
+                "capabilities": [
+                    "Saves notes from text requests",
+                    "Retrieves session notes",
+                    "Separates note files between sessions"
+                ],
+                "whatItGenerates": "A note-taking agent with local storage helpers, dependencies, and hosting configuration. Note data is created when the agent runs.",
+                "requirements": [
+                    "Model deployment, session storage"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/bring-your-own/invocations/notetaking-agent",
+                "samples/csharp/hosted-agents/bring-your-own/responses/notetaking-agent",
+                "samples/python/hosted-agents/bring-your-own/invocations/notetaking-agent",
+                "samples/python/hosted-agents/bring-your-own/responses/notetaking-agent"
+            ]
+        },
+        {
+            "id": "voice-conversation-starter",
+            "title": "Start a voice conversation",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Connect a Voice Live client to a hosted audio bridge or text-event adapter.",
+                "whatItDoes": "Bridges browser audio to a managed Voice Live session over a WebSocket, adapts transcribed text and model replies into Voice Live–compatible Invocations SSE events, or emits Responses-based assistant text and tool-status events for VoiceLive synthesis.",
+                "whyUseIt": "Explore the connection between hosted-agent contracts and a voice conversation.",
+                "exampleScenario": "Use the selected sample's compatible client to ask a short spoken question and receive a reply.",
+                "bestFit": "Developers starting Voice Live integration in Python or C#.",
+                "capabilities": [
+                    "Connects conversational input to the configured voice or model backend",
+                    "Returns voice-compatible replies or events",
+                    "Bridges raw audio in the WebSocket variants; adapts text-event SSE in the Invocations variant; streams assistant text and tool-status events in the Responses (VoiceLive) variant"
+                ],
+                "whatItGenerates": "A WebSocket audio bridge (Python or C#), or a Python hosted agent that emits Invocations- or Responses-format voice-compatible events, with hosting configuration and variant-specific client examples.",
+                "requirements": [
+                    "Voice Live, model access"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/bring-your-own/invocations_ws/HelloWorld",
+                "samples/python/hosted-agents/bring-your-own/invocations_ws/hello-world",
+                "samples/python/hosted-agents/bring-your-own/voicelive/hello-world-invocations-voicelive",
+                "samples/python/hosted-agents/bring-your-own/voicelive/github-copilot-responses-voicelive"
+            ]
+        },
+        {
+            "id": "connection-env-injection",
+            "title": "Use connection-backed settings",
+            "categoryId": "security-governance-ops",
+            "details": {
+                "summary": "Resolve connection values into environment variables and inspect their runtime status.",
+                "whatItDoes": "Uses a function-calling tool to inspect injected connection targets, metadata, and credential-resolution indicators. Treat even partial credential values as sensitive.",
+                "whyUseIt": "Validate portable connection configuration without hard-coding credential values into the agent definition.",
+                "exampleScenario": "Check that a test connection target resolved and that a credential placeholder was populated.",
+                "bestFit": "Developers testing connection injection and configuration handling.",
+                "capabilities": [
+                    "Demonstrates ApiKey and CustomKeys placeholders",
+                    "Distinguishes target, metadata, and credential kinds",
+                    "Reports resolution status through a tool"
+                ],
+                "whatItGenerates": "A BYO agent and example connection placeholders. It does not create real credential values for you.",
+                "requirements": [
+                    "Model deployment, test connections"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/bring-your-own/responses/env-vars-agent",
+                "samples/python/hosted-agents/bring-your-own/responses/env-vars-agent"
+            ]
+        },
+        {
+            "id": "weather-function-tools",
+            "title": "Call a weather tool",
+            "categoryId": "tools-mcp-skills",
+            "details": {
+                "summary": "Let the model invoke a local weather function and use its result in a reply.",
+                "whatItDoes": "Exposes a local weather example through the framework's tool decorator and returns its result in conversation.",
+                "whyUseIt": "Learn tool schemas and model-directed invocation with a self-contained function.",
+                "exampleScenario": "Ask for the weather in Seattle and inspect the function call used to form the answer.",
+                "bestFit": "Python developers starting with custom Agent Framework tools.",
+                "capabilities": [
+                    "Registers a local weather function",
+                    "Lets the model select the tool",
+                    "Uses tool results in a reply"
+                ],
+                "whatItGenerates": "A Python agent with an example local tool, dependencies, and Responses hosting, not a live weather-service integration.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/agent-framework/responses/02-tools"
+            ]
+        },
+        {
+            "id": "local-travel-skills",
+            "title": "Use file-based Skills",
+            "categoryId": "tools-mcp-skills",
+            "details": {
+                "summary": "Load local instructions and scripts to create a travel guide with PDF output.",
+                "whatItDoes": "Attaches a local Skills provider to an Agent Framework agent, including a travel-guide example that can produce a PDF.",
+                "whyUseIt": "Keep task guidance and supporting scripts alongside the agent as reusable Skills.",
+                "exampleScenario": "Request a short travel guide and use the included Skill to create a downloadable PDF.",
+                "bestFit": "Python developers packaging local instructions and scripts as Skills.",
+                "capabilities": [
+                    "Discovers local Skills",
+                    "Loads relevant task instructions",
+                    "Runs the travel-guide generation flow"
+                ],
+                "whatItGenerates": "A Python agent with local Skill sources and hosting configuration. PDF output is produced when the agent runs, not when it is scaffolded.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/agent-framework/responses/07-skills"
+            ]
+        },
+        {
+            "id": "declarative-customer-support",
+            "title": "Route support requests with YAML",
+            "categoryId": "multi-agent-orchestration",
+            "details": {
+                "summary": "Triage support questions, ask for clarification, and route them through a declarative workflow.",
+                "whatItDoes": "Uses a declarative workflow to triage a request, ask for clarification, and route it to the appropriate agent while retaining conversation context.",
+                "whyUseIt": "Explore workflow orchestration expressed as configuration instead of hand-written control flow.",
+                "exampleScenario": "Start with an incomplete support request, answer a clarification question, and route the issue to a specialist.",
+                "bestFit": "Teams evaluating declarative Agent Framework orchestration.",
+                "capabilities": [
+                    "Runs a YAML-defined workflow",
+                    "Branches on triage results",
+                    "Uses conversation history across turns"
+                ],
+                "whatItGenerates": "A Python host, declarative workflow files, and container/hosting artifacts. Referenced agents and resources still require setup.",
+                "requirements": [
+                    "Models, containers, Power Fx"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/agent-framework/responses/09-declarative-customer-support"
+            ]
+        },
+        {
+            "id": "per-agent-azure-identity",
+            "title": "Use an agent identity",
+            "categoryId": "security-governance-ops",
+            "details": {
+                "summary": "Access Blob Storage and Service Bus with a dedicated agent identity and resource-specific roles.",
+                "whatItDoes": "Runs data-plane operations against Blob Storage and Service Bus with identity-based credentials rather than shared connection strings.",
+                "whyUseIt": "Explore least-privilege authorization for an agent's downstream resource access.",
+                "exampleScenario": "Read a permitted blob and interact with a configured queue using the agent's own identity.",
+                "bestFit": "Teams validating per-agent access to Azure resources.",
+                "capabilities": [
+                    "Uses identity-based credentials",
+                    "Accesses configured blob and queue resources",
+                    "Demonstrates service-specific RBAC"
+                ],
+                "whatItGenerates": "A Python agent project with downstream-service tools and resource configuration examples.",
+                "requirements": [
+                    "Model deployment, Storage, Service Bus"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/agent-framework/responses/10-downstream-azure"
+            ]
+        },
+        {
+            "id": "travel-approval-optimization",
+            "title": "Optimize travel approvals",
+            "categoryId": "agent-optimization",
+            "details": {
+                "summary": "Evaluate instructions, Skills, and tool descriptions for a policy-based travel approval agent.",
+                "whatItDoes": "Uses Agent Framework tools and Skills to assess travel requests and provides configuration for the Agent Optimizer workflow.",
+                "whyUseIt": "Study optimization on a task with policy, cost, and authorization constraints.",
+                "exampleScenario": "Evaluate how the agent handles a proposed trip that exceeds a policy threshold.",
+                "bestFit": "Teams learning multi-target agent optimization with measurable examples.",
+                "capabilities": [
+                    "Processes travel-request inputs",
+                    "Uses task-specific tools and Skills",
+                    "Loads optimization configuration"
+                ],
+                "whatItGenerates": "A Python travel-approval agent with optimization-ready configuration and supporting evaluation artifacts. The example does not authorize real business travel.",
+                "requirements": [
+                    "Model deployment, Agent Optimizer"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/agent-framework/responses/15-optimization-travel-approver"
+            ]
+        },
+        {
+            "id": "content-safety-policy",
+            "title": "Content Safety Guardrail",
+            "categoryId": "security-governance-ops",
+            "details": {
+                "summary": "Apply a Responsible AI policy to check prompts and responses in the hosting platform.",
+                "whatItDoes": "Associates an RAI policy with the hosted agent so the platform applies configured input and output checks. These checks reduce risk but do not guarantee safe outputs.",
+                "whyUseIt": "Explore definition-level safety configuration separately from application code.",
+                "exampleScenario": "Compare how the configured policy handles permitted and blocked test prompts.",
+                "bestFit": "Teams evaluating platform safety configuration for hosted agents.",
+                "capabilities": [
+                    "References an RAI policy",
+                    "Applies configured platform checks",
+                    "Separates policy setup from basic chat code"
+                ],
+                "whatItGenerates": "A Python chat agent with policy-aware hosting configuration. Merely copying the code does not activate a cloud policy.",
+                "requirements": [
+                    "Model deployment, RAI policy"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/agent-framework/responses/16-content-safety-guardrail"
+            ]
+        },
+        {
+            "id": "ag-ui-event-stream",
+            "title": "Stream events to an AG-UI client",
+            "categoryId": "other-sdks-adapters",
+            "details": {
+                "summary": "Stream Pydantic AI run, message, and tool events to an AG-UI-compatible interface.",
+                "whatItDoes": "Accepts a RunAgentInput payload and streams run, message, and tool events through an Invocations handler.",
+                "whyUseIt": "Integrate an agent with an event-driven UI without manually translating every execution event.",
+                "exampleScenario": "Show a conversation's run status and streamed text in an AG-UI-compatible client.",
+                "bestFit": "Developers connecting Pydantic AI to interactive clients.",
+                "capabilities": [
+                    "Accepts AG-UI run input",
+                    "Streams lifecycle and text events",
+                    "Surfaces tool execution events"
+                ],
+                "whatItGenerates": "A Python event-streaming adapter and hosting configuration, not a finished application UI.",
+                "requirements": [
+                    "Model deployment, AG-UI client"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/invocations/ag-ui"
+            ]
+        },
+        {
+            "id": "event-grid-blob-summary",
+            "title": "Summarize files on upload",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Use Event Grid to trigger an agent when a blob arrives and save a summary.",
+                "whatItDoes": "Receives an authenticated Event Grid delivery, reads the uploaded content, and writes a summary artifact.",
+                "whyUseIt": "Explore event-driven processing without requiring a user to start each agent request.",
+                "exampleScenario": "Upload a document to the input container and store a JSON summary in the configured output container.",
+                "bestFit": "Teams prototyping storage-event-driven agent workflows.",
+                "capabilities": [
+                    "Receives storage events",
+                    "Reads uploaded content",
+                    "Writes generated summaries"
+                ],
+                "whatItGenerates": "A Python event handler plus event and storage configuration examples. The subscription and permissions must be provisioned.",
+                "requirements": [
+                    "Model deployment, Storage, Event Grid"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/invocations/event-grid-trigger"
+            ]
+        },
+        {
+            "id": "resilient-approval",
+            "title": "Resume approval-gated tasks",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Checkpoint long-running work and pause for approval of a plan or sensitive tool call, depending on the implementation.",
+                "whatItDoes": "The BYO Invocations sample creates a plan, waits for approval or edits, and requires a second confirmation for irreversible steps. A resilient task store and per-step watermarks support recovery; its offline demo mode uses deterministic stand-ins. The LangGraph sample runs flight and hotel searches automatically and pauses book_trip for approval or denial. It uses durable LangGraph checkpoints and Agent Server durable invocation state for recovery.",
+                "whyUseIt": "Explore durable human decisions during longer-running agent work.",
+                "exampleScenario": "With the BYO sample, approve a release-preparation plan and confirm a publishing step. With LangGraph, approve or deny a proposed trip booking.",
+                "bestFit": "Developers evaluating resumable approval workflows and side-effect handling.",
+                "capabilities": [
+                    "Requests plan and action approvals (bring-your-own); requests approval for sensitive tool calls (LangGraph)",
+                    "Persists task progress between turns",
+                    "Resumes interrupted execution from checkpoints",
+                    "Exposes task status and cancellation"
+                ],
+                "whatItGenerates": "One Python Invocations project for the selected implementation: a BYO resilient approval-gate agent or a LangGraph trip-planning agent with durable checkpoints. Use the selected sample's client approval and recovery contract. Review storage durability, authorization, and idempotency before replacing demonstration steps with real external actions.",
+                "requirements": [
+                    "Model access, approval client"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/invocations/resilient-approval-gate",
+                "samples/python/hosted-agents/langgraph/invocations/02-resilient"
+            ]
+        },
+        {
+            "id": "voice-background-tasks",
+            "title": "Run background tasks by voice",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Delegate longer requests to worker agents and report progress in a voice conversation.",
+                "whatItDoes": "Uses a foreground router to start asynchronous worker tasks and report status. The Responses variant also exposes cancellation and result retrieval. Voice integration and task lifetime vary; latency and restart recovery are not guaranteed.",
+                "whyUseIt": "Explore task coordination without requiring the conversational agent to perform every long operation inline.",
+                "exampleScenario": "Request a longer information-gathering task and ask for its status during the conversation.",
+                "bestFit": "Voice-first prototypes evaluating router and worker coordination.",
+                "capabilities": [
+                    "Routes conversational requests",
+                    "Starts background agent work",
+                    "Reports task status and results"
+                ],
+                "whatItGenerates": "A Python router/worker project with WebSocket or Responses hosting and variant-specific voice integration. Worker tools and task examples differ.",
+                "requirements": [
+                    "Voice Live, models, worker tools"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/invocations_ws/duplex-live-agent",
+                "samples/python/hosted-agents/bring-your-own/voicelive/foreground-background-agents-responses-voicelive"
+            ]
+        },
+        {
+            "id": "voice-support-handoff",
+            "title": "Hand off voice support",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Transfer spoken support requests from a greeter or triage agent to a specialist.",
+                "whatItDoes": "Routes a greeting or triage conversation to an order-support role. LiveKit uses WebSocket signaling and WebRTC audio; LangGraph uses Responses handoff tools and adds a refund specialist. Order and refund actions are demonstrations.",
+                "whyUseIt": "Explore specialist handoffs while keeping a conversational support experience.",
+                "exampleScenario": "Ask an order question and let the initial agent transfer the request to the order specialist.",
+                "bestFit": "Teams prototyping multi-agent voice support.",
+                "capabilities": [
+                    "Starts with a greeting or triage role",
+                    "Transfers control to a support specialist",
+                    "Supports voice interaction through the selected integration"
+                ],
+                "whatItGenerates": "A Python LiveKit worker and signaling service, or a LangGraph support-handoff agent with Responses hosting and voice-integration configuration.",
+                "requirements": [
+                    "Models, LiveKit or Voice Live"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/invocations_ws/livekit-server",
+                "samples/python/hosted-agents/bring-your-own/voicelive/handoff-langgraph-responses-voicelive"
+            ]
+        },
+        {
+            "id": "pipecat-webrtc",
+            "title": "Use Pipecat with WebRTC",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Connect browser audio to a Pipecat speech pipeline using WebRTC media and hosted signaling.",
+                "whatItDoes": "Uses hosted WebSocket signaling to establish WebRTC media, then routes speech through transcription, agent processing, and synthesis.",
+                "whyUseIt": "Explore real-time media transport separately from the hosted-agent signaling endpoint.",
+                "exampleScenario": "Hold a spoken conversation in the sample browser client and inspect turn and transcript events.",
+                "bestFit": "Developers evaluating Pipecat with WebRTC media.",
+                "capabilities": [
+                    "Establishes WebRTC media",
+                    "Runs speech-to-text and text-to-speech",
+                    "Coordinates the sample voice-agent pipeline"
+                ],
+                "whatItGenerates": "A Python Pipecat bot, signaling integration, and sample browser/client configuration. Keep private signaling and TURN credentials out of client code.",
+                "requirements": [
+                    "Model access, Azure Speech"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/invocations_ws/pipecat-webrtc"
+            ]
+        },
+        {
+            "id": "pipecat-websocket",
+            "title": "Use Pipecat with WebSocket",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Stream audio through a hosted WebSocket endpoint for transcription, agent replies, and speech output.",
+                "whatItDoes": "Receives Pipecat audio frames, transcribes input, runs the agent pipeline, and streams synthesized speech and control events back.",
+                "whyUseIt": "Explore a frame-based voice connection without using the WebRTC media variant.",
+                "exampleScenario": "Use the sample client to speak or send a text turn and observe live transcripts and speech output.",
+                "bestFit": "Developers evaluating Pipecat's WebSocket audio transport.",
+                "capabilities": [
+                    "Accepts audio frames",
+                    "Runs speech and model processing",
+                    "Streams speech and turn events"
+                ],
+                "whatItGenerates": "A Python Pipecat WebSocket service with protocol-aware client and hosting artifacts.",
+                "requirements": [
+                    "Model access, Azure Speech"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/invocations_ws/pipecat-ws-server"
+            ]
+        },
+        {
+            "id": "user-identity-mcp-tools",
+            "title": "Access tools as the user",
+            "categoryId": "security-governance-ops",
+            "details": {
+                "summary": "Call Work IQ and GitHub tools with user authorization and handle consent requests.",
+                "whatItDoes": "Loads Mail, Calendar, and GitHub MCP integrations and surfaces consent requirements when a tool needs user authorization.",
+                "whyUseIt": "Explore user-identity tool access separately from the agent's runtime identity.",
+                "exampleScenario": "Ask for upcoming calendar events and complete the tool's consent flow when prompted.",
+                "bestFit": "Teams integrating delegated access and OAuth-backed tools.",
+                "capabilities": [
+                    "Discovers user-scoped MCP tools",
+                    "Invokes tools with the configured identity model",
+                    "Surfaces consent requests to the client"
+                ],
+                "whatItGenerates": "A Python LangGraph agent with a Responses handler and user-identity Toolbox connection configuration.",
+                "requirements": [
+                    "Model deployment, Toolbox, user consent"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/responses/langgraph-toolbox-user-identity",
+                "samples/python/hosted-agents/langgraph/responses/03-langgraph-toolbox-user-identity"
+            ]
+        },
+        {
+            "id": "customer-support-optimization",
+            "title": "Optimize a support agent",
+            "categoryId": "agent-optimization",
+            "details": {
+                "summary": "Compare instruction and Skill configurations against a customer-support evaluation dataset.",
+                "whatItDoes": "Provides a support-agent baseline and an optimization workflow for comparing candidate configurations. Evaluate results before production use.",
+                "whyUseIt": "Evaluate changes against a task-specific dataset instead of judging prompt changes from a few examples.",
+                "exampleScenario": "Compare how baseline and optimized instructions respond to a product troubleshooting question.",
+                "bestFit": "Teams learning Agent Optimizer with a concrete support workload.",
+                "capabilities": [
+                    "Runs the support-agent baseline",
+                    "Loads optimization configuration",
+                    "Supports the documented evaluation workflow"
+                ],
+                "whatItGenerates": "A Python support-agent project with configuration and evaluation artifacts. Optimization runs occur after setup.",
+                "requirements": [
+                    "Model deployment, Agent Optimizer"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/responses/optimization-customer-support"
+            ]
+        },
+        {
+            "id": "optimizer-hello-world",
+            "title": "Start with Agent Optimizer",
+            "categoryId": "agent-optimization",
+            "details": {
+                "summary": "Evaluate a minimal agent, apply an optimized configuration, and compare the responses.",
+                "whatItDoes": "Runs a small BYO model handler whose behavior can be configured through the Agent Optimizer workflow.",
+                "whyUseIt": "Learn the evaluate, optimize, and apply cycle before introducing complex business logic.",
+                "exampleScenario": "Evaluate a baseline instruction, apply a candidate configuration, and compare the resulting responses.",
+                "bestFit": "Developers first integrating Agent Optimizer configuration.",
+                "capabilities": [
+                    "Loads agent configuration",
+                    "Runs a minimal model interaction",
+                    "Supports documented optimization experiments"
+                ],
+                "whatItGenerates": "A Python BYO agent with optimization configuration loading and hosting artifacts.",
+                "requirements": [
+                    "Model deployment, Optimizer, evaluation data"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/responses/optimization-hello-world"
+            ]
+        },
+        {
+            "id": "resilient-steering",
+            "title": "Steer a running conversation",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Redirect an in-flight response and explore recovery when the host restarts.",
+                "whatItDoes": "Accepts new input during a stored background response, winds down the current turn, and runs the queued input. Recovery behavior differs by implementation: the Python Responses sample re-runs an interrupted turn from scratch and does not checkpoint partial output, while the C# Agent Framework workflow resumes from the last committed checkpoint. The Python sample simulates model streaming; the workflow sample is deterministic and does not require a model.",
+                "whyUseIt": "Understand how steering, cancellation, and shutdown interact with recoverable background work.",
+                "exampleScenario": "Start a long reply, change the requested topic while it runs, and observe the next turn.",
+                "bestFit": "Developers integrating steerable, resilient background execution.",
+                "capabilities": [
+                    "Accepts steering input during a running turn",
+                    "Distinguishes steering from user cancellation",
+                    "Supports recovery after crashes; behavior varies by implementation (Responses: re-run from scratch; Agent Framework: resume from last committed checkpoint)"
+                ],
+                "whatItGenerates": "One Responses project for the selected implementation: a Python BYO simulated-streaming agent or a C# Agent Framework deterministic workflow. Recovery uses stored background responses: Python re-runs an interrupted turn, while C# resumes from the last committed workflow checkpoint. Neither sample calls a model as provided; model calls added to the Python handler may repeat after recovery.",
+                "requirements": [
+                    "Foundry project or stored responses"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/responses/resilient-steering",
+                "samples/csharp/hosted-agents/agent-framework/steerable-workflow"
+            ]
+        },
+        {
+            "id": "resilient-streaming",
+            "title": "Resume a multi-stage response",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Checkpoint streamed stages so a restarted response can reuse completed output.",
+                "whatItDoes": "Streams simulated analyze, generate, and refine stages, checkpointing after each output item. Recovery restores completed items with their original IDs and resumes unfinished work; a stage interrupted before its checkpoint is re-run.",
+                "whyUseIt": "Explore resumable delivery without regenerating stages that were already checkpointed.",
+                "exampleScenario": "Interrupt a staged report response after the first checkpoint, then reconnect to the same response ID.",
+                "bestFit": "Clients handling longer streamed responses and interrupted connections.",
+                "capabilities": [
+                    "Checkpoints completed response stages",
+                    "Restores persisted output items",
+                    "Resumes stored background responses"
+                ],
+                "whatItGenerates": "A Python BYO Responses demonstration using stream checkpoints and persisted response snapshots. Enable stored background requests for recovery. Output is simulated; real model calls require integration.",
+                "requirements": [
+                    "Stored background responses"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/responses/resilient-streaming"
+            ]
+        },
+        {
+            "id": "session-multiplexing",
+            "title": "Isolate users in shared sessions",
+            "categoryId": "security-governance-ops",
+            "details": {
+                "summary": "Keep response chains tied to authenticated users even when they share an agent session.",
+                "whatItDoes": "Demonstrates that platform-managed response chains belong to their acted-for users even when a hosted session is shared. A caller-supplied session ID is not authentication.",
+                "whyUseIt": "Understand the distinction between session routing and authenticated user identity.",
+                "exampleScenario": "Create a response as one test identity and verify a different identity cannot continue that chain.",
+                "bestFit": "Teams validating multi-user Responses integration.",
+                "capabilities": [
+                    "Uses platform-managed conversation history",
+                    "Shares a session across test users",
+                    "Demonstrates response-chain access checks"
+                ],
+                "whatItGenerates": "A Python BYO Responses agent and session-isolation test guidance.",
+                "requirements": [
+                    "Model deployment, test identities"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/responses/session-multiplexing"
+            ]
+        },
+        {
+            "id": "uv-project",
+            "title": "Host a uv-managed project",
+            "categoryId": "just-the-basics",
+            "details": {
+                "summary": "Serve model replies from a Python project with reproducible uv-managed dependencies.",
+                "whatItDoes": "Forwards text to a Foundry model through Responses while keeping project dependencies in pyproject.toml and uv.lock. The sample demonstrates existing-code initialization and remote dependency builds, with system-certificate configuration in uv.toml.",
+                "whyUseIt": "Adopt hosted-agent deployment without replacing an existing uv project structure.",
+                "exampleScenario": "Initialize the supplied Python project, verify its locked environment, and invoke a short model-backed reply.",
+                "bestFit": "Python developers using uv and lockfile-based builds.",
+                "capabilities": [
+                    "Serves text replies through Responses",
+                    "Declares dependencies in pyproject.toml",
+                    "Uses a lockfile for reproducible builds"
+                ],
+                "whatItGenerates": "A Python BYO project with pyproject.toml, uv.lock, uv.toml, and hosting artifacts. The sample requires Python 3.13 or later and uv; update and verify the lockfile when changing dependencies. Model and project provisioning remain setup steps.",
+                "requirements": [
+                    "Model deployment, uv"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/responses/uv-pyproject"
+            ]
+        },
+        {
+            "id": "voice-hotel-booking-demo",
+            "title": "Prototype hotel booking",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Handle hotel selection and confirmation through voice-text and button actions using sample data.",
+                "whatItDoes": "Handles transcribed text and button-action payloads using an in-memory hotel catalogue and keyword logic, not a model call. State resets on restart; provisioning defaults may still include a model.",
+                "whyUseIt": "Explore a mixed voice/UI contract without first integrating a real booking backend.",
+                "exampleScenario": "Ask for a hotel, select an option, and confirm or cancel the demonstration booking.",
+                "bestFit": "Developers prototyping voice-compatible transactional interfaces.",
+                "capabilities": [
+                    "Handles voice-text and UI actions",
+                    "Tracks a multi-turn selection flow",
+                    "Streams reply and custom UI events"
+                ],
+                "whatItGenerates": "A Python booking-flow demonstration and Invocations configuration, not a live hotel booking service.",
+                "requirements": [
+                    "Voice/UI client"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/voicelive/hotel-booking-invocations-voicelive"
+            ]
+        },
+        {
+            "id": "resilient-workflow",
+            "title": "Resilient Workflow",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Host a workflow that survives agent crashes and resumes pending tool calls after process restart.",
+                "whatItDoes": "Runs a model-backed workflow with resilient background Responses enabled. The samples register executors/tools that intentionally terminate the host (for example, a simulate_crash tool); the hosting layer persists a durable checkpoint so a replacement process can restore workflow state and deliver pending tool results to resume the interrupted turn.",
+                "whyUseIt": "Validate durable workflow checkpoints, recovery semantics, and how stored background Responses continue after an agent host crashes and is restarted. It demonstrates configuration and runtime considerations needed to build crash-resilient hosted agents.",
+                "exampleScenario": "Invoke a stored background response that instructs the model to call simulate_crash. Observe the agent process exit, let the platform start a replacement, follow the same response ID, and confirm the resumed response completes with the original function call's result.",
+                "bestFit": "Developers building hosted agents with Responses (Agent Framework or LangGraph) who need explicit demonstrations of durable checkpoints, background response recovery, and executor identity or checkpoint compatibility across restarts.",
+                "capabilities": [
+                    "Persists durable workflow checkpoints",
+                    "Resumes pending function/tool calls after restart",
+                    "Demonstrates ResilientBackground option for Responses",
+                    "Shows requirement for stable executor identity (Agent Framework sample only)"
+                ],
+                "whatItGenerates": "One Responses project for the selected implementation: a C# Agent Framework workflow with a crash-simulating tool executor and durable workflow checkpoints, or a Python LangGraph trip-planning agent with durable graph checkpoints and background response recovery. Both include hosting configuration and a crash-recovery walkthrough.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/resilient-workflow",
+                "samples/python/hosted-agents/langgraph/responses/09-resilient"
+            ]
+        },
+        {
+            "id": "steerable-conversations",
+            "title": "Steerable Conversations",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Host an Agent Framework Responses agent that queues new inputs to steer an active, persisted conversation instead of rejecting concurrent requests.",
+                "whatItDoes": "Demonstrates a C# Agent Framework Responses host with the SteerableConversations option enabled so a second stored background request submitted to the same conversation is returned as queued and executed after the active turn reaches a safe boundary. This sample shows host configuration, local debugging, azd-based provisioning/deploy, and how to exercise queued background+stored requests; it does not implement crash recovery.",
+                "whyUseIt": "Validate and experiment with durable in-conversation steering behavior where additional user inputs can be queued to influence an in-progress persisted conversation rather than being rejected, enabling richer background and control flows.",
+                "exampleScenario": "Start a long-running background response with background=true and store=true on conversation X. While it is still running, submit a second request using the same conversation ID and confirm the second response is returned with status=queued and later completes on the same persisted session.",
+                "bestFit": "C# developers hosting Agent Framework Responses who need durable in-conversation queuing (steering) and want to compare steering with separate resilient recovery patterns.",
+                "capabilities": [
+                    "Enables host-wide steering option",
+                    "Queues second stored background request",
+                    "Runs queued input on same persisted session",
+                    "Includes azd and VS Code run/deploy guidance"
+                ],
+                "whatItGenerates": "A C# Agent Framework Responses sample (Program.cs and host configuration) that registers the agent with AddFoundryResponses configured with SteerableConversations = true, project files for local run and azd-based deployment, and a usage walkthrough showing how to submit stored background requests to observe queued behavior. It demonstrates steering only; crash/restart recovery is not included.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/agent-framework/steering"
+            ]
+        },
+        {
+            "id": "managed-audio-offload",
+            "title": "Managed Audio Offload",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "A hosted text agent that offloads audio input/output to Voice Live by implementing the Voice Live Bridge Protocol over invocations_ws.",
+                "whatItDoes": "Implements Voice Live Bridge Protocol 1.0 using the AgentServer invocations_ws transport. The hosted target agent accepts session lifecycle and control events (session.start, session.ready, user.message, etc.), receives final transcripts and control signals from Voice Live, and streams model text output (response.output_text.delta and terminal events) back to Voice Live via the Responses API. Voice Live (the wrapper) owns STT, VAD, TTS, playback interruption, barge-in, and audio playback admission. The sample documents supported and unsupported Bridge features and exposes a protocol-aware local smoke client for testing.",
+                "whyUseIt": "Separate audio handling from conversational logic so a hosted text agent can be reused by managed voice wrappers; keep the agent free of audio capture/playback code while still supporting streaming and real-time voice scenarios.",
+                "exampleScenario": "Deploy the hosted target agent and the provided Voice wrapper. A caller connects to the Voice wrapper's voice WebSocket endpoint; the wrapper sends transcripts and control events to the target over invocations_ws; the target streams response deltas back and the wrapper handles STT/TTS and playback for the caller. Use the included smoke_test to validate the Bridge wire flow locally.",
+                "bestFit": "Developers building text-only hosted agents that will be wrapped by platform-managed voice (Voice Live) or anyone who wants to prototype a voice-capable integration without adding audio code to the agent.",
+                "capabilities": [
+                    "Accepts Voice Live Bridge Protocol events over invocations_ws",
+                    "Streams model text deltas back to Voice Live (Responses API)",
+                    "Handles session lifecycle and control events (session.start/ready/end)",
+                    "Supports barge-in, proactive responses, response.none, and self-cancellation",
+                    "Includes a protocol-aware local smoke client and azd deployment guidance",
+                    "Documents Bridge 1.0 limitations (no DTMF, no image input, no hosted-agent handoff)"
+                ],
+                "whatItGenerates": "A Python hosted-agent sample that implements Voice Live Bridge Protocol 1.0 over invocations_ws, relays text and control events to a Foundry model, and streams response.output_text deltas back to Voice Live. The sample includes a protocol callback layer, response coordination, state management, a smoke test, and azd/azd-provision guidance. Production audio is managed externally by Voice Live; deterministic fake model streams are used in tests.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/basic"
+            ]
+        },
+        {
+            "id": "hosted-audio-target",
+            "title": "Hosted Audio Target",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Provide a text-only hosted agent that integrates with Voice Live by implementing the Voice Live Bridge Protocol over invocations_ws and streaming assistant text back to callers.",
+                "whatItDoes": "Implements Voice Live Bridge Protocol 1.0 on the /invocations_ws transport: accepts session.start, emits session.ready, receives final transcripts as user.message, and streams response.output_text.delta back to Voice Live. The sample is text-only — Voice Live handles STT, VAD, synthesis, playback interruption, and proactive-response admission. It uses a LangChain hosting loop and the Responses API for model inference and includes a small local UTC-time tool. Protocol limitations: no DTMF, no image input, no app-driven history mutation, and no hosted-agent handoff.",
+                "whyUseIt": "Quickly add a managed audio front end to a hosted text agent without embedding audio code in the agent: let Voice Live own audio while your agent focuses on text conversation, streaming, and host-side response sequencing.",
+                "exampleScenario": "Deploy the LangChain hosted agent and a managed Voice wrapper; a caller connects to the Voice wrapper, which sends Bridge events to this hosted agent on /invocations_ws. The agent receives transcripts, calls the configured Foundry model, and streams assistant text deltas that Voice Live synthesizes to the caller.",
+                "bestFit": "Developers who want to expose a model-backed text agent as a managed-voice target (Voice Live) using Python + LangChain over invocations_ws, or teams evaluating voice/hosted-agent separation of concerns.",
+                "capabilities": [
+                    "Implements Voice Live Bridge Protocol 1.0 over invocations_ws",
+                    "Streams assistant text deltas (response.output_text.delta) to Voice Live",
+                    "Handles session lifecycle events and response sequencing",
+                    "Supports proactive responses, barge-in reconciliation, response cancellation and response.none",
+                    "Uses LangChain + Responses API and a local UTC-time tool; audio is managed externally"
+                ],
+                "whatItGenerates": "A Python LangChain hosted-agent project (invocations_ws transport) that exposes /invocations_ws, implements the typed AgentServer Voice callback surface, handles Bridge lifecycle events, calls a Foundry Responses model and streams text deltas back to Voice Live. The sample includes a protocol-aware smoke client and deterministic tests; production audio is provided by a separate managed Voice wrapper and the project does not contain STT/TTS code.",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langchain"
+            ]
+        },
+        {
+            "id": "voice-live-bridge",
+            "title": "Voice Live Bridge",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "A hosted text agent that implements Voice Live Bridge Protocol 1.0 over invocations_ws to connect a managed Voice Live audio front end and stream assistant text back to Voice Live.",
+                "whatItDoes": "Implements the Voice Live Bridge 1.0 protocol using the Invocations WebSocket transport: accepts session.start, emits session.ready, receives final transcripts as user.message, creates responses, and streams response.output_text.delta messages back to Voice Live. The sample uses a Python LangGraph StateGraph to route between a Microsoft Foundry Responses model and a local UTC-time tool; it emits only assistant text to the voice wrapper. Voice Live / the Voice wrapper owns all audio (STT, VAD, TTS, barge-in, playback interruption); this hosted agent receives text and control events on /invocations_ws.",
+                "whyUseIt": "Attach a managed voice front end (Voice Live) to an existing hosted text agent without adding audio processing code. Learn Bridge protocol sequencing, streaming assistant-text deltas, LangGraph routing between model and tools, and how to coordinate response lifecycle and turnaround with a voice wrapper.",
+                "exampleScenario": "Deploy the sample locally or to a Foundry project, start the server exposing /invocations_ws, connect a Voice wrapper (or run the included smoke client). A caller speaks; Voice Live sends transcripts as user.message; the LangGraph agent calls the Foundry model and/or the UTC tool; assistant text is streamed back as response.output_text.delta and synthesized by Voice Live.",
+                "bestFit": "Developers building BYO hosted agents that must integrate with Voice Live or other managed voice wrappers using the Voice Live Bridge Protocol over invocations_ws, and teams using LangGraph to coordinate model↔tool flows without adding audio code to the agent.",
+                "capabilities": [
+                    "Implements Bridge Protocol 1.0 over invocations_ws",
+                    "Streams assistant text deltas to Voice Live",
+                    "Handles session.start/ready and full response lifecycle events",
+                    "Routes model and local tool calls via a LangGraph StateGraph",
+                    "Demonstrates barge-in, proactive responses, no-input handling, and response self-cancellation"
+                ],
+                "whatItGenerates": "A Python LangGraph hosted-agent implementation that exposes /invocations_ws, includes voice_runtime callbacks and a response coordinator, defines a StateGraph that routes between a Foundry Responses model node and a UTC-time tool, and streams assistant text deltas back to Voice Live. The sample includes a protocol-aware smoke test and azd-based provisioning/deploy guidance. Production audio is managed externally by Voice Live; deterministic fake model streams are used in tests.",
+                "requirements": [
+                    "Foundry model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langgraph"
+            ]
+        },
+        {
+            "id": "location-aware-host",
+            "title": "Location-aware host",
+            "categoryId": "other-sdks-adapters",
+            "details": {
+                "summary": "A LangGraph host that reads a client locale header and optional custom location messages to tailor model behavior and units across Invocations and Responses implementations.",
+                "whatItDoes": "Provides custom host-server implementations that extract an x-client-user-locale header and application-defined location messages from incoming requests, inject locale and structured location into the LangGraph assistant state, and delegate standard graph execution to the protocol's base host (InvocationsHostServer or ResponsesHostServer). The samples wire simple tools (calculator, current-time, and a fake-weather tool) into the graph and demonstrate follow-up turns using session continuation (agent_session_id for Invocations, previous_response_id for Responses).",
+                "whyUseIt": "Show how to adapt the LangGraph host surface to client-specific metadata (locale, location) without changing the core LangGraph execution loop. Useful when a front-end wants to send non-text structured messages or locale hints that affect temperature units, language selection, or tool input. Works with either Invocations or Responses hosting patterns.",
+                "exampleScenario": "A mobile client sends a first-turn payload containing a custom location message (label, latitude, longitude) plus a user question “What weather should I expect here?”, and includes header x-client-user-locale: en-US so the agent reports Fahrenheit; subsequent text-only follow-ups reuse the returned x-agent-session-id (Invocations) or previous_response_id (Responses) to continue the same conversation.",
+                "bestFit": "BYO or Foundry-hosted LangGraph projects that need a custom host endpoint (Invocations or Responses) to accept structured client messages and header-driven locale behavior.",
+                "capabilities": [
+                    "Parses x-client-user-locale header",
+                    "Extracts application-defined location messages",
+                    "Injects locale and location into LangGraph state",
+                    "Delegates execution to standard InvocationsHostServer (Invocations) or ResponsesHostServer (Responses)",
+                    "Supports session continuation via agent_session_id (Invocations) or previous_response_id (Responses)",
+                    "Demonstrates unit selection (F/C) and tool-driven fake-weather responses"
+                ],
+                "whatItGenerates": "A Python LangGraph sample that implements a LocationAware host for the repository's protocol-specific project. The sample shows request parsing (parse_request or build_input), a TypedDict assistant state including messages/locale/location, example client JSON for a combined location+text turn, the graph wiring to calculator/current-time/fake-weather tools, and run instructions for local debugging and azd-based deploy. Weather results are produced by the included fake-weather tool (not a live weather service).",
+                "requirements": [
+                    "Model deployment"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/langgraph/invocations/04-custom-host",
+                "samples/python/hosted-agents/langgraph/responses/12-custom-host"
+            ]
+        },
+        {
+            "id": "custom-state-stores",
+            "title": "Custom State Stores",
+            "categoryId": "knowledge-rag-memory",
+            "details": {
+                "summary": "Show how to implement and wire custom persistence stores for a LangGraph Responses agent so you control conversation chains, response records, and long-term memory storage.",
+                "whatItDoes": "Provides concrete implementations and wiring for ConversationChainStoreProtocol and ResponseProviderProtocol, plus examples of integrating LangGraph-compatible long-term memory/checkpointer stores. The sample includes SQLite-backed example stores, host-server wiring (ResponsesHostServer), and a main.py that runs locally or as a Foundry hosted agent. Model calls use AZURE_AI_API_KEY when present or DefaultAzureCredential otherwise.",
+                "whyUseIt": "Use custom stores to control persistence behavior, storage backend, data lifecycle, and deployment topology instead of relying on Foundry-managed state services—needed for on-prem deployments, custom security, or alternative storage choices.",
+                "exampleScenario": "Run the local server, persist a conversation-only parcel code in the conversation-chain store and validate it is available only in that conversation; then persist a long-term memory fact and query it from a new conversation to confirm memory retrieval. The sample shows tests and curl examples to exercise both behaviors.",
+                "bestFit": "Teams building LangGraph/Responses agents that must implement custom persistence backends (on-prem or hosted), validate storage behavior, or migrate to a non-Foundry storage solution.",
+                "capabilities": [
+                    "Custom ConversationChainStore wiring",
+                    "Custom ResponseProvider persistence",
+                    "LangGraph-compatible memory/checkpoint integration",
+                    "SQLite example implementations and tests",
+                    "Runs on-host or in Foundry hosted agents"
+                ],
+                "whatItGenerates": "A Python LangGraph Responses sample that implements and wires SQLite-based ConversationChainStore and ResponseStore classes, a ResponsesHostServer setup, tests and curl-based usage examples. The committed SQLite classes are illustrative—production backends must satisfy the same protocols and address concurrency, replication, and security limitations.",
+                "requirements": [
+                    "Python 3.13"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/langgraph/responses/13-custom-store"
+            ]
         }
     ]
 }
