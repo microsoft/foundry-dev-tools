@@ -161,14 +161,16 @@ test('agent evidence failures identify the field, file and invalid range', () =>
     assert.throws(() => applyReview(candidate, scope, response, sources), /different card/);
 });
 
-test('agent review enforces Requirements and final description limits', () => {
+test('agent review enforces Requirements without a picker description length limit', () => {
     const { candidate, scope, sources, response } = reviewFixture();
     response.changes[0] = { ...response.changes[0], field: 'requirements', before: candidate.cards[0].details.requirements, after: ['one two three four five six'] };
     assert.throws(() => applyReview(candidate, scope, response, sources), /five words/);
     response.changes[0].after = ['Model access, research client'];
     assert.deepEqual(applyReview(candidate, scope, response, sources).cards[0].details.requirements, ['Model access, research client']);
-    candidate.templates[1].description = 'x'.repeat(101);
-    assert.throws(() => validateReady(candidate, scope), /1-100/);
+    candidate.templates[1].description = 'Restores durable background responses after a hosted process crashes and a replacement process starts.';
+    assert.doesNotThrow(() => validateReady(candidate, scope));
+    candidate.templates[1].description = ' ';
+    assert.throws(() => validateReady(candidate, scope), /new description required/);
 });
 
 function reviewAttemptHarness(context, responses) {
@@ -250,18 +252,45 @@ test('review recovery records service failures without resetting the model budge
     assert.equal(harness.saved().rounds[0].error, 'Model token budget exhausted');
 });
 
-test('review recovery feeds description-limit failures back without accepting an incomplete review', async context => {
-    const harness = reviewAttemptHarness(context, ({ round }, item) => {
-        const response = { ...item.response, changes: [] };
-        if (round === 1) response.changes = [{ ...item.response.changes[0], kind: 'template', id: item.scope.templates[0],
-            field: 'description', before: 'x'.repeat(101), after: 'Draft and review text.' }];
-        return response;
-    });
-    harness.item.candidate.templates[1].description = 'x'.repeat(101);
+test('review recovery accepts multiple longer descriptions without forcing shortening patches', async context => {
+    const harness = reviewAttemptHarness(context, (_request, item) => ({ ...item.response, changes: [], reviewedTemplates: [...item.scope.templates] }));
+    const candidate = harness.item.candidate;
+    candidate.templates[1].description = 'Restores durable background responses after a hosted process crashes and a replacement process starts.';
+    const added = { ...candidate.templates[1], path: 'samples/csharp/hosted-agents/agent-framework/steering', protocol: 'invocations',
+        description: 'Accepts a second stored background request on an active conversation while the first remains in progress.' };
+    candidate.templates.push(added);
+    candidate.cards[0].templatePaths.push(added.path);
+    candidate.dimensions.protocol.options.push({ id: 'invocations', displayName: 'invocations' });
+    harness.item.scope = reviewScope(harness.item.base, candidate);
+    const before = structuredClone(candidate);
+    assert.deepEqual(await harness.execute(), before);
+    assert.equal(harness.calls.length, 1);
+    assert.deepEqual(harness.saved().rounds.map(round => round.status), ['validated']);
+});
+
+test('review recovery retains minimal baseline restorations together after independent verification', async context => {
+    const fields = ['whatItDoes', 'whatItGenerates'];
+    const harness = reviewAttemptHarness(context, ({ candidate, round }, item) => ({
+        ...item.response,
+        changes: round === 0 ? fields.map(field => ({ ...item.response.changes[0], field,
+            before: candidate.cards[0].details[field], after: item.base.cards[0].details[field],
+            evidence: [{ path: item.scope.templates[0] + '/README.md', startLine: 1, endLine: 2 }] })) : [],
+    }));
+    harness.item.sources.set(harness.item.scope.templates[0] + '/README.md', 'The workflow drafts and reviews text.\nIncludes source code and hosting configuration.');
+    harness.item.candidate.cards[0].details.whatItDoes = 'A C# writer and reviewer plus a Python writer and reviewer draft and review text.';
+    harness.item.candidate.cards[0].details.whatItGenerates = 'C# source and hosting files plus Python source and hosting files.';
+    const before = structuredClone(harness.item.candidate);
     const result = await harness.execute();
-    assert.match(harness.calls[1].feedback.validationError, /\.description:.*1-100/);
-    assert.equal(result.templates[1].description, 'Draft and review text.');
-    assert.equal(harness.calls.length, 3);
+    const expected = structuredClone(before);
+    for (const field of fields) expected.cards[0].details[field] = harness.item.base.cards[0].details[field];
+    assert.deepEqual(result, expected);
+    assert.notDeepEqual(result, before);
+    assert.deepEqual(harness.item.candidate, before);
+    assert.equal(harness.calls.length, 2);
+    assert.equal(harness.calls[1].feedback, null);
+    assert.deepEqual(harness.calls[1].candidate, expected);
+    assert.deepEqual(harness.saved().rounds.map(round => round.status), ['validated', 'validated']);
+    assert.equal(harness.saved().rounds[0].response.changes.length, 2);
 });
 
 for (const [name, change] of [
@@ -768,6 +797,8 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                 }
                 let content;
                 if (request.messages[0].content.startsWith('You generate')) {
+                    assert.ok(request.messages[0].content.includes('no character limit'));
+                    assert.ok(!request.messages[0].content.includes('max 100 characters'));
                     content = { displayName: 'Generated Workflow', description: 'Draft and review a document.' };
                 } else if (stage === 'reuse') {
                     const input = JSON.parse(request.messages[1].content);
@@ -839,6 +870,19 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
     delete env.GITHUB_STEP_SUMMARY;
     return spawnSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8', env, timeout: 10000 });
 }
+
+test('CI ends at draft publication and hands off local skill acceptance', () => {
+    const workflow = readFileSync(new URL('../workflows/sync-sample-catalog.yml', import.meta.url), 'utf8');
+    assert.deepEqual([...workflow.matchAll(/^  (scan|metadata|group|details|validate|publish|review):$/gm)].map(match => match[1]),
+        ['scan', 'metadata', 'group', 'details', 'validate', 'publish']);
+    assert.ok(!workflow.includes('node .github/scripts/review_catalog_pr.mjs'));
+    assert.match(workflow, /draft: always-true/);
+    assert.match(workflow, /Local acceptance required/);
+    assert.match(workflow, /Sample source SHA/);
+    assert.match(workflow, /Generated PR head/);
+    assert.match(workflow, /Review skill SHA-256/);
+    assert.match(workflow, /CI generation success is not semantic acceptance/);
+});
 
 test('separate sync steps publish only after complete generation and preserve credentials', context => {
     const { root, source, outputPath } = temporaryFixture(context);

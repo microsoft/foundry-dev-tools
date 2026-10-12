@@ -770,7 +770,8 @@ async function callLLMForJson(systemPrompt, userPrompt, samplePath) {
 // by both the description-only prompt and the combined refine prompt so the
 // two paths stay consistent.
 const DESCRIPTION_GUIDANCE = `A good description:
-- Is one sentence, max 100 characters, plain text (no markdown)
+- Uses concise, natural plain text (no markdown), with no character limit
+- Accurately describes the real scenario and preserves useful factual distinctions rather than shortening to a fixed length
 - Describes what the sample does, not how it is implemented
 - Does NOT include language, protocol, or framework names, or words like "Sample" / "Demo"
 Examples:
@@ -1495,9 +1496,11 @@ async function generateSyncDetails(state) {
         const implementations = await loadImplementations(input.card.templatePaths);
         const systemPrompt = `You review Details for ONE hosted-agent card after its implementation membership changed.
 Preserve its ID, title, Pattern, core purpose and all still-accurate text. Return a sparse detailsPatch, fieldReviews for EVERY Details field, and a short evidence-based reason. Use an empty detailsPatch when no factual correction is needed. Do not polish style, reorder lists, expand the scope, or rewrite all fields for consistency.
+    Use previousCard.details as the baseline for an existing card. A new member is not a reason to expand every field: keep accurate fields verbatim and change only the smallest inaccurate sentence or clause. Preserve the original sentence structure and tone where possible.
+    Write natural, scenario-led prose. Prefer a small wording adjustment over repeated language-by-language explanations, parenthetical hedging or an implementation inventory. Put necessary variant distinctions in the most relevant field; keep other fields accurate without repeating those distinctions. Do not weaken a limitation or leave another field making a false universal claim.
 Check the final set of implementations, including surviving and newly added variants. Remove obsolete claims after deletions. Preserve useful distinctions: protocol-specific, framework-specific, approval, recovery, simulation and client requirements must be explicitly qualified, not implied for every implementation.
 For each field, test every claim against EVERY final implementation, not just the files being generated. In particular, plan approval plus a second action approval, offline simulation, step watermarks and tool-call approval are different capabilities. Qualify a claim supported only by some variants wherever it appears (including summary, whatItDoes, exampleScenario and capabilities); editing only whatItGenerates is insufficient.
-whatItGenerates describes ONE project for the selected implementation, never a set of all samples. Concisely qualify variant-specific behavior instead of enumerating every sample or protocol parameter.
+whatItGenerates describes ONE project for the selected implementation, never a set of all samples. Preserve an accurate shared project description; do not enumerate every language, framework, file or protocol parameter, and never imply multiple implementations are generated together.
 Only edit the minimum fields/sentences necessary to correct omissions or contradictions. For a changed list, return that field's full updated list, preserving unaffected entries and order. Allowed fields: summary, whatItDoes, whyUseIt, exampleScenario, bestFit, capabilities, whatItGenerates, requirements. Requirements must remain an array with exactly one concise value, at most five words total; keep detailed prerequisites in other fields.
 The supplied requirementsFormat counts array values and whitespace-separated words. Commas do NOT split values: ["Model access, research client"] is ONE value and FOUR words, already valid. Never shorten valid Requirements merely to satisfy a format it already meets.
 requiresModel is a scaffold configuration flag for a Foundry model deployment, NOT a statement that model access is unnecessary. requiresModel=false may use Copilot credentials, another provider, or an optional Foundry model. Do not replace a specific valid prerequisite such as "Model access" with generic infrastructure such as "Hosting environment". Preserve existing prerequisites unless the changed membership's README evidence makes them factually wrong; qualify differences instead of dropping useful requirements.

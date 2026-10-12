@@ -23,14 +23,27 @@ A condition in editable workflow YAML alone cannot establish that boundary.
 ## Untrusted data
 
 Sample source and generated catalog content are data, not executable workflow
-code. Review source is fetched at a fixed commit and its blob hashes are checked.
-The model runs in a read-only container with restricted tools and network access;
-GitHub and Azure credentials stay in the host. Trusted host code validates the
-proposed edit scope, evidence references, catalog invariants and regression tests
-before appending a commit to the expected Draft PR head without force-pushing.
+code. CI scans a fixed source commit, generates template/card metadata, checks
+catalog invariants and regression tests, and creates a Draft PR. It does not run
+a post-publication editorial agent or append correction commits.
 
 External Actions use immutable commit SHAs. No source code from the sample
 bundle or data PR is executed. No approval or merge is automated.
+
+## Local acceptance
+
+After Draft creation, use the
+[review-sample-catalog skill](../skills/review-sample-catalog/SKILL.md) locally in
+`review` mode, then `fix` confirmed findings when authorized. The generation
+summary records the source SHA, generated PR head, workflow revision and skill
+hash. Verify the actual current PR base/head and every affected implementation
+at the catalog's pinned SHA; a green generation workflow is not semantic approval.
+
+Keep accurate baseline Details, make natural minimal corrections, and judge
+template descriptions by scenario accuracy rather than a 100-character limit.
+Run tests and review the final diff before appending an authorized commit to the
+existing upstream PR branch. Preserve unrelated content and never force-push,
+approve or merge automatically. Do not execute sample code during prose review.
 
 ## Credentials and validation
 

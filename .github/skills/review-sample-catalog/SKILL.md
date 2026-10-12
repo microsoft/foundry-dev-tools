@@ -1,6 +1,6 @@
 ---
 name: review-sample-catalog
-description: 'Review and fix generated hosted-agent sample catalog pull requests against pinned implementation evidence. Use for sample-catalog.json, Sync Sample Catalog PRs, card grouping, Details accuracy, variant coverage, catalog promotion, and merge-readiness reviews. Supports CI-generated Draft PRs followed by bounded skill-driven automatic correction or maintainer-led review.'
+description: 'Locally review and fix CI-generated hosted-agent sample catalog Draft pull requests against pinned implementation evidence. Use for sample-catalog.json, Sync Sample Catalog PRs, card grouping, Details accuracy, variant coverage, minimal prose corrections, catalog promotion, and merge-readiness reviews. CI generates the Draft; this skill owns local acceptance and authorized corrections.'
 argument-hint: 'PR URL or number; review or fix; optional release target'
 user-invocable: true
 ---
@@ -14,16 +14,6 @@ of factual accuracy. A Draft PR is a review artifact, not permission to merge.
 ## Scope and Authority
 
 - `review` is read-only. Report findings before suggesting changes.
-- In the final CI fix step, the trusted wrapper authorizes automatic prose
-  corrections. Read this skill and the supplied scope and sources, then return
-  only the requested structured patch and unresolved findings. Do not ask for
-  human edits as a success outcome. The wrapper permits two repair passes and a
-  final verification pass, validates changes, runs tests and performs GitHub
-  writes; the agent itself must never execute commands or publish anything.
-  Rejected outputs consume the same three-attempt limit. Read `feedback.json`
-  when supplied: rejected patches were not applied, so use the current input's
-  values. Address the specific error without hiding factual concerns. After a
-  correction, the wrapper requires an independent clean review before publishing.
 - An explicit request to fix the data PR authorizes narrowly scoped catalog
   corrections during human-led review. Do not require a generator change merely
   to correct reviewed prose. If the user has prohibited direct data edits, ask
@@ -36,21 +26,32 @@ of factual accuracy. A Draft PR is a review artifact, not permission to merge.
 - Preserve unrelated changes. Use an isolated worktree when appropriate; do not
   reset existing release branches or rewrite shared history.
 
+## Local Acceptance
+
+Invoke this skill after CI creates the Draft, whether generation succeeded on
+its first attempt or required a rerun. For example:
+
+```text
+Use review-sample-catalog to review <PR URL>. Read-only; report acceptance and findings.
+Use review-sample-catalog to fix confirmed findings in <PR URL>. Keep the PR draft.
+```
+
+Work from an isolated checkout of the actual data PR. Inspect its complete file
+list before running trusted tests; only the catalog data should differ from the
+base. Record base/head SHAs, pinned sample SHA and the version of this skill used.
+CI's generation summary is a handoff, not proof of semantic acceptance.
+
+In `fix` mode, correct confirmed findings with the smallest evidence-backed
+edits, then repeat the structural checks, tests and source review on the final
+diff. When commit/push is authorized, append to the existing upstream PR branch,
+never a fork or a replacement branch. Recheck its head before pushing and never
+force-push. Link each finding to its correction and verification. Do not create
+edits merely to obtain a correction commit when the candidate is already accurate.
+
+Report `accepted`, `changes required` or `blocked`, with any missing evidence and
+unverified runtime behavior. Acceptance does not authorize approval or merge.
+
 ## Read the Current Contracts
-
-In sandboxed CI, the wrapper owns the full-catalog checks in sections 1 and 2,
-test execution and GitHub publication. Read `scope.json` and `review-input.json`
-instead of the complete catalogs and generator/test/workflow files, which are
-not mounted. The scoped input includes affected cards, every current member's
-template metadata, new templates and baseline cards. Apply sections 3 and 4 to
-all of that scope using the pinned files under `sources/`. This reduces unrelated
-context, not variant coverage. Return unresolved findings for missing evidence
-or required protected-field changes; never silently narrow the supplied scope.
-Use `scope.json` files[].readPath to open a mounted evidence file. Its `path`
-is the repository-relative citation identifier, not its readable container path.
-Check the supplied readPath before concluding that a source is missing.
-
-For maintainer-led repository review, use the contracts below.
 
 Use the PR's base and head versions, not an unrelated working branch:
 
@@ -66,16 +67,17 @@ Do not copy a historical inventory, template count, model version or source SHA
 into acceptance criteria. Requirements that are only prompt guidance must not
 be presented as checks already enforced by code.
 
-The intended process has two stages:
+The intended process has three stages:
 
 1. CI scans a pinned source revision, generates an incremental candidate, checks
    structural contracts and opens a Draft PR. Read the current workflow's actual
    generation/review gates; do not assume it has no AI dependencies.
-2. The final CI step uses this skill to review and automatically correct prose
-  against pinned source evidence, or a maintainer invokes it interactively.
-  Unresolved findings or failed verification block successful completion, but
-  preserve the Draft PR. Required human approval is still a separate merge gate,
-  not an expectation that humans finish routine corrections.
+2. A local agent uses this skill to verify the actual Draft against pinned source
+  evidence and apply authorized minimal corrections. CI does not perform a
+  post-publication editorial review or append correction commits. Unresolved
+  findings prevent local acceptance; preserve the Draft while resolving them.
+3. A maintainer reviews the final diff and satisfies repository approval and
+  merge policies. Neither CI nor this skill automatically approves or merges.
 
 ## 1. Establish the Review Snapshot
 
@@ -133,7 +135,7 @@ unchanged cards when a fix specifically touches it.
 | Model configuration | `requiresModel=false` does not establish absence of model access. Conversely, this flag does not disprove absence shown by the implementation. Separate hosting/storage requests from model inference. |
 | Recommendations | `whyUseIt`, `bestFit` and illustrative scenarios may reasonably apply supported capabilities without appearing verbatim in a README. Do not invent required tools or integrations. |
 | Requirements | One nonempty string in the requirements array, at most five whitespace-separated words. Commas do not create extra values. Preserve valid concise prerequisites; this is not an exhaustive installation guide. |
-| Picker text | Follow the current generator's naming guidance. Descriptions are one plain-text sentence, at most 100 characters, without redundant selected language/framework/protocol wording. |
+| Picker text | Follow the current generator's naming guidance. Descriptions use concise, natural plain text grounded in the actual scenario, without a character limit or redundant selected language/framework/protocol wording. Do not shorten accurate text merely for length. |
 
 Check source provenance and entailment separately. A valid excerpt ID or a real
 source link does not mean the text supports the statement. Read the cited text
@@ -160,19 +162,25 @@ text changes. Preserve factual qualifications, warnings, Requirements, identity,
 membership and ordering. Generalize common behavior or explicitly qualify real
 differences; do not erase useful information merely to silence a reviewer.
 
-In sandboxed CI, propose these changes using the wrapper's structured output
-contract instead of editing files. Include the exact current value and evidence
-references `{path, startLine, endLine}` for each correction. Files under `sources/`
-have `L<number>:` markers for their original 1-based lines; use those inclusive
-line ranges and omit `sources/` from the path. Do not copy source quotations:
-the wrapper extracts the exact original text and preserves it in the report.
-Choose concise supporting ranges of at most 6000 characters per reference.
-A valid location proves provenance, not that the text supports the correction;
-verify the meaning and every applicable variant. Return all reviewed card/template IDs even
-when no changes are needed. Report grouping or protected-field defects as
-unresolved; never modify them to satisfy a prose review.
+For existing cards, use the supplied baseline Details as the editing reference.
+Adding a template is not a reason to expand every field. Keep still-accurate
+fields verbatim and adjust only the smallest inaccurate sentence or clause,
+preserving the original structure and tone. If generation expanded a field
+unnecessarily, restore the baseline wording when it remains accurate for every
+current member; this is not permission to undo needed factual qualifications.
+Prefer natural, shared scenario wording to repeated language-by-language lists
+or parenthetical hedging. Explain genuine differences in the most relevant
+field, without leaving another field making a false universal claim.
+Describe one selected project in `whatItGenerates`, not a bundle of alternatives.
 
-Shorten overlong descriptions by rewriting the sentence, not truncating words.
+Record each correction's affected field, before/after values and pinned source
+path with 1-based line references. A valid location proves provenance, not that
+the text supports the correction; verify the meaning and every applicable
+variant. Report grouping or protected-field defects as unresolved; never modify
+them merely to satisfy a prose review without separate authorization.
+
+Rewrite descriptions only to correct scenario accuracy, not to meet a length
+target; never truncate words or drop factual distinctions to save characters.
 Do not format the entire JSON file or regenerate untouched content. Preserve the
 pinned source revision and generation provenance when making an editorial fix;
 do not falsely label a hand-reviewed edit as a new upstream scan.

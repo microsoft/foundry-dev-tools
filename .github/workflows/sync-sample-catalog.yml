@@ -139,6 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       has_changes: ${{ steps.diff.outputs.has_changes }}
+      source_sha: ${{ needs.scan.outputs.source_sha }}
       catalog_artifact: ${{ format('validated-sample-catalog-{0}-{1}', github.run_id, github.run_attempt) }}
     env:
       REPO_ROOT: ${{ github.workspace }}
@@ -173,9 +174,6 @@ jobs:
 
       - name: Run catalog regression tests
         run: node --test .github/scripts/sample_catalog_cards.test.mjs
-
-      - name: Verify isolated CLI transport (offline)
-        run: node .github/scripts/review_catalog_pr.mjs --sandbox-smoke-test
 
       - name: Detect catalog changes
         id: diff
@@ -346,7 +344,7 @@ jobs:
             - New cards are created only when no compatible candidate fits; their Details and one primary Pattern are AI-generated for review.
             - The catalog commitSha advances only when templates are added or removed. It also pins the implementations of surviving templates to that revision.
             - Failed AI generation/review, incomplete audits, unknown README references, incomplete scans, or invalid grouping stop the job before PR creation. Verified source references do not replace human review of semantic accuracy.
-            - A final bounded agent step reads the repository review skill and fixed-source evidence, then proposes prose corrections to this Draft PR. Trusted code validates scope, evidence references and tests before appending a commit. Failed or unresolved review leaves the Draft PR open and the workflow blocked; no approval or merge is automated.
+            - CI ends after creating this Draft PR. Final scenario accuracy, natural wording and minimal Details changes are reviewed locally with the `review-sample-catalog` skill against the pinned source. Confirmed corrections are tested and committed to this PR branch only when authorized; no CI editorial correction, approval or merge is automated.
 
             ## Reviewer Checks
             - Confirm the catalog is self-contained and card-only edits do not change template facts.
@@ -366,9 +364,14 @@ jobs:
           PR_OPERATION: ${{ steps.cpr.outputs.pull-request-operation }}
           PR_URL: ${{ steps.cpr.outputs.pull-request-url }}
           PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+          PR_HEAD: ${{ steps.cpr.outputs.pull-request-head-sha }}
+          SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
+          WORKFLOW_SHA: ${{ github.sha }}
         run: |
+          set -euo pipefail
           echo "PR operation: $PR_OPERATION"
           echo "PR URL: $PR_URL"
+          skill_sha=$(sha256sum .github/skills/review-sample-catalog/SKILL.md | cut -d ' ' -f 1)
 
           {
             echo
@@ -377,59 +380,13 @@ jobs:
             if [[ -n "$PR_URL" ]]; then
               echo "- Operation: \`$PR_OPERATION\`"
               echo "- PR: [#${PR_NUMBER:-?}]($PR_URL)"
+              echo "- Generated PR head: \`$PR_HEAD\`"
+              echo "- Sample source SHA: \`$SOURCE_SHA\`"
+              echo "- Workflow revision: \`$WORKFLOW_SHA\`"
+              echo "- Review skill SHA-256: \`$skill_sha\`"
+              echo "- Local acceptance required: use the \`review-sample-catalog\` skill in \`review\` mode for this PR, then \`fix\` only confirmed findings when authorized."
+              echo "- CI generation success is not semantic acceptance or approval to merge."
             else
               echo "- No pull request was created or updated (peter-evans/create-pull-request returned no URL)."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
-
-  review:
-    name: 7. AI review and commit corrections
-    needs: publish
-    if: ${{ needs.publish.outputs.number != '' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 50
-    env:
-      REPO_ROOT: ${{ github.workspace }}
-      AZURE_OPENAI_REASONING_EFFORT: ${{ vars.AZURE_OPENAI_REASONING_EFFORT }}
-    steps:
-      - name: Checkout workflow-pinned review implementation
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version: '20'
-
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547
-        with:
-          app-id: ${{ secrets.SYNC_APP_ID }}
-          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
-
-      - name: Review with skill and commit verified corrections
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-          CATALOG_REVIEW_MODEL: ${{ vars.CATALOG_REVIEW_MODEL }}
-          CATALOG_REVIEW_PR: ${{ needs.publish.outputs.number }}
-          CATALOG_REVIEW_BRANCH: ${{ needs.publish.outputs.branch }}
-          CATALOG_REVIEW_BASE: ${{ github.ref_name }}
-          CATALOG_REVIEW_HEAD: ${{ needs.publish.outputs.head }}
-        run: |
-          export CATALOG_REVIEW_REPORT_DIR="$RUNNER_TEMP/catalog-review"
-          node .github/scripts/review_catalog_pr.mjs
-
-      - name: Upload final review report
-        if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: catalog-review
-          path: ${{ runner.temp }}/catalog-review/
-          if-no-files-found: warn
-          retention-days: 7
