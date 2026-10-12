@@ -27,7 +27,7 @@ code. CI scans a fixed source commit, generates template/card metadata, checks
 catalog invariants and regression tests, and creates a Draft PR. It does not run
 a post-publication editorial agent or append correction commits.
 
-External Actions use immutable commit SHAs. No source code from the sample
+Action version tags follow the existing workflow. No source code from the sample
 bundle or data PR is executed. No approval or merge is automated.
 
 ## Local acceptance
