@@ -1,7 +1,7 @@
 {
-    "commitSha": "be4706c76acfe44e2ae99c2818efdc4c5ab25bd9",
+    "commitSha": "d3171cb69ac2fb73f2be216b509a0b4a14e394b9",
     "repo": "https://github.com/microsoft-foundry/foundry-samples/",
-    "generatedAt": "2026-09-23T05:22:25Z",
+    "generatedAt": "2026-10-12T06:17:36Z",
     "dimensions": {
         "language": {
             "title": "Select a Language",
@@ -1155,6 +1155,33 @@
             "description": "Agent that uses custom persistence stores for conversation chains and response records.",
             "path": "samples/python/hosted-agents/langgraph/responses/13-custom-store",
             "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "invocations",
+            "displayName": "Content Safety Guardrail",
+            "description": "Hosted agent with a Responsible AI content safety guardrail that screens incoming prompts and outgoing responses against an RAI policy. The guardrail is a definition-level setting that points to an RAI policy by resource ID and uses input/output path selectors and stream selectors to identify text fields to moderate. Supports screening of request payloads, buffered responses, and streamed response frames according to the configured paths and selectors.",
+            "path": "samples/python/hosted-agents/agent-framework/invocations/02-content-safety-guardrail",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Resilient Workflow",
+            "description": "Hosted workflow on Microsoft Foundry that demonstrates crash recovery by restoring a stored background response from durable workflow checkpoints after the original process exits. Shows how a replacement process resumes the workflow, returns the original tool-call result, and completes the pending response. Emphasizes recovery behavior (requires background=true and store=true) rather than steering.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/23-resilient-workflow",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Steerable Conversations",
+            "description": "Demonstrates accepting a second stored background response on the same active conversation (steering) instead of rejecting it with conversation_locked. Shows how the host admits a second request while the first response remains in_progress so both responses independently reach terminal states. Clarifies that steering is separate from crash recovery and that requests must not include previous_response_id; the hosted runtime may report the admitted second response as in_progress and does not guarantee serialized completion order.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/24-steering",
+            "requiresModel": true
         }
     ],
     "patterns": [
@@ -2098,7 +2125,8 @@
                 "capabilities": [
                     "References an RAI policy",
                     "Applies configured platform checks",
-                    "Separates policy setup from basic chat code"
+                    "Separates policy setup from basic chat code",
+                    "Supports invocationsModeration selectors for Invocations protocol"
                 ],
                 "whatItGenerates": "A Python chat agent with policy-aware hosting configuration. Merely copying the code does not activate a cloud policy.",
                 "requirements": [
@@ -2106,7 +2134,8 @@
                 ]
             },
             "templatePaths": [
-                "samples/python/hosted-agents/agent-framework/responses/16-content-safety-guardrail"
+                "samples/python/hosted-agents/agent-framework/responses/16-content-safety-guardrail",
+                "samples/python/hosted-agents/agent-framework/invocations/02-content-safety-guardrail"
             ]
         },
         {
@@ -2491,14 +2520,15 @@
                     "Demonstrates ResilientBackground option for Responses",
                     "Shows requirement for stable executor identity (Agent Framework sample only)"
                 ],
-                "whatItGenerates": "One Responses project for the selected implementation: a C# Agent Framework workflow with a crash-simulating tool executor and durable workflow checkpoints, or a Python LangGraph trip-planning agent with durable graph checkpoints and background response recovery. Both include hosting configuration and a crash-recovery walkthrough.",
+                "whatItGenerates": "One Responses project for the selected implementation: a C# Agent Framework workflow with a crash-simulating tool executor and durable workflow checkpoints, a Python LangGraph trip-planning agent with durable graph checkpoints and background response recovery, or a Python Agent Framework workflow with a crash-tool executor and durable workflow checkpoints. Each project includes hosting configuration and a crash-recovery walkthrough.",
                 "requirements": [
                     "Model deployment"
                 ]
             },
             "templatePaths": [
                 "samples/csharp/hosted-agents/agent-framework/resilient-workflow",
-                "samples/python/hosted-agents/langgraph/responses/09-resilient"
+                "samples/python/hosted-agents/langgraph/responses/09-resilient",
+                "samples/python/hosted-agents/agent-framework/responses/23-resilient-workflow"
             ]
         },
         {
@@ -2507,14 +2537,14 @@
             "categoryId": "human-in-the-loop-async-events",
             "details": {
                 "summary": "Host an Agent Framework Responses agent that queues new inputs to steer an active, persisted conversation instead of rejecting concurrent requests.",
-                "whatItDoes": "Demonstrates a C# Agent Framework Responses host with the SteerableConversations option enabled so a second stored background request submitted to the same conversation is returned as queued and executed after the active turn reaches a safe boundary. This sample shows host configuration, local debugging, azd-based provisioning/deploy, and how to exercise queued background+stored requests; it does not implement crash recovery.",
+                "whatItDoes": "Demonstrates an Agent Framework Responses host with the SteerableConversations option enabled so a second stored background request submitted to the same conversation is returned as queued or otherwise admitted and executed after the active turn reaches a safe boundary. The sample shows host configuration, local debugging, azd-based provisioning/deploy, and how to exercise queued/admitted background+stored requests; it does not implement crash recovery.",
                 "whyUseIt": "Validate and experiment with durable in-conversation steering behavior where additional user inputs can be queued to influence an in-progress persisted conversation rather than being rejected, enabling richer background and control flows.",
                 "exampleScenario": "Start a long-running background response with background=true and store=true on conversation X. While it is still running, submit a second request using the same conversation ID and confirm the second response is returned with status=queued and later completes on the same persisted session.",
                 "bestFit": "C# developers hosting Agent Framework Responses who need durable in-conversation queuing (steering) and want to compare steering with separate resilient recovery patterns.",
                 "capabilities": [
                     "Enables host-wide steering option",
-                    "Queues second stored background request",
-                    "Runs queued input on same persisted session",
+                    "Accepts or queues a second stored background request (host-specific semantics: .NET reports queued; Python-hosting accepts and reports in_progress)",
+                    "Runs queued or admitted input on the same persisted session",
                     "Includes azd and VS Code run/deploy guidance"
                 ],
                 "whatItGenerates": "A C# Agent Framework Responses sample (Program.cs and host configuration) that registers the agent with AddFoundryResponses configured with SteerableConversations = true, project files for local run and azd-based deployment, and a usage walkthrough showing how to submit stored background requests to observe queued behavior. It demonstrates steering only; crash/restart recovery is not included.",
@@ -2523,7 +2553,8 @@
                 ]
             },
             "templatePaths": [
-                "samples/csharp/hosted-agents/agent-framework/steering"
+                "samples/csharp/hosted-agents/agent-framework/steering",
+                "samples/python/hosted-agents/agent-framework/responses/24-steering"
             ]
         },
         {
