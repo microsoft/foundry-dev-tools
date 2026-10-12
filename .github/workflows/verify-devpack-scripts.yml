@@ -631,9 +631,18 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          brew uninstall --ignore-dependencies azure-cli 2>/dev/null || true
+          formulae="$(brew list --formula)"
+          casks="$(brew list --cask)"
+          if grep -Fxq azure-cli <<< "$casks"; then
+            brew uninstall --cask azure-cli
+          fi
+          if grep -Fxq azure-cli <<< "$formulae"; then
+            brew uninstall --formula --force --ignore-dependencies azure-cli
+          fi
+          hash -r
           if command -v az >/dev/null 2>&1; then
             echo 'Azure CLI is still available after removal' >&2
+            type -a az >&2
             exit 1
           fi
 

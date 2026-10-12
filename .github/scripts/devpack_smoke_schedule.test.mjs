@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { buildReport, issueMarker, issueTitle, prepare, prepareInputs, report, reportAction, selectRelease, sourceMatrices } from "./devpack_smoke_schedule.mjs";
 
@@ -194,4 +196,94 @@ test("API failures are surfaced instead of pretending resolution succeeded", asy
   Object.assign(process.env, { GITHUB_EVENT_NAME: "schedule", INPUT_TAG: "", INPUT_SOURCE: "" });
   t.mock.method(globalThis, "fetch", async () => ({ ok: false, status: 403 }));
   await assert.rejects(prepare(), /HTTP 403/);
+});
+
+test("macOS no-az fixture removes formula and cask installations without hiding failures", async () => {
+  const workflow = (await readFile(
+    new URL("../workflows/verify-devpack-scripts.yml", import.meta.url), "utf8",
+  )).replace(/\r\n/g, "\n");
+  const macosStart = workflow.indexOf("\n  macos:\n");
+  assert.ok(macosStart >= 0, "macOS job not found");
+  const macos = workflow.slice(macosStart);
+  const block = /      - name: Remove Azure CLI\n[\s\S]*?        run: \|\n([\s\S]*?)(?=\n      - name:)/.exec(macos);
+  assert.ok(block, "macOS removal step not found");
+  const script = block[1].replace(/^          /gm, "");
+  const bash = process.platform === "win32" ? "C:\\Program Files\\Git\\bin\\bash.exe" : "bash";
+  const shim = `
+    formula="$TEST_FORMULA"
+    cask="$TEST_CASK"
+    if [ "$formula" = 1 ] || [ "$cask" = 1 ] || [ "$TEST_LEFTOVER" = 1 ]; then
+      az() { :; }
+    fi
+    command() {
+      if [ "$*" = "-v az" ]; then
+        declare -F az >/dev/null
+      else
+        builtin command "$@"
+      fi
+    }
+    brew() {
+      if [ "$TEST_LIST_FAILURE" = 1 ]; then
+        echo 'Homebrew inventory failed' >&2
+        return 42
+      fi
+      case "$*" in
+        'list --formula')
+          printf 'python@3.14\\n'
+          if [ "$formula" = 1 ]; then printf 'azure-cli\\n'; fi
+          ;;
+        'list --cask')
+          printf 'azure-cli-preview\\n'
+          if [ "$cask" = 1 ]; then printf 'azure-cli\\n'; fi
+          ;;
+        'uninstall --cask azure-cli')
+          printf 'REMOVED cask\\n'
+          if [ "$TEST_UNINSTALL_FAILURE" = cask ]; then return 43; fi
+          cask=0
+          ;;
+        'uninstall --formula --force --ignore-dependencies azure-cli')
+          printf 'REMOVED formula\\n'
+          if [ "$TEST_UNINSTALL_FAILURE" = formula ]; then return 44; fi
+          formula=0
+          ;;
+        *)
+          echo "Unexpected brew command: $*" >&2
+          return 45
+          ;;
+      esac
+      if [ "$formula" = 0 ] && [ "$cask" = 0 ] && [ "$TEST_LEFTOVER" != 1 ]; then
+        unset -f az
+      fi
+      return 0
+    }
+  `;
+  const run = options => spawnSync(bash, ["--noprofile", "--norc", "-c", shim + "\n" + script], {
+    cwd: fileURLToPath(new URL("../../", import.meta.url)),
+    env: {
+      ...process.env, TEST_FORMULA: "0", TEST_CASK: "0", TEST_LEFTOVER: "0",
+      TEST_LIST_FAILURE: "0", TEST_UNINSTALL_FAILURE: "", ...options,
+    },
+    encoding: "utf8",
+    timeout: 10_000,
+  });
+  for (const [formula, cask, expected] of [
+    ["0", "0", []],
+    ["1", "0", ["formula"]],
+    ["0", "1", ["cask"]],
+    ["1", "1", ["cask", "formula"]],
+  ]) {
+    const result = run({ TEST_FORMULA: formula, TEST_CASK: cask });
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual([...result.stdout.matchAll(/REMOVED (\w+)/g)].map(match => match[1]), expected);
+  }
+  for (const [options, status] of [
+    [{ TEST_LIST_FAILURE: "1" }, 42],
+    [{ TEST_CASK: "1", TEST_UNINSTALL_FAILURE: "cask" }, 43],
+    [{ TEST_FORMULA: "1", TEST_UNINSTALL_FAILURE: "formula" }, 44],
+    [{ TEST_FORMULA: "1", TEST_CASK: "1", TEST_LEFTOVER: "1" }, 1],
+  ]) {
+    const result = run(options);
+    assert.equal(result.status, status, result.stderr);
+    if (status === 1) assert.match(result.stderr, /Azure CLI is still available after removal/);
+  }
 });
