@@ -455,7 +455,8 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
         const aiRequests = [];
         process.on('exit', () => console.log('SOURCE_REQUESTS=' + JSON.stringify(sourceRequests)));
         process.on('exit', () => console.log('AI_REQUESTS=' + JSON.stringify(aiRequests)));
-        process.argv = [process.execPath, ${JSON.stringify(fileURLToPath(generator))}, '--sync', ${JSON.stringify(targetSha)}];
+        process.argv = [process.execPath, ${JSON.stringify(fileURLToPath(generator))},
+            ...(scenario.syncStage ? ['--sync-stage', scenario.syncStage] : ['--sync']), ${JSON.stringify(targetSha)}];
         globalThis.fetch = async (resource, options) => {
             const url = String(resource);
             if (url.startsWith('https://catalog-ai.invalid/')) {
@@ -474,6 +475,8 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                 }
                 let content;
                 if (request.messages[0].content.startsWith('You generate')) {
+                    assert.ok(request.messages[0].content.includes('no character limit'));
+                    assert.ok(!request.messages[0].content.includes('max 100 characters'));
                     content = { displayName: 'Generated Workflow', description: 'Draft and review a document.' };
                 } else if (stage === 'reuse') {
                     const input = JSON.parse(request.messages[1].content);
@@ -539,10 +542,77 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
         AI_REFINE: 'false', IGNORE_EXISTING: 'false', LLM_MAX_ATTEMPTS: String(scenario.maxAttempts ?? 1),
         AZURE_OPENAI_MAX_COMPLETION_TOKENS: String(scenario.initialBudget ?? 2000),
         AZURE_OPENAI_REASONING_EFFORT: scenario.reasoningEffort ?? '',
+        CATALOG_SYNC_STATE: join(root, 'sync-state.json'),
+        GITHUB_OUTPUT: join(root, 'step-output.txt'),
     };
     delete env.GITHUB_STEP_SUMMARY;
     return spawnSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8', env, timeout: 10000 });
 }
+
+test('CI ends at draft publication and hands off local skill acceptance', () => {
+    const workflow = readFileSync(new URL('../workflows/sync-sample-catalog.yml', import.meta.url), 'utf8');
+    assert.deepEqual([...workflow.matchAll(/^  (scan|metadata|group|details|validate|publish|review):$/gm)].map(match => match[1]),
+        ['scan', 'metadata', 'group', 'details', 'validate', 'publish']);
+    assert.ok(!workflow.includes('node .github/scripts/review_catalog_pr.mjs'));
+    assert.match(workflow, /draft: always-true/);
+    assert.match(workflow, /Local acceptance required/);
+    assert.match(workflow, /Sample source SHA/);
+    assert.match(workflow, /Generated PR head/);
+    assert.match(workflow, /Review skill SHA-256/);
+    assert.match(workflow, /CI generation success is not semantic acceptance/);
+});
+
+test('separate sync steps publish only after complete generation and preserve credentials', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
+    const paths = [source.templates[0].path, `${source.templates[1].path}-new`];
+    const calls = { scan: [], metadata: ['metadata'], group: ['placement'], details: ['details'], write: [] };
+    for (const [syncStage, expected] of Object.entries(calls)) {
+        const result = runIncremental(root, source, paths, { syncStage });
+        assert.equal(result.status, 0, result.stderr);
+        const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+        assert.deepEqual(requests.map(request => request.stage), expected);
+        const stateText = readFileSync(join(root, 'sync-state.json'), 'utf8');
+        assert.ok(!stateText.includes('test-only'));
+        assert.equal(JSON.parse(stateText).completedStage, syncStage);
+        if (syncStage !== 'write') assert.deepEqual(readFileSync(outputPath), before);
+    }
+    assertSnapshot(JSON.parse(readFileSync(outputPath, 'utf8')));
+    assert.match(readFileSync(join(root, 'step-output.txt'), 'utf8'), /has_changes=true/);
+});
+
+for (const failure of ['wrong order', 'changed baseline', 'changed source']) {
+    test(`staged sync blocks ${failure}`, context => {
+        const { root, source, outputPath } = temporaryFixture(context);
+        const paths = [source.templates[0].path];
+        assert.equal(runIncremental(root, source, paths, { syncStage: 'scan' }).status, 0);
+        if (failure === 'changed baseline') writeFileSync(outputPath, readFileSync(outputPath, 'utf8') + '\n');
+        if (failure === 'changed source') {
+            const statePath = join(root, 'sync-state.json');
+            const state = JSON.parse(readFileSync(statePath, 'utf8'));
+            state.commitSha = 'c'.repeat(40);
+            writeFileSync(statePath, JSON.stringify(state));
+        }
+        const before = readFileSync(outputPath);
+        const result = runIncremental(root, source, paths, { syncStage: failure === 'wrong order' ? 'write' : 'metadata' });
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /requires completed|does not match/);
+        assert.deepEqual(readFileSync(outputPath), before);
+        assert.match(result.stdout, /AI_REQUESTS=\[\]/);
+    });
+}
+
+test('staged no-change sync skips all model calls and catalog writes', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
+    for (const syncStage of ['scan', 'metadata', 'group', 'details', 'write']) {
+        const result = runIncremental(root, source, source.templates.map(template => template.path), { syncStage });
+        assert.equal(result.status, 0, result.stderr);
+        assert.match(result.stdout, /AI_REQUESTS=\[\]/);
+        assert.deepEqual(readFileSync(outputPath), before);
+    }
+    assert.match(readFileSync(join(root, 'step-output.txt'), 'utf8'), /has_changes=false/);
+});
 
 for (const stage of ['metadata', 'placement']) {
     test(`incremental CLI retries token-exhausted ${stage} with a larger budget`, context => {
