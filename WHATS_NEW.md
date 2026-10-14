@@ -1,5 +1,11 @@
 # What's New in Foundry Toolkit for VS Code
 
+## Version 1.6.15 - 30 September, 2026
+
+### Fixed
+
+- Fixed an issue where local model initialization on Windows could freeze the extension host.
+
 ## Version 1.6.14 - 23 September, 2026
 
 This release of Microsoft Foundry Toolkit for VS Code adds solution templates, skill-only toolboxes, and controls for active hosted-agent responses. It also updates model choices and Agent-to-Agent connections, and improves sign-in recovery, deployment guidance, and Agent Inspector.
