@@ -1,0 +1,37 @@
+{
+    "templates": [
+        {
+            "id": "private-network-hosted-agent",
+            "title": "Private-network Hosted Agent",
+            "description": "Demonstrates security and data-protection controls for a Hosted Agent solution, including VNet isolation, private endpoints, restricted egress, managed identity, and customer-managed keys.",
+            "tags": ["Private Networking", "Security & Compliance", "Azure AI Search"],
+            "repo": "https://github.com/microsoft/Foundry-Agent-Solution-Templates",
+            "githubUrl": "https://github.com/microsoft/Foundry-Agent-Solution-Templates/tree/main/private-network-hosted-agent",
+            "ref": "main",
+            "path": "private-network-hosted-agent",
+            "readmePath": "README.md"
+        },
+        {
+            "id": "apim-hosted-agent",
+            "title": "APIM-hosted Foundry Agent",
+            "description": "Demonstrates governed agent, model, and tool traffic through API Management.",
+            "tags": ["AI Gateway", "Governance", "Content Safety"],
+            "repo": "https://github.com/microsoft/Foundry-Agent-Solution-Templates",
+            "githubUrl": "https://github.com/microsoft/Foundry-Agent-Solution-Templates/tree/main/apim-hosted-agent",
+            "ref": "main",
+            "path": "apim-hosted-agent",
+            "readmePath": "README.md"
+        },
+        {
+            "id": "enterprise-knowledge-agent",
+            "title": "Enterprise Knowledge Agent",
+            "description": "Demonstrates grounding with custom data from Fabric, databases, org APIs, and Microsoft IQs, and shows a typical RAG setup with a hosted agent, including connection and authentication best practices.",
+            "tags": ["RAG", "Foundry IQ", "Web IQ"],
+            "repo": "https://github.com/microsoft/Foundry-Agent-Solution-Templates",
+            "githubUrl": "https://github.com/microsoft/Foundry-Agent-Solution-Templates/tree/main/enterprise-knowledge-agent",
+            "ref": "main",
+            "path": "enterprise-knowledge-agent",
+            "readmePath": "README.md"
+        }
+    ]
+}
