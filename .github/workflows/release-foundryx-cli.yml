@@ -16,8 +16,8 @@ on:
         options:
           - dev
           - test
-      create_draft_release:
-        description: "Create a draft prerelease after verification (otherwise only upload an Actions artifact)"
+      create_release:
+        description: "Publish a prerelease after verification (otherwise only upload an Actions artifact)"
         required: true
         default: false
         type: boolean
@@ -30,8 +30,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build and verify Windows x64 binary
+  resolve:
+    name: Resolve source branch
     runs-on: windows-latest
     timeout-minutes: 30
     outputs:
@@ -87,7 +87,7 @@ jobs:
           path: source
           persist-credentials: false
 
-      - name: Record source commit and install dependencies
+      - name: Record source commit
         id: source
         working-directory: source/FoundryX/cli
         run: |
@@ -100,6 +100,64 @@ jobs:
           if (-not (Test-Path -LiteralPath '.\scripts\build-binary.mjs')) {
             throw 'The selected source branch does not contain the binary build. Commit and push it first.'
           }
+
+  build:
+    name: Build and verify ${{ matrix.target }} binary
+    needs: resolve
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, target: win32-x64 }
+          - { os: windows-11-arm, target: win32-arm64 }
+          - { os: macos-15-intel, target: darwin-x64 }
+          - { os: macos-15, target: darwin-arm64 }
+          - { os: ubuntu-22.04, target: linux-x64 }
+    env:
+      SOURCE_COMMIT: ${{ needs.resolve.outputs.source_commit }}
+      FOUNDRYX_RELEASE_ENVIRONMENT: ${{ inputs.environment }}
+      RELEASE_ENVIRONMENT: ${{ inputs.environment }}
+      EXPECTED_TARGET: ${{ matrix.target }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout destination automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: automation
+          persist-credentials: false
+
+      - name: Checkout resolved source commit
+        uses: actions/checkout@v4
+        with:
+          repository: SmallBlackHole/foundry-orchestrator-agent
+          ref: ${{ needs.resolve.outputs.source_commit }}
+          ssh-key: ${{ secrets.FOUNDRYX_SOURCE_SSH_KEY }}
+          path: source
+          persist-credentials: false
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Prepare Linux credential store
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-0 gnome-keyring dbus-x11
+
+      - name: Install dependencies and verify native target
+        working-directory: source/FoundryX/cli
+        run: |
+          node -e "if (process.platform + '-' + process.arch !== process.env.EXPECTED_TARGET) throw new Error('Runner architecture does not match target')"
+          if ($LASTEXITCODE -ne 0) { throw 'Runner architecture mismatch.' }
           npm ci
           if ($LASTEXITCODE -ne 0) { throw 'CLI dependency installation failed.' }
 
@@ -118,12 +176,29 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Native keytar vendoring failed.' }
           npm run build:binary
           if ($LASTEXITCODE -ne 0) { throw 'Binary build failed.' }
+
+      - name: Verify standalone executable
+        if: runner.os != 'Linux'
+        working-directory: source/FoundryX/cli
+        run: |
           npm run test:binary
           if ($LASTEXITCODE -ne 0) { throw 'Standalone executable tests failed.' }
 
+      - name: Verify Linux executable with a session keyring
+        if: runner.os == 'Linux'
+        working-directory: source/FoundryX/cli
+        shell: bash
+        run: |
+          set -euo pipefail
+          dbus-run-session -- bash -euo pipefail -c '
+            export GNOME_KEYRING_CONTROL
+            GNOME_KEYRING_CONTROL="$(mktemp -d)"
+            trap "rm -rf \"$GNOME_KEYRING_CONTROL\"" EXIT
+            printf "\n" | gnome-keyring-daemon --unlock --components=secrets --control-directory="$GNOME_KEYRING_CONTROL"
+            npm run test:binary
+          '
+
       - name: Stage binary, checksum and provenance
-        env:
-          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
         run: |
           node .\automation\.github\scripts\foundryx_release.mjs stage .\source\FoundryX\cli .\release-assets
           if ($LASTEXITCODE -ne 0) { throw 'Release staging failed.' }
@@ -131,21 +206,18 @@ jobs:
       - name: Upload verified release assets
         uses: actions/upload-artifact@v4
         with:
-          name: foundryx-windows-x64
+          name: foundryx-${{ matrix.target }}
           path: release-assets/*
           if-no-files-found: error
           retention-days: 14
 
-  publish:
-    name: Create destination draft prerelease
-    needs: build
-    if: ${{ inputs.create_draft_release }}
+  assemble:
+    name: Assemble all platform binaries
+    needs: [resolve, build]
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    permissions:
-      contents: write
     env:
-      SOURCE_COMMIT: ${{ needs.build.outputs.source_commit }}
+      SOURCE_COMMIT: ${{ needs.resolve.outputs.source_commit }}
       RELEASE_ENVIRONMENT: ${{ inputs.environment }}
     steps:
       - name: Checkout destination automation
@@ -160,30 +232,76 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Download verified build
+      - name: Download platform builds
         uses: actions/download-artifact@v4
         with:
-          name: foundryx-windows-x64
+          pattern: foundryx-*
+          path: platform-artifacts
+
+      - name: Assemble verified platform builds
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir platform-builds
+          for target in win32-x64 win32-arm64 darwin-x64 darwin-arm64 linux-x64; do
+            mv "platform-artifacts/foundryx-$target" "platform-builds/$target"
+          done
+          node automation/.github/scripts/foundryx_release.mjs assemble platform-builds release-assets
+
+      - name: Upload combined release
+        uses: actions/upload-artifact@v4
+        with:
+          name: foundryx-all-platforms
+          path: release-assets/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish destination prerelease
+    needs: [resolve, assemble]
+    if: ${{ inputs.create_release }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      SOURCE_COMMIT: ${{ needs.resolve.outputs.source_commit }}
+      RELEASE_ENVIRONMENT: ${{ inputs.environment }}
+    steps:
+      - name: Checkout destination automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: automation
+          persist-credentials: false
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Download combined release
+        uses: actions/download-artifact@v4
+        with:
+          name: foundryx-all-platforms
           path: release-assets
 
       - name: Verify checksum and provenance
         id: release
         run: node automation/.github/scripts/foundryx_release.mjs verify release-assets
 
-      - name: Create draft prerelease
+      - name: Publish prerelease
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.release.outputs.tag }}
-          BINARY: ${{ steps.release.outputs.binary }}
+          TITLE: ${{ steps.release.outputs.title }}
         run: |
           set -euo pipefail
-          gh release create "$TAG" \
-            "release-assets/$BINARY" \
-            release-assets/SHA256SUMS \
-            release-assets/release.json \
+          assets=(release-assets/*)
+          gh release create "$TAG" "${assets[@]}" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "FoundryX $TAG (unsigned Windows x64 preview)" \
+            --title "$TITLE" \
             --notes-file release-assets/release-notes.md \
-            --draft --prerelease --latest=false
+            --prerelease --latest=false
