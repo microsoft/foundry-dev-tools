@@ -2,7 +2,7 @@
 name: foundry-agent
 description: Use the FoundryX CLI to manage Microsoft Foundry access, projects, models, Toolboxes, agents, agent publishing, conversations, agent evaluation, operational metrics, and Hosted Agent diagnostics. When you are manually invoked by "/foundry-agent", never use your "microsoft-foundry" skill or "microsoft-foundry" canvas plugin.
 metadata:
-  version: "0.6.6-dev"
+  version: "0.6.8"
 ---
 
 IMPORTANT: When manually invoked by `/foundry-agent`, use the installed `foundry` CLI. Do not run the requested operation through `az`, `azd`, the `microsoft-foundry` skill, or the `microsoft-foundry` canvas plugin.
@@ -11,7 +11,16 @@ IMPORTANT: When manually invoked by `/foundry-agent`, use the installed `foundry
 
 After a customer tenant is onboarded to FoundryX via Entra admin consent, users in that tenant use the `foundry` CLI to create Foundry projects, manage project access, and build, deploy, and operate Agents. Parse structured CLI stdout directly, pass optional formatting flags only when supported by a command's `--help`, and do not bypass the CLI with direct HTTP scripts or Azure/toolkit commands.
 
-**Authentication prerequisite (`foundry auth`)**: Before running project or Agent commands, check `foundry --version` (stop if uninstalled; requires the matching CLI release) and `foundry auth status`. Run `foundry auth login` when `authenticated: false`, or `foundry auth login --tenant <tenant-id>` to switch Entra tenants (let the user complete interactive Entra prompts; `foundry auth logout` clears both FoundryX and publishing sessions).
+**CLI prerequisite**: Use the installed CLI. Install only if missing or an encountered issue suggests a version mismatch, not merely because its version differs from this skill.
+
+When installation or a version-related update is needed, use [FoundryX GitHub releases](https://github.com/microsoft/foundry-dev-tools/releases?q=FoundryX&expanded=true):
+
+- Select a published FoundryX CLI release matching this skill's version, including prereleases. Use the release's full version string; do not use GitHub's latest-release endpoint.
+- Download the binary for the user's OS and architecture.
+- Install as `foundry.exe` on Windows or `foundry` on macOS/Linux in a user-owned binary directory, add that directory to the user PATH, and run `chmod +x` on macOS/Linux. Use the absolute executable path until the current session's PATH is refreshed. Linux sign-in requires `libsecret-1` and a running Secret Service/keyring.
+- Run the installed executable with `--version` and confirm it matches the selected release before continuing.
+
+**Authentication prerequisite (`foundry auth`)**: Before running project or Agent commands, check `foundry auth status`. Run `foundry auth login` when `authenticated: false`, or `foundry auth login --tenant <tenant-id>` to switch Entra tenants (let the user complete interactive Entra prompts; `foundry auth logout` clears both FoundryX and publishing sessions).
 
 Match the user's request against **Capability** and **When to use** in the routing table below, then follow the linked workflow or `references/*.md`:
 

@@ -6,15 +6,23 @@ the existing `microsoft-foundry` plugin or provide the native `azd ai` workflow.
 
 ## Prerequisites
 
-- Install the matching FoundryX CLI separately. The executable is `foundry` and
-  requires Node.js 20 or later.
+- Use the installed FoundryX CLI (`foundry`). Install only if it is missing or an
+  encountered issue suggests a version mismatch, not just because the version
+  differs from this plugin.
+- When installation or an update is needed, select a published matching
+  [FoundryX CLI release](https://github.com/microsoft/foundry-dev-tools/releases?q=FoundryX&expanded=true),
+  including prereleases, for the intended service environment, OS and architecture.
+  Use the full release version rather than GitHub's latest-release endpoint.
+  Standalone binaries do not require Node.js or npm. Linux sign-in requires
+  `libsecret-1` and a running Secret Service/keyring.
 - Retain the CLI service profile for the FoundryX environment you intend to use.
   This plugin contains no service profile and does not select an environment.
 - Use GitHub Copilot App with canvas extension support for the graphical view.
   The skill can also be used in a compatible Copilot CLI session.
 
-The plugin never installs the CLI, signs in or grants permissions automatically.
-Verify the installed CLI and complete sign-in when needed:
+Installing the plugin does not run CLI installation hooks, sign in or grant
+permissions. The skill provides CLI installation guidance when needed; it does
+not bundle the executable. Complete sign-in when needed:
 
 ```text
 foundry --version
@@ -84,8 +92,10 @@ This is an Agent Plugins 1.0 package, matching the format used by
 packaged without replacing their transport or authentication.
 
 Plugin updates distribute the skill and canvas together. They do not update the
-separate CLI. The manifest version matches the packaged skill/CLI source version;
-verify that the installed CLI is a matching build before using the plugin.
+separate CLI. The manifest version matches the packaged skill/CLI base source
+version; CLI builds may append an environment suffix. Follow the skill's
+prerequisite checks rather than reinstalling a working CLI merely because its
+version differs.
 
 This is a test plugin for later integration into `microsoft-foundry`, not a
 separate marketplace listing. Its generated contents come from the FoundryX
