@@ -131,6 +131,18 @@ jobs:
           path: automation
           persist-credentials: false
 
+      - name: Select Git for Windows SSH
+        if: runner.os == 'Windows'
+        run: |
+          $git = (Get-Command git -ErrorAction Stop).Source
+          $sshDirectory = Join-Path (Split-Path (Split-Path $git -Parent) -Parent) 'usr\bin'
+          $ssh = Join-Path $sshDirectory 'ssh.exe'
+          if (-not (Test-Path -LiteralPath $ssh)) {
+            throw "Git for Windows SSH was not found at $ssh."
+          }
+          # Use the SSH client paired with Git instead of the system client with different ACL handling.
+          $sshDirectory | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Checkout resolved source commit
         uses: actions/checkout@v4
         with:
@@ -200,7 +212,10 @@ jobs:
 
       - name: Stage binary, checksum and provenance
         run: |
-          node .\automation\.github\scripts\foundryx_release.mjs stage .\source\FoundryX\cli .\release-assets
+          $script = Join-Path $env:GITHUB_WORKSPACE 'automation' '.github' 'scripts' 'foundryx_release.mjs'
+          $cli = Join-Path $env:GITHUB_WORKSPACE 'source' 'FoundryX' 'cli'
+          $output = Join-Path $env:GITHUB_WORKSPACE 'release-assets'
+          node $script stage $cli $output
           if ($LASTEXITCODE -ne 0) { throw 'Release staging failed.' }
 
       - name: Upload verified release assets
