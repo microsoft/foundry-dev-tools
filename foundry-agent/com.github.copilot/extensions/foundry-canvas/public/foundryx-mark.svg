@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FoundryX">
+  <path
+    d="M32 3.5 58.5 18.8v26.4L32 60.5 5.5 45.2V18.8L32 3.5Z"
+    fill="none"
+    stroke="#6842b8"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="m5.5 18.8 26.5 15.3 26.5-15.3M32 34.1v26.4"
+    fill="none"
+    stroke="#6842b8"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
