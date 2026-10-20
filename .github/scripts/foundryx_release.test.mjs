@@ -34,7 +34,12 @@ test("release identities separate service profiles and reject unsafe inputs", ()
   for (const version of ["../bad", "0.6.6\ninjected=value", "main"]) {
     assert.throws(() => releaseIdentity(version, "dev", commit));
   }
-  assert.throws(() => releaseIdentity("0.6.6", "production", commit));
+  for (const profile of ["staging", "production", "team-2"]) {
+    assert.equal(releaseIdentity(`0.6.6-${profile}`, profile, commit).tag, `foundryx-v0.6.6-${profile}`);
+  }
+  for (const profile of ["", "../dev", "dev\ninjected=value", "Dev", "team profile"]) {
+    assert.throws(() => releaseIdentity("0.6.6-dev", profile, commit), /service profile/);
+  }
   assert.throws(() => releaseIdentity("0.6.6", "dev", "main"));
 });
 

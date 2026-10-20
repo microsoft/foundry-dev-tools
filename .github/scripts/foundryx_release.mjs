@@ -9,7 +9,6 @@ export const releaseTargets = ["win32-x64", "win32-arm64", "darwin-x64", "darwin
 
 export function releaseIdentity(version, environment, commit, target = `${process.platform}-${process.arch}`) {
   assert.match(version, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/, "Invalid CLI version");
-  assert.ok(["dev", "test"].includes(environment), "Environment must be dev or test");
   assert.match(commit, /^[0-9a-f]{40}$/, "Expected a lowercase full source commit SHA");
   assert.ok(releaseTargets.includes(target), "Unsupported target platform");
   assert.ok(version.endsWith(`-${environment}`), "Build version must include the selected environment");

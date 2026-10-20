@@ -12,10 +12,7 @@ on:
         description: "Service profile embedded in the CLI"
         required: true
         default: dev
-        type: choice
-        options:
-          - dev
-          - test
+        type: string
 
 permissions:
   contents: read
@@ -46,8 +43,8 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($env:SOURCE_BRANCH)) {
             throw 'source_branch must be a valid Git branch name.'
           }
-          if ($env:RELEASE_ENVIRONMENT -cnotin @('dev', 'test')) {
-            throw 'environment must be dev or test.'
+          if ($env:RELEASE_ENVIRONMENT -cnotmatch '^[a-z][a-z0-9-]*$') {
+            throw 'environment must start with a lowercase letter and contain only lowercase letters, digits or hyphens.'
           }
           if ([string]::IsNullOrWhiteSpace($env:SOURCE_SSH_KEY)) {
             throw 'Configure the FOUNDRYX_SOURCE_SSH_KEY Actions secret with a read-only source deploy key.'
