@@ -47,9 +47,6 @@ jobs:
         env:
           SOURCE_SSH_KEY: ${{ secrets.FOUNDRYX_SOURCE_SSH_KEY }}
         run: |
-          if ($env:GITHUB_REF -ne 'refs/heads/main') {
-            throw 'Run this workflow from the destination repository main branch.'
-          }
           git check-ref-format "refs/heads/$env:SOURCE_BRANCH"
           if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($env:SOURCE_BRANCH)) {
             throw 'source_branch must be a valid Git branch name.'
