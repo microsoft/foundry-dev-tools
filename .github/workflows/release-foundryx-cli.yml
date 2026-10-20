@@ -1,0 +1,189 @@
+name: Build and release FoundryX CLI binary
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: "Trusted source branch from SmallBlackHole/foundry-orchestrator-agent"
+        required: true
+        default: main
+        type: string
+      environment:
+        description: "Service profile embedded in the CLI"
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - test
+      create_draft_release:
+        description: "Create a draft prerelease after verification (otherwise only upload an Actions artifact)"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-foundryx-cli
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and verify Windows x64 binary
+    runs-on: windows-latest
+    timeout-minutes: 30
+    outputs:
+      source_commit: ${{ steps.source.outputs.commit }}
+    env:
+      SOURCE_BRANCH: ${{ inputs.source_branch }}
+      RELEASE_ENVIRONMENT: ${{ inputs.environment }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Validate invocation
+        env:
+          SOURCE_SSH_KEY: ${{ secrets.FOUNDRYX_SOURCE_SSH_KEY }}
+        run: |
+          if ($env:GITHUB_REF -ne 'refs/heads/main') {
+            throw 'Run this workflow from the destination repository main branch.'
+          }
+          git check-ref-format "refs/heads/$env:SOURCE_BRANCH"
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($env:SOURCE_BRANCH)) {
+            throw 'source_branch must be a valid Git branch name.'
+          }
+          if ($env:RELEASE_ENVIRONMENT -cnotin @('dev', 'test')) {
+            throw 'environment must be dev or test.'
+          }
+          if ([string]::IsNullOrWhiteSpace($env:SOURCE_SSH_KEY)) {
+            throw 'Configure the FOUNDRYX_SOURCE_SSH_KEY Actions secret with a read-only source deploy key.'
+          }
+
+      - name: Checkout destination automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: automation
+          persist-credentials: false
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Verify release automation
+        run: |
+          node --test .\automation\.github\scripts\foundryx_release.test.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Release automation tests failed.' }
+
+      - name: Checkout private FoundryX source
+        uses: actions/checkout@v4
+        with:
+          repository: SmallBlackHole/foundry-orchestrator-agent
+          ref: refs/heads/${{ inputs.source_branch }}
+          ssh-key: ${{ secrets.FOUNDRYX_SOURCE_SSH_KEY }}
+          path: source
+          persist-credentials: false
+
+      - name: Record source commit and install dependencies
+        id: source
+        working-directory: source/FoundryX/cli
+        run: |
+          $actual = git rev-parse HEAD
+          if ($LASTEXITCODE -ne 0 -or $actual -cnotmatch '^[0-9a-f]{40}$') {
+            throw 'Could not resolve the checked-out source commit.'
+          }
+          "commit=$actual" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Building source branch $env:SOURCE_BRANCH at $actual"
+          if (-not (Test-Path -LiteralPath '.\scripts\build-binary.mjs')) {
+            throw 'The selected source branch does not contain the binary build. Commit and push it first.'
+          }
+          npm ci
+          if ($LASTEXITCODE -ne 0) { throw 'CLI dependency installation failed.' }
+
+      - name: Build service profile and verify CLI
+        working-directory: source/FoundryX/cli
+        run: |
+          npm run build -- --environment "$env:RELEASE_ENVIRONMENT"
+          if ($LASTEXITCODE -ne 0) { throw 'CLI build or service profile generation failed.' }
+          npm test
+          if ($LASTEXITCODE -ne 0) { throw 'CLI tests failed.' }
+
+      - name: Build and verify standalone executable
+        working-directory: source/FoundryX/cli
+        run: |
+          npm run vendor:keytar
+          if ($LASTEXITCODE -ne 0) { throw 'Native keytar vendoring failed.' }
+          npm run build:binary
+          if ($LASTEXITCODE -ne 0) { throw 'Binary build failed.' }
+          npm run test:binary
+          if ($LASTEXITCODE -ne 0) { throw 'Standalone executable tests failed.' }
+
+      - name: Stage binary, checksum and provenance
+        env:
+          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
+        run: |
+          node .\automation\.github\scripts\foundryx_release.mjs stage .\source\FoundryX\cli .\release-assets
+          if ($LASTEXITCODE -ne 0) { throw 'Release staging failed.' }
+
+      - name: Upload verified release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: foundryx-windows-x64
+          path: release-assets/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Create destination draft prerelease
+    needs: build
+    if: ${{ inputs.create_draft_release }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      SOURCE_COMMIT: ${{ needs.build.outputs.source_commit }}
+      RELEASE_ENVIRONMENT: ${{ inputs.environment }}
+    steps:
+      - name: Checkout destination automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: automation
+          persist-credentials: false
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Download verified build
+        uses: actions/download-artifact@v4
+        with:
+          name: foundryx-windows-x64
+          path: release-assets
+
+      - name: Verify checksum and provenance
+        id: release
+        run: node automation/.github/scripts/foundryx_release.mjs verify release-assets
+
+      - name: Create draft prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          BINARY: ${{ steps.release.outputs.binary }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" \
+            "release-assets/$BINARY" \
+            release-assets/SHA256SUMS \
+            release-assets/release.json \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "FoundryX $TAG (unsigned Windows x64 preview)" \
+            --notes-file release-assets/release-notes.md \
+            --draft --prerelease --latest=false
