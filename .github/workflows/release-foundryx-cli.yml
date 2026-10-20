@@ -11,7 +11,7 @@ on:
       environment:
         description: "Service profile embedded in the CLI"
         required: true
-        default: dev
+        default: staging
         type: string
 
 permissions:
