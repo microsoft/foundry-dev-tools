@@ -16,11 +16,6 @@ on:
         options:
           - dev
           - test
-      create_release:
-        description: "Publish a prerelease after verification (otherwise only upload an Actions artifact)"
-        required: true
-        default: false
-        type: boolean
 
 permissions:
   contents: read
@@ -271,7 +266,6 @@ jobs:
   publish:
     name: Publish destination prerelease
     needs: [resolve, assemble]
-    if: ${{ inputs.create_release }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
