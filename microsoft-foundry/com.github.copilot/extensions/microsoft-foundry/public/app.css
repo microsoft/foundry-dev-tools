@@ -1587,8 +1587,6 @@ body {
 .agent-type-choice-title { flex: 0 0 auto; font-size: 12px; font-weight: 600; line-height: 16px; }
 .agent-type-choice-badge { min-width: 0; padding: 0 5px; border-radius: 2px; background: var(--colorNeutralBackground4); color: var(--muted); font-size: 10px; line-height: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .agent-type-description { color: var(--muted); font-size: 12px; line-height: 16px; }
-.agent-type-attribution { display: inline-flex; flex: 0 0 14px; width: 14px; height: 14px; color: var(--muted); }
-.agent-type-attribution svg { width: 14px; height: 14px; }
 .agent-type-check { position: absolute; right: 10px; top: calc(50% - 8px); color: var(--colorBrandStroke1); opacity: 0; --fi-size: 16px; }
 .agent-type-choice[aria-checked="true"] .agent-type-check { opacity: 1; }
 .panel-shell .agent-type-continue { margin-top: 12px; min-height: 26px; padding: 3px 8px; background: var(--fluent-deploy-background); color: var(--fluent-deploy-foreground); border-color: var(--fluent-deploy-border); }
