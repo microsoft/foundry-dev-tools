@@ -2,7 +2,7 @@
 name: foundry-agent
 description: Use the FoundryX CLI to manage Microsoft Foundry access, projects, models, Toolboxes, agents, agent publishing, conversations, agent evaluation, operational metrics, and Hosted Agent diagnostics. When you are manually invoked by "/foundry-agent", never use your "microsoft-foundry" skill or "microsoft-foundry" canvas plugin.
 metadata:
-  version: "0.6.9"
+  version: "0.7.0"
 ---
 
 IMPORTANT: When manually invoked by `/foundry-agent`, use the installed `foundryx` CLI. Do not run the requested operation through `az`, `azd`, the `microsoft-foundry` skill, or the `microsoft-foundry` canvas plugin.
