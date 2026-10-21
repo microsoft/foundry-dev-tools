@@ -7,12 +7,12 @@ All reads go through FoundryX; no caller Azure RBAC or external credentials are 
 ## 1. Discover and inspect
 
 ```text
-foundry connection list --project <project-id>
-foundry toolbox list --project <project-id>
-foundry connection show <connection-name> --project <project-id>
-foundry toolbox show <toolbox-name> --project <project-id>
-foundry toolbox version list <toolbox-name> --project <project-id>
-foundry toolbox show <toolbox-name> --version <version> --project <project-id>
+foundryx connection list --project <project-id>
+foundryx toolbox list --project <project-id>
+foundryx connection show <connection-name> --project <project-id>
+foundryx toolbox show <toolbox-name> --project <project-id>
+foundryx toolbox version list <toolbox-name> --project <project-id>
+foundryx toolbox show <toolbox-name> --version <version> --project <project-id>
 ```
 
 These commands return JSON and include admin-created native resources, not just

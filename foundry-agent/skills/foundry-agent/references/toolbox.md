@@ -15,7 +15,7 @@ No plans, dry-run or definitions/credentials persisted by FoundryX are involved.
 - **Hosted Agent integration**: Reuse an existing Toolbox for the builder path.
   When explicitly provisioning new MCP resources, create the connection before its
   Toolbox. Creating a Toolbox does not attach it to an Agent. Do not call a Toolbox
-  MCP endpoint directly; verify through `foundry agent invoke`. Read
+  MCP endpoint directly; verify through `foundryx agent invoke`. Read
   [Hosted Agent Toolbox](hosted-agent-toolbox.md).
 
 ## Toolbox definition schema
@@ -56,19 +56,19 @@ tools:
     require_approval: never
 ```
 
-## Create a Toolbox (`foundry toolbox create`)
+## Create a Toolbox (`foundryx toolbox create`)
 
 ```text
-foundry toolbox create <toolbox-name> --from-file <definition-file> --project <project-id> [--output json]
+foundryx toolbox create <toolbox-name> --from-file <definition-file> --project <project-id> [--output json]
 ```
 
 Posting the first version implicitly creates the Toolbox, sets that version as the default, and returns `<toolbox-name>`, immutable `version`, and `endpoint`.
 
-## Version or roll back (`foundry toolbox version create`, `foundry toolbox publish`)
+## Version or roll back (`foundryx toolbox version create`, `foundryx toolbox publish`)
 
 ```text
-foundry toolbox version create <toolbox-name> --from-file <definition-file> --project <project-id> [--output json]
-foundry toolbox publish <toolbox-name> <version> --project <project-id> [--output json]
+foundryx toolbox version create <toolbox-name> --from-file <definition-file> --project <project-id> [--output json]
+foundryx toolbox publish <toolbox-name> <version> --project <project-id> [--output json]
 ```
 
 `version create` leaves the default unchanged. Run `toolbox publish` (`{ "default_version": "<version>" }`) to promote a new version or roll back to an earlier `<version>` without creating another version. On failure, inspect `error.code` and `error.message`; on `unknown`, compare the FoundryX record with Foundry state before retrying.
@@ -76,8 +76,8 @@ foundry toolbox publish <toolbox-name> <version> --project <project-id> [--outpu
 ## Owner-only deletion
 
 ```text
-foundry toolbox version delete <toolbox-name> <version> --project <project-id>
-foundry toolbox delete <toolbox-name> --project <project-id>
+foundryx toolbox version delete <toolbox-name> <version> --project <project-id>
+foundryx toolbox delete <toolbox-name> --project <project-id>
 ```
 
 The API rejects deleting the current default version, known native references or

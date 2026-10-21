@@ -6,7 +6,7 @@ the existing `microsoft-foundry` plugin or provide the native `azd ai` workflow.
 
 ## Prerequisites
 
-- Use the installed FoundryX CLI (`foundry`). Install only if it is missing or an
+- Use the installed FoundryX CLI (`foundryx`). Install only if it is missing or an
   encountered issue suggests a version mismatch, not just because the version
   differs from this plugin.
 - When installation or an update is needed, select a published matching
@@ -25,9 +25,9 @@ permissions. The skill provides CLI installation guidance when needed; it does
 not bundle the executable. Complete sign-in when needed:
 
 ```text
-foundry --version
-foundry auth status
-foundry auth login
+foundryx --version
+foundryx auth status
+foundryx auth login
 ```
 
 ## Install

@@ -28,10 +28,10 @@ and conversations are unavailable, even when their native IDs are known. See
 [Scope and schema](#scope-and-schema) for query constraints and visibility limits.
 
 ```text
-foundry auth status
-foundry access project list
-foundry agent trace query --help
-foundry agent trace query --project <project-id> --query "AppRequests | where TimeGenerated > ago(24h) | summarize Runs=count()"
+foundryx auth status
+foundryx access project list
+foundryx agent trace query --help
+foundryx agent trace query --project <project-id> --query "AppRequests | where TimeGenerated > ago(24h) | summarize Runs=count()"
 ```
 
 Use FoundryX login and project selection; the service resolves monitoring and Azure
@@ -50,7 +50,7 @@ explicitly labeled `substring` projection when an excerpt is sufficient.
 For multiline KQL supplied by the user:
 
 ```powershell
-Get-Content -Raw ./trace.kql | foundry agent trace query --project <project-id> --query -
+Get-Content -Raw ./trace.kql | foundryx agent trace query --project <project-id> --query -
 ```
 
 Use inline KQL or stdin for investigations. Create reusable query files or exports
@@ -96,26 +96,26 @@ Reuse the FoundryX project and Agent UUIDs from deployment or the current
 conversation. When they are unknown, discover them with:
 
 ```text
-foundry access project list
-foundry agent list --project <foundryx-project-id>
+foundryx access project list
+foundryx agent list --project <foundryx-project-id>
 ```
 
 Use the selected entries' `id` values as CLI selectors. Resolve their Foundry
 identities with ordinary read-only `show` commands:
 
 ```text
-foundry access project show <foundryx-project-id>
-foundry agent show <foundryx-agent-id> --project <foundryx-project-id>
+foundryx access project show <foundryx-project-id>
+foundryx agent show <foundryx-agent-id> --project <foundryx-project-id>
 ```
 
-Read the `foundry` section rather than using the top-level FoundryX `id` or display
+Read the `foundryx` section rather than using the top-level FoundryX `id` or display
 `name`. For example, Agent show can return this excerpt:
 
 ```json
 {
     "id": "<foundryx-agent-id>",
     "name": "Supply chain advisor",
-    "foundry": {
+    "foundryx": {
         "name": "supply-chain-advisor",
         "version": "1",
         "id": "supply-chain-advisor:1"
@@ -123,8 +123,8 @@ Read the `foundry` section rather than using the top-level FoundryX `id` or disp
 }
 ```
 
-Use `foundry.name` for `<agent-name>` in the query prelude below. Use `foundry.id`
-against an emitted `gen_ai.agent.id`, and `foundry.version` against the emitted
+Use `foundryx.name` for `<agent-name>` in the query prelude below. Use `foundryx.id`
+against an emitted `gen_ai.agent.id`, and `foundryx.version` against the emitted
 Agent version. For Hosted Agents, select root requests by these Foundry attributes
 before correlating child spans by `OperationId`.
 
@@ -134,19 +134,19 @@ Use the FoundryX conversation UUID returned by an invocation, or one already kno
 from the user's investigation:
 
 ```text
-foundry agent conversation show <foundryx-conversation-id>
+foundryx agent conversation show <foundryx-conversation-id>
 ```
 
-Read `foundry.conversation_ids` and `foundry.response_ids` from the saved conversation.
-When there is one retained Foundry conversation ID, `foundry.id` also contains it.
+Read `foundryx.conversation_ids` and `foundryx.response_ids` from the saved conversation.
+When there is one retained Foundry conversation ID, `foundryx.id` also contains it.
 Select the relevant response from those returned IDs, then inspect it with:
 
 ```text
-foundry agent response show <foundry-response-id> --conversation-id <foundryx-conversation-id>
+foundryx agent response show <foundry-response-id> --conversation-id <foundryx-conversation-id>
 ```
 
-Response show returns `foundry.id` and `foundry.conversation_id` for that specific
-turn. Both conversation and response show include `foundry.agent`, identifying the
+Response show returns `foundryx.id` and `foundryx.conversation_id` for that specific
+turn. Both conversation and response show include `foundryx.agent`, identifying the
 Agent version recorded for the conversation. Use that recorded version when
 investigating an older conversation, even if Agent show reports a newer version.
 
@@ -154,10 +154,10 @@ investigating an older conversation, even if Agent show reports a newer version.
 
 | Returned value | Query use |
 |---|---|
-| Project show's `foundry.id`, `foundry.name`, `foundry.endpoint` | Identify the Foundry project context; use project-specific predicates only for attributes actually emitted in telemetry |
-| Agent show's `foundry.name`, `foundry.id`, `foundry.version` | Filter emitted Agent name, `gen_ai.agent.id` and version attributes |
-| Conversation show's `foundry.conversation_ids` or response show's `foundry.conversation_id` | Filter `gen_ai.conversation.id` or the emitted `azure.ai.agentserver.conversation_id` alias |
-| Conversation show's `foundry.response_ids` or response show's `foundry.id` | Filter `gen_ai.response.id` or the emitted `azure.ai.agentserver.response_id` alias |
+| Project show's `foundryx.id`, `foundryx.name`, `foundryx.endpoint` | Identify the Foundry project context; use project-specific predicates only for attributes actually emitted in telemetry |
+| Agent show's `foundryx.name`, `foundryx.id`, `foundryx.version` | Filter emitted Agent name, `gen_ai.agent.id` and version attributes |
+| Conversation show's `foundryx.conversation_ids` or response show's `foundryx.conversation_id` | Filter `gen_ai.conversation.id` or the emitted `azure.ai.agentserver.conversation_id` alias |
+| Conversation show's `foundryx.response_ids` or response show's `foundryx.id` | Filter `gen_ai.response.id` or the emitted `azure.ai.agentserver.response_id` alias |
 | Trace query response's `component_id` | Filter `_ResourceId` to the Application Insights component |
 | A query row's `OperationId`, `Id`, `ParentId` | Correlate tables and reconstruct the span tree |
 

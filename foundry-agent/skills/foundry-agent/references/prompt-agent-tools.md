@@ -1,6 +1,6 @@
 # Prompt Agent tools
 
-Configure `agent.tools` in `foundryx.yaml` only when requested for a Prompt Agent (`kind: prompt`), then run `foundry agent deploy` (`tools: []` disables tools; omitting `tools` on update preserves deployed settings).
+Configure `agent.tools` in `foundryx.yaml` only when requested for a Prompt Agent (`kind: prompt`), then run `foundryx agent deploy` (`tools: []` disables tools; omitting `tools` on update preserves deployed settings).
 
 For existing project resources, first use `connection list` and `connection show`
 per [Discover and reuse tools](tool-discovery.md). Use only the reported supported
@@ -17,7 +17,7 @@ tools:
 ```
 
 - **Runtime limits**: Code Interpreter supports text results only (no file upload/download or retained Python state across turns). Web Search uses Bing under separate data-handling terms; both tools may incur extra charges. Keep pilot inputs synthetic or public.
-- **Verification**: Read sources/warnings in default output, and use remote `foundry agent invoke "<prompt>" --json` to verify actual `tool_calls` (`type` and `status`)—enabled does not mean executed, and answer prose is not proof of tool use. Surface unsupported model, region, or policy errors directly without falling back to a tool-free answer.
+- **Verification**: Read sources/warnings in default output, and use remote `foundryx agent invoke "<prompt>" --json` to verify actual `tool_calls` (`type` and `status`)—enabled does not mean executed, and answer prose is not proof of tool use. Surface unsupported model, region, or policy errors directly without falling back to a tool-free answer.
 
 ## 2. Existing Azure AI Search index
 
