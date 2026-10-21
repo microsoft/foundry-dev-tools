@@ -1,5 +1,29 @@
 # What's New in Foundry Toolkit for VS Code
 
+## Version 1.6.17 - 21 October, 2026
+
+This release of Microsoft Foundry Toolkit for VS Code adds fine-tuning analysis links for Copilot Chat and restores tool icons in the catalog and in prompt agents. It also improves model deployment and response details.
+
+### Added
+
+- **Fine-tuning analysis**: Open Copilot Chat from a fine-tuning analysis link, with the job and project context and a bundled skill to guide run analysis.
+
+### Changed
+
+- **Agent optimization**: Removed the Preview badge from the **Optimize** tab in Agent Playground.
+
+### Fixed
+
+- **Model deployment**: Successful deployments from the model deployment page now open Model Playground with the new deployment selected, even if Playground is already open.
+- **Model Playground**: Show the model that served each response and service-reported token usage when available, including for routed models. Preserve these details in chat history.
+- **Tool icons**: Restored provider icons in Tool Catalog and Agent Builder, including when reopening saved prompt agents.
+
+## Version 1.6.16 - 15 October, 2026
+
+### Fixed
+
+- Fixed an issue when opening Foundry Toolkit from Portal
+
 ## Version 1.6.15 - 30 September, 2026
 
 ### Fixed
