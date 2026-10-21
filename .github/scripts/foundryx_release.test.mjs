@@ -20,7 +20,7 @@ async function fixture(t, target = `${process.platform}-${process.arch}`) {
   await writeFile(path.join(cli, "package-lock.json"), JSON.stringify({
     version: "0.6.6", packages: { "": { version: "0.6.6" } },
   }));
-  await writeFile(path.join(binaryDirectory, target.startsWith("win32-") ? "foundry.exe" : "foundry"), "synthetic executable fixture");
+  await writeFile(path.join(binaryDirectory, target.startsWith("win32-") ? "foundryx.exe" : "foundryx"), "synthetic executable fixture");
   return { cli, output };
 }
 
@@ -50,7 +50,7 @@ test("stages exactly the binary, checksum, provenance and usage notes", async (t
   assert.equal(metadata.target, `${process.platform}-${process.arch}`);
   assert.match(metadata.sha256, /^[0-9a-f]{64}$/);
   const notes = await readFile(path.join(output, "release-notes.md"), "utf8");
-  assert.match(notes, /foundry auth login/);
+  assert.match(notes, /foundryx auth login/);
   assert.match(notes, /no separate Node\.js installation is needed/);
 });
 
