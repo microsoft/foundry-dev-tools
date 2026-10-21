@@ -16,7 +16,7 @@ custom HTTPS ports, subject to native network support. These are not necessarily
 valid direct Prompt MCP targets; inspect compatibility before choosing that path.
 
 ```text
-foundry connection create <name> \
+foundryx connection create <name> \
   --kind remote-tool \
   --target https://example.com/mcp \
   --auth-type none|custom-keys|project-managed-identity|agentic-identity \
@@ -48,10 +48,10 @@ project connection or replace its credentials regardless of its creator.
 There are no preview plans, dry-run or force-delete.
 
 ```text
-foundry connection update <name> --from-file connection.yaml --project <project-id>
-foundry connection update <name> --from-file connection.yaml --credentials-stdin --project <project-id>
-foundry connection credentials set <name> --credentials-stdin --project <project-id>
-foundry connection delete <name> --project <project-id>
+foundryx connection update <name> --from-file connection.yaml --project <project-id>
+foundryx connection update <name> --from-file connection.yaml --credentials-stdin --project <project-id>
+foundryx connection credentials set <name> --credentials-stdin --project <project-id>
+foundryx connection delete <name> --project <project-id>
 ```
 
 The update file contains only `target`, `metadata` and/or `audience`, never

@@ -4,8 +4,8 @@ Use when the user asks for an Agent connected to Contoso enterprise documents or
 
 ## Step 1: Select the Foundry project, model, and Agent kind
 
-1. Run `foundry access project list`: `foundryx-poc` is pre-provisioned for private-preview users with the `contoso-search` connection and `contoso-enterprise-docs` Toolbox already set up, so recommend `foundryx-poc` when present; if the user does not have `foundryx-poc`, tell the user that an admin needs to set up a new project, Search connection, and Toolbox in their environment (it does not need to use the `foundryx-poc` naming).
-2. Pick a ready chat deployment from `foundry model list --project <project-id>` (such as `gpt-5-mini`; verify readiness first).
+1. Run `foundryx access project list`: `foundryx-poc` is pre-provisioned for private-preview users with the `contoso-search` connection and `contoso-enterprise-docs` Toolbox already set up, so recommend `foundryx-poc` when present; if the user does not have `foundryx-poc`, tell the user that an admin needs to set up a new project, Search connection, and Toolbox in their environment (it does not need to use the `foundryx-poc` naming).
+2. Pick a ready chat deployment from `foundryx model list --project <project-id>` (such as `gpt-5-mini`; verify readiness first).
 3. Confirm `Prompt` vs `Hosted` if unspecified.
 4. Set instructions to retrieve before answering Contoso questions, rely strictly on retrieved facts with document/section citations, state when information is missing, and never invent approvals or public download links (the corpus is fictional trial content).
 
@@ -13,7 +13,7 @@ Use when the user asks for an Agent connected to Contoso enterprise documents or
 
 ### Branch A — Prompt Agent
 
-Add the prepared Search index under `agent.tools` in `foundryx.yaml` and run `foundry agent deploy` (report any unsupported-tool error as a service/client compatibility issue without silently changing Agent kind or bypassing FoundryX):
+Add the prepared Search index under `agent.tools` in `foundryx.yaml` and run `foundryx agent deploy` (report any unsupported-tool error as a service/client compatibility issue without silently changing Agent kind or bypassing FoundryX):
 
 ```yaml
 tools:
@@ -28,14 +28,14 @@ tools:
 
 ### Branch B — Hosted Agent
 
-1. Run `foundry agent init [directory] --sample toolbox`.
-2. Run `foundry toolbox show contoso-enterprise-docs --project <project-id>` (with `--version` only when a pin is intended), and use its exact `endpoint` as `TOOLBOX_ENDPOINT` in `main.py` per [Hosted Agent Toolbox](hosted-agent-toolbox.md). Preserve the selected version; do not reconstruct an unversioned URL, set `TOOLBOX_NAME`, or create a replacement Toolbox.
-3. Configure `project`, `name`, and `model` in `foundryx.yaml` (no `agent.tools` or env fields), then run `foundry agent deploy` (skip local `agent run` / `--local`).
+1. Run `foundryx agent init [directory] --sample toolbox`.
+2. Run `foundryx toolbox show contoso-enterprise-docs --project <project-id>` (with `--version` only when a pin is intended), and use its exact `endpoint` as `TOOLBOX_ENDPOINT` in `main.py` per [Hosted Agent Toolbox](hosted-agent-toolbox.md). Preserve the selected version; do not reconstruct an unversioned URL, set `TOOLBOX_NAME`, or create a replacement Toolbox.
+3. Configure `project`, `name`, and `model` in `foundryx.yaml` (no `agent.tools` or env fields), then run `foundryx agent deploy` (skip local `agent run` / `--local`).
 
 ## Step 3: Verify retrieval
 
 ```text
-foundry agent invoke "What is the domestic hotel limit and when are expenses due?" --agent-id <agent-id> --project <project-id>
+foundryx agent invoke "What is the domestic hotel limit and when are expenses due?" --agent-id <agent-id> --project <project-id>
 ```
 
 Expected trial facts: **USD 220 per night** before taxes; submit travel expenses within **30 calendar days** after the trip. Confirm retrieval evidence/citations (not just plausible answer text) and report tool failures rather than guessing.

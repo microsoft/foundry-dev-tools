@@ -17,20 +17,20 @@ Publishes a ready Prompt Agent or enabled Hosted Agent (with its own native iden
 ## Step 2: Verify target readiness and publishing session
 
 ```text
-foundry agent show <agent-id> --project <project-id>
-foundry auth publish status
-foundry auth publish login
-foundry auth publish logout
+foundryx agent show <agent-id> --project <project-id>
+foundryx auth publish status
+foundryx auth publish login
+foundryx auth publish logout
 ```
 
-Publishing uses a separate M365 session signed in as the **same immutable tenant and user** (`auth publish status` is silent-only, so transport/store errors do not prove a signed-out session; `auth publish logout` clears only publishing credentials, while `foundry auth logout` clears both; never switch accounts to bypass a catalog ownership denial). If previous publication is known, run `foundry agent publish-status <agent-id> --project <project-id>` first (missing local journal history on another machine is not proof of a first upload—ask for the known version or external reconciliation rather than generating a replacement app ID).
+Publishing uses a separate M365 session signed in as the **same immutable tenant and user** (`auth publish status` is silent-only, so transport/store errors do not prove a signed-out session; `auth publish logout` clears only publishing credentials, while `foundryx auth logout` clears both; never switch accounts to bypass a catalog ownership denial). If previous publication is known, run `foundryx agent publish-status <agent-id> --project <project-id>` first (missing local journal history on another machine is not proof of a first upload—ask for the known version or external reconciliation rather than generating a replacement app ID).
 
 ## Step 3: Preview, confirm, and submit
 
 Run `agent publish` **without** `--yes` to validate metadata/icons, read the authorized binding, and print the publishing plan (exiting nonzero with the confirmation prompt is the expected preview outcome; do not suppress unrelated validation or readiness errors as if they were a preview):
 
 ```powershell
-foundry agent publish <agent-id> --project <project-id> `
+foundryx agent publish <agent-id> --project <project-id> `
   --app-version <semver> `
   --short-description "<short-description <= 80 chars>" `
   --description "<full-description <= 4000 chars>" `
@@ -48,7 +48,7 @@ Obtain one explicit user confirmation for the reviewed plan (a generic build/pub
 ## Step 4: Inspect status and recover
 
 ```text
-foundry agent publish-status <agent-id> --project <project-id>
+foundryx agent publish-status <agent-id> --project <project-id>
 ```
 
 | State / Phase | Meaning & action |

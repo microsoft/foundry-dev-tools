@@ -11,9 +11,9 @@ export async function startCliBridge() {
         const { stdout } = process.platform === "win32"
             ? await execute("powershell.exe", [
                 "-NoProfile", "-NonInteractive", "-Command",
-                "& foundry auth canvas --entrypoint; exit $LASTEXITCODE",
+                "& foundryx auth canvas --entrypoint; exit $LASTEXITCODE",
             ], { timeout: 15_000, windowsHide: true })
-            : await execute("foundry", ["auth", "canvas", "--entrypoint"], { timeout: 15_000 });
+            : await execute("foundryx", ["auth", "canvas", "--entrypoint"], { timeout: 15_000 });
         metadata = JSON.parse(stdout);
     } catch {
         throw new Error("The canvas requires FoundryX CLI 0.4.1 or later on PATH. Install the matching release and reload extensions.");

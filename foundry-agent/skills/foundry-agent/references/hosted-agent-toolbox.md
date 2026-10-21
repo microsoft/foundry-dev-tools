@@ -11,8 +11,8 @@ For normal Agent building, resources are already configured by an administrator.
 Follow [Discover and reuse tools](tool-discovery.md):
 
 ```text
-foundry toolbox list --project <project-id>
-foundry toolbox show <toolbox-name> --project <project-id>
+foundryx toolbox list --project <project-id>
+foundryx toolbox show <toolbox-name> --project <project-id>
 ```
 
 ## Step 2: Review version, authentication and tool requirements
@@ -22,8 +22,8 @@ Missing resources or credentials require administrator action, not automatic
 creation. Configuration discovery does not prove tool enumeration or execution.
 
 ```text
-foundry toolbox version list <toolbox-name> --project <project-id>
-foundry toolbox show <toolbox-name> --version <version> --project <project-id>
+foundryx toolbox version list <toolbox-name> --project <project-id>
+foundryx toolbox show <toolbox-name> --version <version> --project <project-id>
 ```
 
 Default inspection selects the published version; `--version` selects a pinned
@@ -36,7 +36,7 @@ Only after the selected Toolbox exists in `<project-id>` (connectionless built-i
 do not require a connection):
 
 ```text
-foundry agent init [directory] --sample toolbox
+foundryx agent init [directory] --sample toolbox
 ```
 
 Use the exact `endpoint` from `toolbox show` as `TOOLBOX_ENDPOINT` in `main.py`;
@@ -49,8 +49,8 @@ ready deployment `agent.model` in `foundryx.yaml`. Do not recreate the Toolbox.
 Skip local `agent run` / `--local` (the local gateway proxies model Responses, not Toolbox MCP routes; do not work around this with personal Azure credentials).
 
 ```text
-foundry agent deploy
-foundry agent invoke "List the tools available to you."
+foundryx agent deploy
+foundryx agent invoke "List the tools available to you."
 ```
 
 If tool enumeration fails, report the actual Toolbox or MCP error rather than falling back to a tool-free answer.
@@ -58,7 +58,7 @@ If tool enumeration fails, report the actual Toolbox or MCP error rather than fa
 - **User identity delegation**: Deployed Hosted invocations delegate the signed-in user's identity by default (`--delegate-user-identity` explicitly enables; `--no-delegate-user-identity` opts out for app-only calls; Prompt and `--local` calls are never delegated). Do not fabricate `x-ms-user-identity` or retry without delegation when `AgentEndpointUserIdentityImpersonation` permission is missing.
 - **OAuth consent (`oauth_consent_required`)**: Emitted as native `oauth_consent_request` items by `agent-framework-foundry-hosting>=1.0.0b260910` (exits nonzero even with `--json`; no custom handler in `main.py` is needed, and do not scrape URLs from logs):
   1. Print the exact consent URL for the user to open and approve manually (do not rewrite, auto-open, or repeat invocation before the user completes consent).
-  2. Once the user approves, rerun `foundry agent invoke` with the same account and delegation option—even if the browser page showed a post-login error such as `"Code ... not found"`, since consent is often saved anyway.
+  2. Once the user approves, rerun `foundryx agent invoke` with the same account and delegation option—even if the browser page showed a post-login error such as `"Code ... not found"`, since consent is often saved anyway.
   3. Only if a new consent link is returned, have the user open that fresh link in a private browser window signed in solely as the invoking account (links expire after a few minutes; invoke again for a fresh link rather than reusing an expired one).
 - **Administrator updates later**: An Agent using the unversioned Toolbox endpoint follows newly published defaults without redeployment. A pinned endpoint requires an explicit Agent update to select another version. Do not create or publish Toolbox versions during normal Agent building.
 
@@ -68,5 +68,5 @@ If tool enumeration fails, report the actual Toolbox or MCP error rather than fa
 |---|---|
 | Toolbox not found | Verify `TOOLBOX_ENDPOINT` uses `<foundry-account>` and `<foundry-project>` from `arm_id` in the same project. |
 | `401` from Toolbox | Keep shared `DefaultAzureCredential` in `FoundryChatClient` and `FoundryToolbox`. |
-| Tool enumeration fails | Check `foundry agent hosted logs <agent-id> --type console`; one failing MCP server fails enumeration for the Toolbox. |
+| Tool enumeration fails | Check `foundryx agent hosted logs <agent-id> --type console`; one failing MCP server fails enumeration for the Toolbox. |
 | New Toolbox version ignored | Inspect `toolbox show`: a new version does not change the default, and pinned endpoints stay pinned. Ask the administrator about an intended default change; never publish automatically during Agent building. |

@@ -2,12 +2,12 @@
 
 Read-only workflow to retrieve and interpret operational metrics for a deployed Prompt or Hosted Agent (`source: "appinsights_logs"`). Does not invoke the Agent or modify monitoring. Requires an effective project `user`, `manager`, or `owner` role (`consumer` membership and subscription `Owner` / `Foundry Owner` status without qualifying project membership are denied).
 
-## Query metrics (`foundry agent metrics`)
+## Query metrics (`foundryx agent metrics`)
 
 ```text
-foundry agent metrics --list
-foundry agent metrics --help
-foundry agent metrics <agent-id> \
+foundryx agent metrics --list
+foundryx agent metrics --help
+foundryx agent metrics <agent-id> \
   [--metric <metric...>] \
   [--agent-version <version>] \
   [--start-time <ISO-8601-with-tz> --end-time <ISO-8601-with-tz>] \

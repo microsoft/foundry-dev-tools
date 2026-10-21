@@ -2,7 +2,7 @@
 
 Read this only when the user explicitly asks for one of these prepared resources (or asks for a knowledge-connected Agent and agrees to use a prepared one); do not suggest them for ordinary requests such as "create a sample agent".
 
-Run `foundry access project list`:
+Run `foundryx access project list`:
 - **If `foundryx-poc` is in the user's accessible projects**: `foundryx-poc` is pre-provisioned for private-preview users with these trial Toolboxes and Contoso knowledge resources already set up—recommend selecting `foundryx-poc` and do not create duplicate connections or Toolboxes.
 - **If the user does not have `foundryx-poc`**: Tell the user that an admin needs to set up a new project, connection, or Toolbox in their own environment (any project/resource name works; it does not need to be named `foundryx-poc`) following [RemoteTool MCP connections](connection-create.md) and [Hosted Agent Toolbox](hosted-agent-toolbox.md).
 
@@ -15,7 +15,7 @@ summaries. Do not create a duplicate if the resource is missing; ask its adminis
 
 ## Prepared Hosted Agent Toolboxes
 
-Initialize with `foundry agent init [directory] --sample toolbox`, set `project`
+Initialize with `foundryx agent init [directory] --sample toolbox`, set `project`
 to the selected project's UUID in `foundryx.yaml`, and use the exact `endpoint`
 returned by `toolbox show` as `TOOLBOX_ENDPOINT` in `main.py`. Preserve an explicit
 `--version` pin; do not reconstruct a consumer URL that would discard it. The
