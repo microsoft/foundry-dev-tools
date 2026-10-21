@@ -31,9 +31,9 @@ function releaseNotes(metadata) {
     "",
     "Node.js and CLI dependencies are included; no separate Node.js installation is needed.",
     "",
-    "Download the binary for your platform and rename it to foundry.exe (Windows) or foundry (macOS/Linux).",
-    "On macOS/Linux, run `chmod +x foundry`. Add its directory to PATH.",
-    "Run `foundry --version` to verify installation, then `foundry auth login` to sign in.",
+    "Download the binary for your platform and rename it to foundryx.exe (Windows) or foundryx (macOS/Linux).",
+    "On macOS/Linux, run `chmod +x foundryx`. Add its directory to PATH.",
+    "Run `foundryx --version` to verify installation, then `foundryx auth login` to sign in.",
     "SHA256SUMS contains the binaries' SHA-256 checksums.",
     "Linux sign-in requires libsecret-1 and a running Secret Service/keyring.",
     "",
@@ -54,7 +54,7 @@ export async function stageRelease(cliRoot, output, environment, commit, target 
   assert.equal(buildInfo.version, `${manifest.version}-${environment}`, "Build version does not match package and environment");
   assert.equal(buildInfo.environment, environment, "Build service profile does not match selected environment");
   assert.match(process.version, /^v24\./, "Stage the release using Node.js 24");
-  const executable = path.join(cliRoot, "release", "binary", target, target.startsWith("win32-") ? "foundry.exe" : "foundry");
+  const executable = path.join(cliRoot, "release", "binary", target, target.startsWith("win32-") ? "foundryx.exe" : "foundryx");
   const contents = await readFile(executable);
   const metadata = {
     schemaVersion: 1,
