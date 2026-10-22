@@ -268,8 +268,8 @@ async function ensureServer() {
 await joinSession({
     canvases: [
         createCanvas({
-            id: "foundry-canvas",
-            displayName: "Foundry Canvas",
+            id: "foundryx-canvas",
+            displayName: "FoundryX Canvas (Preview)",
             description:
                 "List and publish Agents managed through FoundryX using the installed foundryx CLI. Use only for an explicit FoundryX canvas or Agent request, or an established /foundry-agent workflow. Do not select for generic Microsoft Foundry or azd Agent workflows.",
             open: async () => {
