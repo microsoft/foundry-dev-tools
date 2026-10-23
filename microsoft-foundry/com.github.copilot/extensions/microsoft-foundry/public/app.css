@@ -484,7 +484,7 @@ body {
     position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(20px);
     background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px;
     font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
-    max-width: 90%; box-shadow: 0 6px 20px rgba(0,0,0,.25); z-index: 50;
+    max-width: 90%; box-shadow: 0 6px 20px rgba(0,0,0,.25); z-index: 70;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -513,6 +513,16 @@ body {
     border-bottom: 1px solid var(--border);
 }
 .inspector-status[hidden] { display: none; }
+.inspector-startup { flex: 1; min-height: 0; overflow: auto; padding: 48px 24px; display: flex; color: var(--text); }
+.inspector-startup-content { width: 100%; max-width: 480px; margin: auto; text-align: center; }
+.inspector-startup h2 { margin: 0 0 12px; font-size: 20px; font-weight: 600; }
+.inspector-startup p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.inspector-startup .inspector-copy { display: inline-flex; align-items: center; gap: 8px; margin: 24px 0 16px; background: var(--fluent-brand, var(--accent)); border-color: transparent; color: var(--colorNeutralForegroundOnBrand, #fff); font-weight: 600; }
+.inspector-startup .inspector-copy:hover { filter: brightness(.95); }
+.inspector-command summary { width: fit-content; margin: 0 auto; color: var(--muted); font-size: 12px; cursor: pointer; }
+.inspector-command pre { margin: 12px 0 0; padding: 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-subtle); text-align: left; font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+.inspector-startup-status { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 32px 0 4px; color: var(--muted); font-size: 12px; }
+.inspector-startup .inspector-startup-hint { font-size: 12px; }
 .inspector-waiting {
     position: absolute; inset: 0; top: 33px; /* below .inspector-bar */
     display: flex; flex-direction: column; align-items: center; justify-content: center;
