@@ -5,6 +5,15 @@ const Labels = {
   needsAttention: "needs attention",
 };
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const workflowMaintainer = process.env.WORKFLOW_MAINTAINER_EMAIL;
 const repoMaintainers = JSON.parse(process.env.REPO_MAINTAINERS);
 const repoMaintainersMap = new Map(
@@ -60,7 +69,7 @@ async function main() {
     console.log(`Sending email to ${email} for issue ${JSON.stringify(issues)}`);
     const body = `
 <p>Hi, here are GitHub issues that needs your attention:</p>
-${issues.map((issue) =>`<p><a href="${issue.url}">#${issue.number}</a>: ${issue.title} (${issue.url})</p>
+${issues.map((issue) =>`<p><a href="${escapeHtml(issue.url)}">#${escapeHtml(issue.number)}</a>: ${escapeHtml(issue.title)} (${escapeHtml(issue.url)})</p>
 <hr />
 <p>* Remove the "needs attention" label or close the issue in order not to receive this notification.</p>`)}
 `;
