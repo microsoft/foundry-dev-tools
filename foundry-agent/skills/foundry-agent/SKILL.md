@@ -88,9 +88,9 @@ restrictions; `can_manage` alone does not authorize every management operation.
 
 ## Foundry models
 
-Read the [required authority](references/permissions.md#required-authority) when checking model access or management eligibility. Resource allowlists apply in addition to the role and model-management setting.
+Read the [required authority](references/permissions.md#required-authority) for model allowlist rules and management eligibility.
 
-### Step 1: Inspect and call project-owned models (`foundryx model list|show|call`)
+### Step 1: Inspect and call allowed models (`foundryx model list|show|call`)
 
 ```text
 foundryx model list --project <project-id>
@@ -109,7 +109,7 @@ foundryx model quota --project <project-id> [--deployable]
 
 ### Step 3: Deploy, scale, or delete a model deployment (`foundryx model deploy|scale|delete`)
 
-FoundryX scales or deletes only deployments recorded as owned by `<project-id>`. Commands return their completed result; inspect the model before retrying an ambiguous upstream failure, then smoke-test with `model call`:
+Commands return their completed result; inspect the model before retrying an ambiguous upstream failure, then smoke-test with `model call`:
 
 ```text
 foundryx model deploy --name <deployment> --model-name <model> --model-version <version> --model-format <format> --sku <sku> --capacity <capacity> --project <project-id>
