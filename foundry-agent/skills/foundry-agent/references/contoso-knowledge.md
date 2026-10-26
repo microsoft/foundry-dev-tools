@@ -39,5 +39,3 @@ foundryx agent invoke "What is the domestic hotel limit and when are expenses du
 ```
 
 Expected trial facts: **USD 220 per night** before taxes; submit travel expenses within **30 calendar days** after the trip. Confirm retrieval evidence/citations (not just plausible answer text) and report tool failures rather than guessing.
-
-

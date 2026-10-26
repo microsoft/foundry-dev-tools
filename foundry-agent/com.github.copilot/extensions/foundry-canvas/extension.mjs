@@ -105,7 +105,11 @@ async function serveAsset(request, response, requestUrl) {
     const styleNonce = extname(path).toLowerCase() === ".html"
         ? randomBytes(16).toString("base64") : undefined;
     if (styleNonce) {
-        body = Buffer.from(body.toString("utf8").replace(
+        const html = body.toString("utf8");
+        if (!html.includes("</head>")) {
+            throw new Error("Canvas HTML is missing its document head.");
+        }
+        body = Buffer.from(html.replace(
             "</head>",
             `<meta name="foundryx-style-nonce" content="${styleNonce}"></head>`,
         ));
