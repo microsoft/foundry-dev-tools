@@ -11,7 +11,7 @@ foundryx agent eval dataset list [--name <name>] --project <project-id>
 foundryx agent eval dataset show <name> <version> --project <project-id>
 ```
 
-Reuse reviewed native datasets and evaluators when available, and pick a ready project-owned judge deployment from `foundryx model list`.
+Reuse reviewed native datasets and evaluators when available, and pick a ready judge deployment with `allowed: true` from `foundryx model list`.
 
 - **Synthetic generation** (billable—obtain user authorization if not already requested; `--max-samples` accepts `15..1000`, default `15`; `--dataset <name>` suppresses dataset generation; inspect rows/rubrics with `show` before running):
   ```text

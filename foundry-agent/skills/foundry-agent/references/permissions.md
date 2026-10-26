@@ -61,13 +61,16 @@ The effective project role is the highest matching user, group or tenant grant.
 | `agent conversation show/delete`, `agent response show` | The caller's own conversation and current project membership |
 | `model catalog`; Agent develop/deploy/list/show/delete/evaluate/publish/metrics/tracing/Hosted operations; connection/Toolbox discovery | Project User or higher; resource policies and operation-specific checks still apply |
 | `model quota` | Subscription administrator |
-| `model deploy/scale/delete` | Subscription administrator, or Project User or higher when project model management is enabled; model policy still applies |
+| `model deploy/scale/delete` | Subscription administrator, or Project User or higher when project model management is enabled; scale/delete must also satisfy the model policy |
 | Connection configuration/credentials/delete; Toolbox create/version/publish/delete | Project Owner; subscription authority alone does not grant this role |
 
+`allowed_models` applies to existing deployments, including models deployed outside
+FoundryX. Successful FoundryX deployments automatically join the Permission's explicit
+allowlist.
+
 Directory discovery additionally needs delegated Graph access. Publishing has separate
-same-user sign-in and native setup; see [Publishing](publishing.md). Model scale/delete
-also require a deployment created and owned by this FoundryX project; imported models
-are read-only. Agent deletion accepts registered imported Agents as well as new Agents.
+same-user sign-in and native setup; see [Publishing](publishing.md). Agent deletion
+accepts registered imported Agents as well as new Agents.
 
 ## Create, update or delete a Permission
 
