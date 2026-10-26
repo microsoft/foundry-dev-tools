@@ -2,6 +2,32 @@
 
 Notable changes to the Microsoft Foundry Canvas plugin for GitHub Copilot App.
 
+## Version 1.0.16
+
+This release improves VS Code sign-in and local inspection, speeds up project lookup, and fixes restored Canvas startup.
+
+### Added
+
+- **VS Code local inspection**: **Inspect Locally** provides a copyable startup command to run in your VS Code terminal, then connects Agent Inspector automatically. Related: [#861](https://github.com/microsoft/foundry-dev-tools/issues/861).
+
+### Changed
+
+- **Sign-in**: Run Azure Developer CLI authentication without requiring Terminal Canvas in either GitHub Copilot App or VS Code.
+- **Project lookup**: Resolve configured project endpoints across accessible subscriptions in a single lookup instead of scanning subscriptions sequentially.
+
+### Fixed
+
+- **Canvas restoration**: Restored panels wait for session initialization before handling requests, avoiding startup failures.
+- **Startup errors**: Show account-initialization failure details and clearer timeout guidance with **Retry**.
+
+## Version 1.0.15
+
+This release enables Canvas in VS Code Copilot.
+
+### Added
+
+- **VS Code Copilot**: Enable Canvas and project-selection tools in VS Code hosts with Canvas support. Related: [#861](https://github.com/microsoft/foundry-dev-tools/issues/861).
+
 ## Version 1.0.14
 
 This release keeps Canvas alongside ongoing Copilot Chat work, adds a command to open Canvas directly, and refreshes setup and agent creation while improving local inspection and approval continuations.
