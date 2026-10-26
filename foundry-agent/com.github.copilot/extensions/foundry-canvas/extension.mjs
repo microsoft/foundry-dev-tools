@@ -19,6 +19,7 @@ const contentTypes = new Map([
     [".svg", "image/svg+xml"],
     [".woff", "font/woff"],
     [".woff2", "font/woff2"],
+    [".ttf", "font/ttf"],
 ]);
 
 let serverState;
@@ -100,7 +101,19 @@ async function serveAsset(request, response, requestUrl) {
         }
         path = indexPath;
     }
-    const body = await readFile(path);
+    let body = await readFile(path);
+    const styleNonce = extname(path).toLowerCase() === ".html"
+        ? randomBytes(16).toString("base64") : undefined;
+    if (styleNonce) {
+        const html = body.toString("utf8");
+        if (!html.includes("</head>")) {
+            throw new Error("Canvas HTML is missing its document head.");
+        }
+        body = Buffer.from(html.replace(
+            "</head>",
+            `<meta name="foundryx-style-nonce" content="${styleNonce}"></head>`,
+        ));
+    }
     response.statusCode = 200;
     response.setHeader(
         "Content-Type",
@@ -109,7 +122,7 @@ async function serveAsset(request, response, requestUrl) {
     response.setHeader("Content-Length", body.length);
     response.setHeader(
         "Content-Security-Policy",
-        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'",
+        `default-src 'self'; script-src 'self'; style-src 'self'${styleNonce ? ` 'nonce-${styleNonce}'` : ""}; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`,
     );
     setCommonHeaders(response);
     response.end(request.method === "HEAD" ? undefined : body);

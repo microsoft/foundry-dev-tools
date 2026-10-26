@@ -16,7 +16,6 @@ Reuse reviewed native datasets and evaluators when available, and pick a ready p
 - **Synthetic generation** (billable—obtain user authorization if not already requested; `--max-samples` accepts `15..1000`, default `15`; `--dataset <name>` suppresses dataset generation; inspect rows/rubrics with `show` before running):
   ```text
   foundryx agent eval generate --agent-id <agent-id> --eval-model <deployment> [--max-samples 15] [--evaluator <name...>] [--gen-instruction <text>] [--dataset <name>] --project <project-id>
-  foundryx operation show <operation-id>
   foundryx agent eval job show <job-id> --kind dataset|evaluator [--wait] --project <project-id>
   ```
 - **Manual dataset fallback** (if generation fails, explain and use an explicit manual fallback rather than silent regeneration; `1..1000` JSONL rows, `<= 8 MiB`, with `query`, `expected_behavior`, and optional `context` / `ground_truth`):
@@ -55,7 +54,7 @@ foundryx agent eval list [--limit <1-100>] --project <project-id>
 foundryx agent eval show <eval-id> [--eval-run-id <run-id>] --project <project-id>
 ```
 
-`--no-wait` and Ctrl+C do not cancel remote Foundry runs; inspect `operation show` and `agent eval list` before retrying an ambiguous submission.
+`--no-wait` and Ctrl+C do not cancel remote Foundry runs; inspect the returned native IDs with `agent eval job show`, `agent eval list`, or `agent eval show` before retrying an ambiguous submission.
 
 ## Step 3: Analyze item-level evidence
 
