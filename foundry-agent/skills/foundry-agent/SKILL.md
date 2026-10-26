@@ -2,7 +2,7 @@
 name: foundry-agent
 description: Use the FoundryX CLI to manage Microsoft Foundry access, projects, models, Toolboxes, agents, agent publishing, conversations, agent evaluation, operational metrics, and Hosted Agent diagnostics. When you are manually invoked by "/foundry-agent", never use your "microsoft-foundry" skill or "microsoft-foundry" canvas plugin.
 metadata:
-  version: "0.7.0"
+  version: "0.7.1"
 ---
 
 IMPORTANT: When manually invoked by `/foundry-agent`, use the installed `foundryx` CLI. Do not run the requested operation through `az`, `azd`, the `microsoft-foundry` skill, or the `microsoft-foundry` canvas plugin.
@@ -28,7 +28,7 @@ Match the user's request against **Capability** and **When to use** in the routi
 |---|---|---|---|
 | Create a Foundry project | Checking permission to create a Foundry project, selecting a subscription/region, inspecting initial deployable models/quota, or creating a Foundry project | `foundryx access project *` | [Create a Foundry project](#create-a-foundry-project) |
 | Manage Foundry project access | Granting, updating, or removing Foundry project access (`consumer`, `user`, `manager`, `owner`) for a single user, an Entra group, or all tenant users | `foundryx access project list --manageable`, `foundryx access user *`, `foundryx access member *` | [Manage Foundry project access](#manage-foundry-project-access) |
-| Manage Foundry models | Listing, viewing, or calling project models, inspecting model catalog/quota, or deploying, scaling, and deleting project model deployments | `foundryx model *`, `foundryx operation show` | [Foundry models](#foundry-models) |
+| Manage Foundry models | Listing, viewing, or calling project models, inspecting model catalog/quota, or deploying, scaling, and deleting project model deployments | `foundryx model *` | [Foundry models](#foundry-models) |
 | Build, deploy & operate Agents | Discovering and reusing existing project tools/Toolboxes, scaffolding, locally testing, deploying, invoking, or debugging Prompt and Hosted Agents | `foundryx access project list`, `foundryx connection list\|show`, `foundryx toolbox list\|show`, `foundryx agent *` | [Foundry Agents](#foundry-agents)<br>[Discover and reuse tools](references/tool-discovery.md)<br>[Prompt Agent tools](references/prompt-agent-tools.md)<br>[Hosted Agent Toolbox](references/hosted-agent-toolbox.md) |
 | Administer tool resources | Explicitly requested connection configuration/credential lifecycle or Toolbox version/default/deletion administration; never an automatic builder fallback | `foundryx connection create\|update\|credentials set\|delete`, `foundryx toolbox create\|version create\|publish\|delete\|version delete` | [RemoteTool MCP connections](references/connection-create.md)<br>[Toolboxes & versions](references/toolbox.md) |
 | Prepared trial resources | User explicitly asks for `GitHubToolbox`, `GitHubOAuthToolbox`, `WorkIQToolbox`, or Contoso enterprise documents/policies | `foundryx access project list`, `foundryx agent *` | [Prepared trial resources](references/prepared-resources.md)<br>[Contoso enterprise knowledge](references/contoso-knowledge.md) |
@@ -124,7 +124,7 @@ foundryx access member list --project <project-id>
 
 ## Foundry models
 
-Project `consumer`+ can list, inspect, and call existing model deployments (`model list|show|call`), and project `user`+ can read the live `model catalog`. Checking `model quota` and deploying, scaling, or deleting models (`model deploy|scale|delete`) require a project admin (check `foundryx access project options` or run `foundryx model quota --project <project-id>` directly; if the CLI returns `azure_role_required`, the user is not an admin for this project's subscription). If an admin can manage the project (`foundryx access project list --manageable`) but is not yet a project member (`user|manager|owner`), grant a project role via [Manage Foundry project access](#manage-foundry-project-access) before reading `model catalog` or building Agents.
+Project `consumer`+ can list, inspect, and call existing model deployments (`model list|show|call`), and project `user`+ can read the live `model catalog`. Checking `model quota` requires Subscription Owner, or both Contributor and User Access Administrator at subscription scope. Deploying, scaling, or deleting models (`model deploy|scale|delete`) also requires that authority unless project model management is enabled, in which case project `user`+ can perform those operations. A subscription manager can change the setting with `foundryx access project model-management enable|disable <project-id>`.
 
 ### Step 1: Inspect and call project-owned models (`foundryx model list|show|call`)
 
@@ -145,13 +145,12 @@ foundryx model quota --project <project-id> [--deployable]
 
 ### Step 3: Deploy, scale, or delete a model deployment (`foundryx model deploy|scale|delete`)
 
-FoundryX scales or deletes only deployments recorded as owned by `<project-id>`. Poll the returned operation ID (`operation show`—inspect current state before retrying if it ends in `unknown`), and smoke-test with `model call`:
+FoundryX scales or deletes only deployments recorded as owned by `<project-id>`. Commands return their completed result; inspect the model before retrying an ambiguous upstream failure, then smoke-test with `model call`:
 
 ```text
 foundryx model deploy --name <deployment> --model-name <model> --model-version <version> --model-format <format> --sku <sku> --capacity <capacity> --project <project-id>
 foundryx model scale <deployment> <capacity> --project <project-id>
 foundryx model delete <deployment> --project <project-id>
-foundryx operation show <operation-id>
 ```
 
 Regional capacity can still fail despite fitting quota; report quota or capacity errors directly without switching SKU, region, or capacity.
@@ -161,6 +160,12 @@ Regional capacity can still fail despite fitting quota; report quota or capacity
 ## Foundry Agents
 
 Requires effective project `user`, `manager`, or `owner` (`consumer` may invoke deployed Agents).
+
+Project permissions also restrict allowed models and tools. If discovery, local
+`agent run`, or deployment fails for lack of permission, finish the requested source
+and configuration using the known requirements. Report what is ready, which checks
+are blocked, and the permission error; ask the user to contact their administrator.
+Report deployment and runtime verification only when they succeed.
 
 ### Step 1: Select Foundry project, verify unique Agent name, and pick a ready model
 
@@ -253,7 +258,7 @@ foundryx agent invoke "Hello"
 
 - **Identity delegation & OAuth consent**: Deployed Hosted Agent calls delegate the signed-in user's identity by default (`--delegate-user-identity` explicitly enables; `--no-delegate-user-identity` opts out for app-only calls; Prompt and `--local` calls remain non-delegated). Hosted delegation requires the project's separate impersonation permission—report permission failures instead of retrying with delegation disabled. On `oauth_consent_required`, surface the exact consent URL and follow [Hosted Agent Toolbox](references/hosted-agent-toolbox.md).
 
-After creating or first deploying an Agent, finish with this exact structure using observed values (`Not run` for unperformed verification; omit only inapplicable fields; for a combined build-and-publish request, finish `agent publish` first and report both creation fields and the observed publishing outcome without implying admin approval):
+After successfully creating or first deploying an Agent, finish with this exact structure using observed values (`Not run` for unperformed verification; omit only inapplicable fields; for a combined build-and-publish request, finish `agent publish` first and report both creation fields and the observed publishing outcome without implying admin approval):
 
 **Agent created**
 
@@ -283,7 +288,7 @@ Always include the observed `--project` and `--agent-id` so the CLI command work
 
 ### Step 6: Inspect, diagnose, evaluate, monitor, and publish
 
-- **Runtime inspection, logs, conversations, and lifecycle**: Continue an existing conversation only when the user intends to do so; default `hosted logs` (use `--json` for raw output) selects the signed-in user's latest session for that Agent, including a failed invoke when Foundry returned a session ID. `hosted refresh|enable|disable` returns an operation object—poll with `foundryx operation show <operation-id>` (inspect current state before retrying if `unknown`):
+- **Runtime inspection, logs, conversations, and lifecycle**: `agent list|show` returns the persisted `endpoints` protocol-to-URL mapping. Continue an existing conversation only when the user intends to do so; default `hosted logs` (use `--json` for raw output) selects the signed-in user's latest session for that Agent, including a failed invoke when Foundry returned a session ID. `hosted refresh|enable|disable` returns its completed result; inspect the Agent before retrying an ambiguous upstream failure:
   ```text
   foundryx agent show <agent-id> --project <project-id>
   foundryx agent hosted logs <agent-id> --type console|system [--tail <1-300>] [--conversation-id <id>] --project <project-id>
