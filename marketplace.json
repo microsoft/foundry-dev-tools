@@ -1,0 +1,14 @@
+{
+  "name": "foundry-dev-tools",
+  "owner": {
+    "name": "Microsoft",
+    "url": "https://github.com/microsoft"
+  },
+  "plugins": [
+    {
+      "name": "foundry-agent",
+      "description": "FoundryX skill and Agent canvas for customer-owned Microsoft Foundry projects.",
+      "source": "./foundry-agent"
+    }
+  ]
+}
