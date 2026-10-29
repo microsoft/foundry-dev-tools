@@ -1,5 +1,23 @@
 # What's New in Foundry Toolkit for VS Code
 
+## Version 1.6.18 - 28 October, 2026
+
+This release of Microsoft Foundry Toolkit for VS Code adds a redesigned hosted-agent sample gallery, Microsoft Copilot harness support (preview), and Foundry model filters. It also improves Model Lab runtime labels and dialog appearance.
+
+### Added
+
+- **Hosted-agent samples**: Browse consolidated sample cards, filter by pattern, framework, language, and protocol, and review sample details and source links before choosing an implementation to scaffold.
+- **Microsoft Copilot harness (preview)**: Manage Foundry prompt agents with built-in tools and skills in Agent Builder. Edit local YAML definitions, deploy changes to Foundry, and run deployed agent versions.
+- **Foundry model filters**: Filter Model Catalog by inference task, capability, region, deployment option, deployment SKU, and lifecycle. Model availability and SKU choices update when you switch Foundry projects.
+
+### Changed
+
+- **Model Lab**: Runtime names in model filters, workflow messages, and evaluation history now match the model catalog.
+
+### Fixed
+
+- **Dialog appearance**: Dialogs use consistent backdrops in light and dark themes, with no background dimming in high-contrast and forced-colors modes.
+
 ## Version 1.6.17 - 21 October, 2026
 
 This release of Microsoft Foundry Toolkit for VS Code adds fine-tuning analysis links for Copilot Chat and restores tool icons in the catalog and in prompt agents. It also improves model deployment and response details.
