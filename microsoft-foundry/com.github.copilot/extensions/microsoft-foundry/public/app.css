@@ -513,16 +513,17 @@ body {
     border-bottom: 1px solid var(--border);
 }
 .inspector-status[hidden] { display: none; }
-.inspector-startup { flex: 1; min-height: 0; overflow: auto; padding: 48px 24px; display: flex; color: var(--text); }
-.inspector-startup-content { width: 100%; max-width: 480px; margin: auto; text-align: center; }
-.inspector-startup h2 { margin: 0 0 12px; font-size: 20px; font-weight: 600; }
-.inspector-startup p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
-.inspector-startup .inspector-copy { display: inline-flex; align-items: center; gap: 8px; margin: 24px 0 16px; background: var(--fluent-brand, var(--accent)); border-color: transparent; color: var(--colorNeutralForegroundOnBrand, #fff); font-weight: 600; }
-.inspector-startup .inspector-copy:hover { filter: brightness(.95); }
-.inspector-command summary { width: fit-content; margin: 0 auto; color: var(--muted); font-size: 12px; cursor: pointer; }
-.inspector-command pre { margin: 12px 0 0; padding: 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-subtle); text-align: left; font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
-.inspector-startup-status { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 32px 0 4px; color: var(--muted); font-size: 12px; }
-.inspector-startup .inspector-startup-hint { font-size: 12px; }
+.inspector-startup { flex: 1; min-height: 0; overflow: auto; padding: clamp(32px, 8vh, 64px) 24px; color: var(--text); }
+.inspector-startup-content { width: 100%; max-width: 600px; margin: 0 auto; }
+.inspector-startup h2 { margin: 0 0 10px; font-size: 22px; line-height: 1.35; font-weight: 600; }
+.inspector-startup p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.inspector-command { display: flex; align-items: flex-start; gap: 16px; margin-top: 24px; padding: 16px; border-radius: 8px; background: var(--bg-subtle); }
+.inspector-command pre { flex: 1; min-width: 0; margin: 0; padding: 4px 0; font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; line-height: 24px; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+.inspector-startup .inspector-copy { flex: 0 0 auto; display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--text); cursor: pointer; }
+.inspector-startup .inspector-copy:hover { background: var(--colorNeutralBackground1Hover, var(--border)); }
+.inspector-startup-status { display: flex; align-items: flex-start; gap: 10px; margin-top: 28px; color: var(--muted); font-size: 14px; line-height: 22px; }
+.inspector-startup-status > :first-child { flex-shrink: 0; margin-top: 2px; }
+.inspector-startup-message { display: block; margin-bottom: 4px; color: var(--text); font-weight: 600; }
 .inspector-waiting {
     position: absolute; inset: 0; top: 33px; /* below .inspector-bar */
     display: flex; flex-direction: column; align-items: center; justify-content: center;
