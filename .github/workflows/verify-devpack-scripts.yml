@@ -146,16 +146,20 @@ jobs:
           winget install --silent --disable-interactivity `
             --accept-package-agreements --accept-source-agreements `
             --id Microsoft.VisualStudioCode
+          if ($LASTEXITCODE -ne 0) { throw "VS Code install exited $LASTEXITCODE" }
           winget install --silent --disable-interactivity `
             --accept-package-agreements --accept-source-agreements `
             --id GitHub.Copilot
+          if ($LASTEXITCODE -ne 0) { throw "Copilot CLI install exited $LASTEXITCODE" }
 
           $vscodeBin = Join-Path $env:LOCALAPPDATA 'Programs\Microsoft VS Code\bin'
           Add-Content -Path $env:GITHUB_PATH -Value $vscodeBin
-          $copilotPackage = Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" `
-            -Directory -Filter 'GitHub.Copilot_*' -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $copilotPackage) { throw 'GitHub Copilot CLI package directory not found' }
-          Add-Content -Path $env:GITHUB_PATH -Value $copilotPackage.FullName
+          # MSI and portable installs publish different locations through PATH.
+          $machine = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+          $user = [Environment]::GetEnvironmentVariable('Path', 'User')
+          $env:Path = "$machine;$user;$env:Path"
+          $copilot = Get-Command copilot -CommandType Application -ErrorAction Stop
+          Add-Content -Path $env:GITHUB_PATH -Value (Split-Path -Parent $copilot.Source)
 
           $claudeBin = Join-Path $env:RUNNER_TEMP 'claude-bin'
           New-Item -ItemType Directory -Force -Path $claudeBin | Out-Null
@@ -390,7 +394,9 @@ jobs:
               $store.Dispose()
             }
           }
-          Remove-Item $env:DEVPACK_SCRIPT -Force -ErrorAction SilentlyContinue
+          if ($env:DEVPACK_SCRIPT -and (Test-Path -LiteralPath $env:DEVPACK_SCRIPT)) {
+            Remove-Item -LiteralPath $env:DEVPACK_SCRIPT -Force
+          }
 
       - name: Upload smoke diagnostics
         if: always()

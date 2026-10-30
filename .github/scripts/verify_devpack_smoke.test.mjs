@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -18,6 +18,96 @@ const extensions = () => [
   { id: "azure.ai.agents", installedVersion: "1.0.0-beta.15", version: "1.0.0-beta.15", updateAvailable: false },
   { id: "azure.ai.projects", installedVersion: "1.0.0-beta.10", version: "1.0.0-beta.10", updateAvailable: false },
 ];
+
+async function windowsWorkflowScript(name) {
+  const workflow = (await readFile(
+    new URL("../workflows/verify-devpack-scripts.yml", import.meta.url), "utf8",
+  )).replace(/\r\n/g, "\n");
+  const windows = workflow.slice(workflow.indexOf("\n  windows:"), workflow.indexOf("\n  linux:"));
+  const start = windows.indexOf(`      - name: ${name}\n`);
+  assert.ok(start >= 0, `Windows workflow step not found: ${name}`);
+  const step = windows.slice(start);
+  const block = step.match(/        run: \|\n([\s\S]*?)(?=\n      - name:)/);
+  assert.ok(block, `Windows workflow step not found: ${name}`);
+  return block[1].replace(/^          /gm, "");
+}
+
+test("Windows with-code setup resolves MSI and portable Copilot installs and surfaces failures",
+  { skip: process.platform !== "win32" }, async t => {
+    const root = await mkdtemp(join(tmpdir(), "devpack-windows-setup-"));
+    t.after(() => rm(root, { recursive: true, force: true }));
+    const script = await windowsWorkflowScript("Install VS Code, Copilot CLI, and Claude shim");
+    const githubPath = join(root, "github-path.txt");
+    const shim = `
+      function winget {
+        $global:LASTEXITCODE = if ($args -contains $env:TEST_FAILED_PACKAGE) { 23 } else { 0 }
+      }
+      function Get-Command {
+        param($Name, $CommandType, $ErrorAction)
+        if ($Name -ne 'copilot' -or $CommandType -ne 'Application' -or $ErrorAction -ne 'Stop') {
+          throw 'Copilot must be resolved as an application'
+        }
+        $persistedPath = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' +
+          [Environment]::GetEnvironmentVariable('Path', 'User') + ';'
+        if (-not $env:Path.StartsWith($persistedPath)) { throw 'PATH was not refreshed' }
+        if ($env:TEST_MISSING_COPILOT -eq '1') { throw 'Copilot application not found' }
+        [pscustomobject]@{ Source = Join-Path $env:TEST_COPILOT_BIN 'copilot.exe' }
+      }
+    `;
+    const run = options => spawnSync("pwsh", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", shim + script], {
+      env: {
+        ...process.env, RUNNER_TEMP: root, LOCALAPPDATA: root, GITHUB_PATH: githubPath,
+        TEST_FAILED_PACKAGE: "", TEST_MISSING_COPILOT: "0", ...options,
+      },
+      encoding: "utf8",
+      timeout: 10_000,
+    });
+    for (const location of ["Program Files\\GitHub Copilot", "Microsoft\\WinGet\\Packages\\GitHub.Copilot_test"]) {
+      const bin = join(root, location);
+      const result = run({ TEST_COPILOT_BIN: bin });
+      assert.equal(result.status, 0, result.stderr);
+      const paths = (await readFile(githubPath, "utf8")).trim().split(/\r?\n/);
+      assert.deepEqual(paths, [
+        join(root, "Programs", "Microsoft VS Code", "bin"), bin, join(root, "claude-bin"),
+      ]);
+      assert.equal(await readFile(join(root, "claude-bin", "claude.cmd"), "utf8"), "@echo off\r\nexit /b 0\r\n");
+      await rm(githubPath);
+    }
+    for (const [options, message] of [
+      [{ TEST_FAILED_PACKAGE: "Microsoft.VisualStudioCode" }, /VS Code install exited 23/],
+      [{ TEST_FAILED_PACKAGE: "GitHub.Copilot" }, /Copilot CLI install exited 23/],
+      [{ TEST_MISSING_COPILOT: "1" }, /Copilot application not found/],
+    ]) {
+      const result = run(options);
+      assert.notEqual(result.status, 0, result.stdout);
+      assert.match(result.stderr, message);
+    }
+  });
+
+test("Windows bootstrap cleanup handles skipped setup, missing files, and repeated cleanup",
+  { skip: process.platform !== "win32" }, async t => {
+    const root = await mkdtemp(join(tmpdir(), "devpack-windows-cleanup-"));
+    t.after(() => rm(root, { recursive: true, force: true }));
+    const script = await windowsWorkflowScript("Remove trusted publisher and bootstrap");
+    const bootstrap = join(root, "bootstrap [signed].ps1");
+    const run = path => spawnSync("pwsh", [
+      "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", "$ErrorActionPreference = 'Stop'\n" + script,
+    ], {
+      env: { ...process.env, DEVPACK_SCRIPT: path, SIGNER_THUMBPRINT: "", SIGNER_WAS_TRUSTED: "" },
+      encoding: "utf8",
+      timeout: 10_000,
+    });
+    for (const path of ["", bootstrap]) {
+      const result = run(path);
+      assert.equal(result.status, 0, result.stderr);
+    }
+    await writeFile(bootstrap, "test bootstrap");
+    const result = run(bootstrap);
+    assert.equal(result.status, 0, result.stderr);
+    await assert.rejects(readFile(bootstrap), { code: "ENOENT" });
+    const repeated = run(bootstrap);
+    assert.equal(repeated.status, 0, repeated.stderr);
+  });
 
 test("release gates compare versions numerically and include the new release's prereleases", () => {
   for (const version of ["0.0.9", "0.1.3", "0.1.4"]) {
