@@ -1,4 +1,4 @@
-# Code owners for template/stable.
+# Code owners for template branches.
 #
 # GitHub uses this file (combined with the branch's
 # `require_code_owner_reviews` protection rule) to enforce that every PR
