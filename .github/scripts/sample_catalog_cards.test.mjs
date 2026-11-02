@@ -472,7 +472,7 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                 }
                 aiRequests.push({
                     stage, budget: request.max_completion_tokens, reasoningEffort: request.reasoning_effort,
-                    evidenceSources: evidenceInput?.evidenceSources, evidenceCorrection: evidenceInput?.evidenceCorrection,
+                    evidenceSources: evidenceInput?.evidenceSources, reviewCorrection: evidenceInput?.reviewCorrection,
                 });
                 if (evidenceInput && scenario.evidenceApiStatus) return new Response('Authentication failed', { status: scenario.evidenceApiStatus });
                 if (scenario.aiFailure) return new Response('AI unavailable', { status: 400 });
@@ -542,6 +542,25 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                         review.evidence[0].excerptId = 'p999';
                     } else {
                         review.evidence[0].path = scenario.badEvidence.path;
+                    }
+                }
+                const detailsAttempt = aiRequests.filter(item => item.stage === 'details').length;
+                if (stage === 'details' && scenario.badDetails
+                    && detailsAttempt >= (scenario.badDetails.startAttempt ?? 1)
+                    && detailsAttempt <= (scenario.badDetails.failures ?? 1)) {
+                    if (scenario.badDetails.kind === 'missing-field') {
+                        delete content.fieldReviews.bestFit;
+                    } else if (scenario.badDetails.kind === 'long-requirements') {
+                        content.detailsPatch.requirements = ['one two three four five six'];
+                        content.fieldReviews.requirements.action = 'change';
+                    } else if (scenario.badDetails.kind === 'html') {
+                        content.detailsPatch.bestFit = '<b>Unsupported HTML</b>';
+                        content.fieldReviews.bestFit.action = 'change';
+                    } else if (scenario.badDetails.kind === 'unreviewed-patch') {
+                        content.detailsPatch.bestFit = 'A changed audience without a matching review.';
+                    } else {
+                        content.fieldReviews.bestFit.action = 'change';
+                        if (scenario.badDetails.kind === 'no-op-change') content.detailsPatch.bestFit = evidenceInput.card.details.bestFit;
                     }
                 }
                 return Response.json({ choices: [{ message: { content: JSON.stringify(content) } }] });
@@ -821,9 +840,9 @@ for (const stage of ['details', 'reuse']) {
             const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length))
                 .filter(request => request.stage === stage);
             assert.equal(requests.length, 2);
-            assert.equal(requests[0].evidenceCorrection, undefined);
-            assert.ok(requests[1].evidenceCorrection.error.includes('README'));
-            const previousReviews = requests[1].evidenceCorrection.previousResponse[stage === 'details' ? 'fieldReviews' : 'candidateReviews'];
+            assert.equal(requests[0].reviewCorrection, undefined);
+            assert.ok(requests[1].reviewCorrection.error.includes('README'));
+            const previousReviews = requests[1].reviewCorrection.previousResponse[stage === 'details' ? 'fieldReviews' : 'candidateReviews'];
             if (stage === 'details' || failure.kind !== 'missing-array') {
                 assert.equal(Object.values(previousReviews)[0].evidence[0].quote,
                     stage === 'reuse' && failure.kind === 'extra-quote' ? 'An invented quote.' : undefined,
@@ -836,7 +855,7 @@ for (const stage of ['details', 'reuse']) {
                 assert.equal(Object.values(previousReviews).at(-1).evidence[0].path, failure.path);
                 assert.ok(!requests[1].evidenceSources.some(item => item.path === failure.path));
             }
-            assert.match(result.stderr, /retrying with README evidence feedback/);
+            assert.match(result.stderr, /retrying with review validation feedback/);
             assertSnapshot(JSON.parse(readFileSync(outputPath, 'utf8')));
         });
     }
@@ -850,7 +869,7 @@ for (const stage of ['details', 'reuse']) {
         };
         const result = runIncremental(root, source, [...source.templates.map(template => template.path), 'samples/python/hosted-agents/langgraph/workflow'], scenario);
         assert.equal(result.status, 1, result.stderr);
-        assert.match(result.stderr, /Unverified README excerpt.*failed after 3 evidence attempts/);
+        assert.match(result.stderr, /Unverified README excerpt.*failed after 3 review attempts/);
         const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
         assert.equal(requests.filter(request => request.stage === stage).length, 3);
         assert.deepEqual(readFileSync(outputPath), before);
@@ -858,13 +877,67 @@ for (const stage of ['details', 'reuse']) {
     });
 }
 
-test('incremental CLI does not retry authentication failures as evidence errors', context => {
+for (const kind of ['unpatched-change', 'no-op-change', 'unreviewed-patch', 'missing-field', 'long-requirements', 'html']) {
+    test(`incremental CLI corrects invalid Details contract ${kind}`, context => {
+        const { root, source, outputPath } = temporaryFixture(context);
+        const result = runIncremental(root, source, [source.templates[0].path], { badDetails: { kind } });
+        assert.equal(result.status, 0, result.stderr);
+        const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+        assert.equal(requests.length, 2);
+        assert.ok(requests[1].reviewCorrection.error.length > 0);
+        assert.match(result.stderr, /retrying with review validation feedback/);
+        assertSnapshot(JSON.parse(readFileSync(outputPath, 'utf8')));
+    });
+}
+
+test('incremental CLI bounds Details contract retries without changing the catalog', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
+    const result = runIncremental(root, source, [source.templates[0].path], {
+        badDetails: { kind: 'no-op-change', failures: 3 },
+    });
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, /review and patch disagree/);
+    assert.match(result.stderr, /failed after 3 review attempts/);
+    const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+    assert.equal(requests.length, 3);
+    assert.deepEqual(readFileSync(outputPath), before);
+});
+
+test('incremental CLI shares one retry budget across evidence and Details contract errors', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const result = runIncremental(root, source, [source.templates[0].path], {
+        badEvidence: { stage: 'details', path: 'card.details.summary' },
+        badDetails: { kind: 'unpatched-change', startAttempt: 2, failures: 2 },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+    assert.equal(requests.length, 3);
+    assert.match(requests[1].reviewCorrection.error, /Unverified README excerpt/);
+    assert.match(requests[2].reviewCorrection.error, /review and patch disagree/);
+    assertSnapshot(JSON.parse(readFileSync(outputPath, 'utf8')));
+});
+
+test('incremental CLI does not retry incompatible-card decisions', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
+    const result = runIncremental(root, source, [source.templates[0].path], {
+        detailsDecision: { incompatible: true, reason: 'Different task' },
+    });
+    assert.equal(result.status, 1, result.stderr);
+    assert.doesNotMatch(result.stderr, /retrying with review validation feedback/);
+    const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+    assert.equal(requests.length, 1);
+    assert.deepEqual(readFileSync(outputPath), before);
+});
+
+test('incremental CLI does not retry authentication failures as review errors', context => {
     const { root, source, outputPath } = temporaryFixture(context);
     const before = readFileSync(outputPath);
     const result = runIncremental(root, source, [source.templates[0].path], { evidenceApiStatus: 401, maxAttempts: 5 });
     assert.equal(result.status, 1, result.stderr);
     assert.match(result.stderr, /LLM API returned 401/);
-    assert.doesNotMatch(result.stderr, /retrying with README evidence feedback/);
+    assert.doesNotMatch(result.stderr, /retrying with review validation feedback/);
     const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
     assert.equal(requests.filter(request => request.stage === 'details').length, 1);
     assert.deepEqual(readFileSync(outputPath), before);

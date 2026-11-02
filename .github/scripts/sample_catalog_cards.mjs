@@ -222,11 +222,49 @@ export async function reconcileCardDefinitions(previous, source, definitions, ch
     return result;
 }
 
+export function validateDetailsReview(card, decision) {
+    const fields = new Set([...DETAIL_TEXT_FIELDS, ...DETAIL_LIST_FIELDS]);
+    assert.ok(decision && typeof decision === 'object' && !Array.isArray(decision), `Missing Details review for ${card.id}`);
+    assert.ok(Object.keys(decision).every(key => ['detailsPatch', 'fieldReviews', 'reason'].includes(key)), `Unexpected Details review property for ${card.id}`);
+    requireText(decision.reason, `${card.id} Details review reason`);
+    const patch = decision.detailsPatch;
+    assert.ok(patch && typeof patch === 'object' && !Array.isArray(patch), `Details patch must be an object for ${card.id}`);
+    const reviews = decision.fieldReviews;
+    assert.ok(reviews && typeof reviews === 'object' && !Array.isArray(reviews), `fieldReviews required for ${card.id}`);
+    assert.deepEqual(Object.keys(reviews).sort(), [...fields].sort(), `fieldReviews must cover every Details field for ${card.id}`);
+    for (const field of fields) {
+        const review = reviews[field];
+        const changed = Object.hasOwn(patch, field) && !isDeepStrictEqual(card.details[field], patch[field]);
+        assert.equal(review?.action, changed ? 'change' : 'keep', `${card.id}.${field} review and patch disagree`);
+        requireText(review.reason, `${card.id}.${field} review reason`);
+        assert.ok(Array.isArray(review.evidence) && review.evidence.length > 0, `${card.id}.${field} requires README evidence`);
+        for (const evidence of review.evidence) {
+            assert.ok(card.templatePaths.includes(evidence?.path), `${card.id}.${field} evidence must reference a final member`);
+            assert.ok(typeof evidence.quote === 'string' && evidence.quote.trim(), `${card.id}.${field} evidence quote required`);
+        }
+    }
+    const changedFields = [];
+    for (const [field, value] of Object.entries(patch)) {
+        assert.ok(fields.has(field), `Unknown Details field: ${field}`);
+        if (DETAIL_LIST_FIELDS.includes(field)) {
+            assert.ok(Array.isArray(value) && value.length > 0, `${card.id}.${field} must be a non-empty array`);
+            value.forEach(text => requireText(text, `${card.id}.${field}`));
+        } else {
+            requireText(value, `${card.id}.${field}`);
+        }
+        if (field === 'requirements') {
+            assert.equal(value.length, 1, 'Requirements must be one value');
+            assert.ok(value[0].trim().split(/\s+/).length <= 5, 'Requirements must total at most five words');
+        }
+        if (!isDeepStrictEqual(card.details[field], value)) changedFields.push(field);
+    }
+    return changedFields;
+}
+
 export async function reviewChangedCardDetails(previous, source, definitions, reviewDetails) {
     buildCatalogWithCards(source, definitions);
     const result = structuredClone(definitions);
     const previousCards = new Map(previous.cards.map(card => [card.id, card]));
-    const fields = new Set([...DETAIL_TEXT_FIELDS, ...DETAIL_LIST_FIELDS]);
     for (const card of result.cards) {
         const previousCard = previousCards.get(card.id);
         const addedPaths = card.templatePaths.filter(templatePath => !previousCard?.templatePaths.includes(templatePath));
@@ -235,44 +273,9 @@ export async function reviewChangedCardDetails(previous, source, definitions, re
         const decision = await reviewDetails({
             card: structuredClone(card), previousCard: structuredClone(previousCard), addedPaths, removedPaths,
         });
-        assert.ok(decision && typeof decision === 'object' && !Array.isArray(decision), `Missing Details review for ${card.id}`);
-        assert.ok(Object.keys(decision).every(key => ['detailsPatch', 'fieldReviews', 'reason'].includes(key)), `Unexpected Details review property for ${card.id}`);
-        requireText(decision.reason, `${card.id} Details review reason`);
-        const patch = decision.detailsPatch;
-        assert.ok(patch && typeof patch === 'object' && !Array.isArray(patch), `Details patch must be an object for ${card.id}`);
-        const reviews = decision.fieldReviews;
-        assert.ok(reviews && typeof reviews === 'object' && !Array.isArray(reviews), `fieldReviews required for ${card.id}`);
-        assert.deepEqual(Object.keys(reviews).sort(), [...fields].sort(), `fieldReviews must cover every Details field for ${card.id}`);
-        for (const field of fields) {
-            const review = reviews[field];
-            const changed = Object.hasOwn(patch, field) && !isDeepStrictEqual(card.details[field], patch[field]);
-            assert.equal(review?.action, changed ? 'change' : 'keep', `${card.id}.${field} review and patch disagree`);
-            requireText(review.reason, `${card.id}.${field} review reason`);
-            assert.ok(Array.isArray(review.evidence) && review.evidence.length > 0, `${card.id}.${field} requires README evidence`);
-            for (const evidence of review.evidence) {
-                assert.ok(card.templatePaths.includes(evidence?.path), `${card.id}.${field} evidence must reference a final member`);
-                assert.ok(typeof evidence.quote === 'string' && evidence.quote.trim(), `${card.id}.${field} evidence quote required`);
-            }
-        }
-        const changedFields = [];
-        for (const [field, value] of Object.entries(patch)) {
-            assert.ok(fields.has(field), `Unknown Details field: ${field}`);
-            if (DETAIL_LIST_FIELDS.includes(field)) {
-                assert.ok(Array.isArray(value) && value.length > 0, `${card.id}.${field} must be a non-empty array`);
-                value.forEach(text => requireText(text, `${card.id}.${field}`));
-            } else {
-                requireText(value, `${card.id}.${field}`);
-            }
-            if (field === 'requirements') {
-                assert.equal(value.length, 1, 'Requirements must be one value');
-                assert.ok(value[0].trim().split(/\s+/).length <= 5, 'Requirements must total at most five words');
-            }
-            if (!isDeepStrictEqual(card.details[field], value)) {
-                card.details[field] = structuredClone(value);
-                changedFields.push(field);
-            }
-        }
-        console.log(`Card Details review: ${JSON.stringify({ cardId: card.id, addedPaths, removedPaths, changedFields, reason: decision.reason, fieldReviews: reviews })}`);
+        const changedFields = validateDetailsReview(card, decision);
+        for (const field of changedFields) card.details[field] = structuredClone(decision.detailsPatch[field]);
+        console.log(`Card Details review: ${JSON.stringify({ cardId: card.id, addedPaths, removedPaths, changedFields, reason: decision.reason, fieldReviews: decision.fieldReviews })}`);
     }
     buildCatalogWithCards(source, result);
     return result;
