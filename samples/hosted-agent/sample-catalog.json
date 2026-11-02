@@ -1,7 +1,7 @@
 {
-    "commitSha": "be4706c76acfe44e2ae99c2818efdc4c5ab25bd9",
+    "commitSha": "9944503783b2c1041ac8cb2293bbb8e59e5eef15",
     "repo": "https://github.com/microsoft-foundry/foundry-samples/",
-    "generatedAt": "2026-09-23T05:22:25Z",
+    "generatedAt": "2026-11-02T09:05:10Z",
     "dimensions": {
         "language": {
             "title": "Select a Language",
@@ -1155,6 +1155,69 @@
             "description": "Agent that uses custom persistence stores for conversation chains and response records.",
             "path": "samples/python/hosted-agents/langgraph/responses/13-custom-store",
             "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "OpenAI Computer Tool",
+            "description": "Hosted agent that uses the computer tool to control a virtual desktop inside the container.",
+            "path": "samples/csharp/hosted-agents/bring-your-own/responses/openai-computer-tool",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "invocations",
+            "displayName": "Content Safety Guardrail",
+            "description": "Agent with a Responsible AI content safety guardrail that screens both incoming prompts and outgoing responses.",
+            "path": "samples/python/hosted-agents/agent-framework/invocations/02-content-safety-guardrail",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Resilient Workflow",
+            "description": "Workflow that recovers a stored background response after a crash and continues it from durable checkpoint state.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/23-resilient-workflow",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Conversation Steering",
+            "description": "Agent that accepts a second stored background request on an active conversation instead of rejecting it.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/24-steering",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Claude Toolbox",
+            "description": "Agent that runs Claude through Foundry and discovers tools from an existing toolbox.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/25-claude-foundry-toolbox",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "responses",
+            "displayName": "OpenAI Computer Tool",
+            "description": "Hosted agent that uses the computer tool to drive a virtual desktop and paint a colored smiley.",
+            "path": "samples/python/hosted-agents/bring-your-own/responses/openai-computer-tool",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Human-in-the-Loop",
+            "description": "Agent with built-in tool approval and a custom pre-model check, hosted on Microsoft Foundry. The email tool is simulated, so no real email is sent.",
+            "path": "samples/python/hosted-agents/langgraph/responses/14-middleware",
+            "requiresModel": true
         }
     ],
     "patterns": [
@@ -1689,7 +1752,7 @@
             "details": {
                 "summary": "Retrieve documentation through MCP tools and use the results to answer questions.",
                 "whatItDoes": "Lets the model request documentation through configured remote tools and use the returned material in an answer.",
-                "whyUseIt": "Explore documentation retrieval through MCP with either Agent Framework integration or a BYO LangGraph host.",
+                "whyUseIt": "Explore documentation retrieval through MCP with Agent Framework integration, a BYO LangGraph host, or a Claude-backed Agent Framework host.",
                 "exampleScenario": "Ask for Microsoft service guidance and summarize the relevant documentation returned by the tools.",
                 "bestFit": "Developers prototyping tool-backed documentation assistants.",
                 "capabilities": [
@@ -1697,14 +1760,15 @@
                     "Selects tool calls in response to user questions",
                     "Uses retrieved tool output in answers"
                 ],
-                "whatItGenerates": "A C# Agent Framework documentation agent or a Python LangGraph agent wrapped by a BYO Responses host, with MCP integration and hosting artifacts.",
+                "whatItGenerates": "A hosted documentation agent with MCP integration and hosting artifacts.",
                 "requirements": [
                     "Model deployment, MCP tools"
                 ]
             },
             "templatePaths": [
                 "samples/csharp/hosted-agents/agent-framework/mcp-tools",
-                "samples/python/hosted-agents/bring-your-own/responses/langgraph-toolbox"
+                "samples/python/hosted-agents/bring-your-own/responses/langgraph-toolbox",
+                "samples/python/hosted-agents/agent-framework/responses/25-claude-foundry-toolbox"
             ]
         },
         {
@@ -2097,7 +2161,7 @@
                 "bestFit": "Teams evaluating platform safety configuration for hosted agents.",
                 "capabilities": [
                     "References an RAI policy",
-                    "Applies configured platform checks",
+                    "Applies configured platform checks; invocations also needs invocationsModeration",
                     "Separates policy setup from basic chat code"
                 ],
                 "whatItGenerates": "A Python chat agent with policy-aware hosting configuration. Merely copying the code does not activate a cloud policy.",
@@ -2106,7 +2170,8 @@
                 ]
             },
             "templatePaths": [
-                "samples/python/hosted-agents/agent-framework/responses/16-content-safety-guardrail"
+                "samples/python/hosted-agents/agent-framework/responses/16-content-safety-guardrail",
+                "samples/python/hosted-agents/agent-framework/invocations/02-content-safety-guardrail"
             ]
         },
         {
@@ -2163,24 +2228,25 @@
             "categoryId": "human-in-the-loop-async-events",
             "details": {
                 "summary": "Checkpoint long-running work and pause for approval of a plan or sensitive tool call, depending on the implementation.",
-                "whatItDoes": "The BYO Invocations sample creates a plan, waits for approval or edits, and requires a second confirmation for irreversible steps. A resilient task store and per-step watermarks support recovery; its offline demo mode uses deterministic stand-ins. The LangGraph sample runs flight and hotel searches automatically and pauses book_trip for approval or denial. It uses durable LangGraph checkpoints and Agent Server durable invocation state for recovery.",
+                "whatItDoes": "The BYO Invocations sample creates a plan, waits for approval or edits, and requires a second confirmation for irreversible steps. A resilient task store and per-step watermarks support recovery; its offline demo mode uses deterministic stand-ins. The LangGraph sample runs flight and hotel searches automatically and pauses book_trip for approval or denial. It uses durable LangGraph checkpoints and Agent Server durable invocation state for recovery. The Responses sample uses built-in HumanInTheLoopMiddleware on a simulated email tool, pauses for approve/edit/reject, and resumes through Responses checkpoint state.",
                 "whyUseIt": "Explore durable human decisions during longer-running agent work.",
-                "exampleScenario": "With the BYO sample, approve a release-preparation plan and confirm a publishing step. With LangGraph, approve or deny a proposed trip booking.",
-                "bestFit": "Developers evaluating resumable approval workflows and side-effect handling.",
+                "exampleScenario": "With the BYO sample, approve a release-preparation plan and confirm a publishing step. With LangGraph, approve or deny a proposed trip booking. With Responses, review a simulated email, then approve, edit, or reject it.",
+                "bestFit": "Developers evaluating resumable approval workflows, side-effect handling, and email review gates.",
                 "capabilities": [
-                    "Requests plan and action approvals (bring-your-own); requests approval for sensitive tool calls (LangGraph)",
+                    "Requests plan and action approvals (bring-your-own); requests approval for sensitive tool calls (LangGraph); supports approve/edit/reject on the simulated email review (Responses)",
                     "Persists task progress between turns",
                     "Resumes interrupted execution from checkpoints",
                     "Exposes task status and cancellation"
                 ],
-                "whatItGenerates": "One Python Invocations project for the selected implementation: a BYO resilient approval-gate agent or a LangGraph trip-planning agent with durable checkpoints. Use the selected sample's client approval and recovery contract. Review storage durability, authorization, and idempotency before replacing demonstration steps with real external actions.",
+                "whatItGenerates": "One Python hosted-agent project for the selected implementation: a BYO resilient approval-gate agent, a LangGraph trip-planning agent with durable checkpoints, or a LangGraph middleware email review agent on the Responses protocol. Use the selected sample's client approval and recovery contract. Review storage durability, authorization, and idempotency before replacing demonstration steps with real external actions.",
                 "requirements": [
                     "Model access, approval client"
                 ]
             },
             "templatePaths": [
                 "samples/python/hosted-agents/bring-your-own/invocations/resilient-approval-gate",
-                "samples/python/hosted-agents/langgraph/invocations/02-resilient"
+                "samples/python/hosted-agents/langgraph/invocations/02-resilient",
+                "samples/python/hosted-agents/langgraph/responses/14-middleware"
             ]
         },
         {
@@ -2484,21 +2550,22 @@
                 "whatItDoes": "Runs a model-backed workflow with resilient background Responses enabled. The samples register executors/tools that intentionally terminate the host (for example, a simulate_crash tool); the hosting layer persists a durable checkpoint so a replacement process can restore workflow state and deliver pending tool results to resume the interrupted turn.",
                 "whyUseIt": "Validate durable workflow checkpoints, recovery semantics, and how stored background Responses continue after an agent host crashes and is restarted. It demonstrates configuration and runtime considerations needed to build crash-resilient hosted agents.",
                 "exampleScenario": "Invoke a stored background response that instructs the model to call simulate_crash. Observe the agent process exit, let the platform start a replacement, follow the same response ID, and confirm the resumed response completes with the original function call's result.",
-                "bestFit": "Developers building hosted agents with Responses (Agent Framework or LangGraph) who need explicit demonstrations of durable checkpoints, background response recovery, and executor identity or checkpoint compatibility across restarts.",
+                "bestFit": "Developers building hosted agents with Responses (Agent Framework or LangGraph) who need explicit demonstrations of durable checkpoints, background response recovery, and executor or workflow identity compatibility across restarts.",
                 "capabilities": [
                     "Persists durable workflow checkpoints",
                     "Resumes pending function/tool calls after restart",
                     "Demonstrates ResilientBackground option for Responses",
-                    "Shows requirement for stable executor identity (Agent Framework sample only)"
+                    "Shows requirement for stable workflow or executor identity (Agent Framework samples only)"
                 ],
-                "whatItGenerates": "One Responses project for the selected implementation: a C# Agent Framework workflow with a crash-simulating tool executor and durable workflow checkpoints, or a Python LangGraph trip-planning agent with durable graph checkpoints and background response recovery. Both include hosting configuration and a crash-recovery walkthrough.",
+                "whatItGenerates": "One Responses project for the selected implementation: a C# Agent Framework workflow with a crash-simulating tool executor and durable workflow checkpoints, a Python Agent Framework workflow that restores a stored background response from durable checkpoint state, or a Python LangGraph trip-planning agent with durable graph checkpoints and background response recovery. Each includes hosting configuration and a crash-recovery walkthrough.",
                 "requirements": [
                     "Model deployment"
                 ]
             },
             "templatePaths": [
                 "samples/csharp/hosted-agents/agent-framework/resilient-workflow",
-                "samples/python/hosted-agents/langgraph/responses/09-resilient"
+                "samples/python/hosted-agents/langgraph/responses/09-resilient",
+                "samples/python/hosted-agents/agent-framework/responses/23-resilient-workflow"
             ]
         },
         {
@@ -2506,24 +2573,25 @@
             "title": "Steerable Conversations",
             "categoryId": "human-in-the-loop-async-events",
             "details": {
-                "summary": "Host an Agent Framework Responses agent that queues new inputs to steer an active, persisted conversation instead of rejecting concurrent requests.",
-                "whatItDoes": "Demonstrates a C# Agent Framework Responses host with the SteerableConversations option enabled so a second stored background request submitted to the same conversation is returned as queued and executed after the active turn reaches a safe boundary. This sample shows host configuration, local debugging, azd-based provisioning/deploy, and how to exercise queued background+stored requests; it does not implement crash recovery.",
+                "summary": "Host an Agent Framework Responses agent that steers an active, persisted conversation by accepting a second concurrent request instead of rejecting it.",
+                "whatItDoes": "Demonstrates Agent Framework Responses hosts with steerable conversations enabled so a second stored background request submitted to the same conversation is accepted while the active turn is still running, then continues on the same persisted session. This sample shows host configuration, local debugging, azd-based provisioning/deploy, and how to exercise overlapping stored requests; it does not implement crash recovery.",
                 "whyUseIt": "Validate and experiment with durable in-conversation steering behavior where additional user inputs can be queued to influence an in-progress persisted conversation rather than being rejected, enabling richer background and control flows.",
-                "exampleScenario": "Start a long-running background response with background=true and store=true on conversation X. While it is still running, submit a second request using the same conversation ID and confirm the second response is returned with status=queued and later completes on the same persisted session.",
-                "bestFit": "C# developers hosting Agent Framework Responses who need durable in-conversation queuing (steering) and want to compare steering with separate resilient recovery patterns.",
+                "exampleScenario": "Start a long-running background response with background=true and store=true on conversation X. While it is still running, submit a second request using the same conversation ID and confirm the second response is accepted on the same persisted session.",
+                "bestFit": "Agent Framework developers hosting Responses agents who need durable in-conversation steering and want to compare steering with separate resilient recovery patterns.",
                 "capabilities": [
                     "Enables host-wide steering option",
-                    "Queues second stored background request",
-                    "Runs queued input on same persisted session",
-                    "Includes azd and VS Code run/deploy guidance"
+                    "Accepts second stored background request",
+                    "Continues on same persisted session",
+                    "Includes local run and deployment guidance"
                 ],
-                "whatItGenerates": "A C# Agent Framework Responses sample (Program.cs and host configuration) that registers the agent with AddFoundryResponses configured with SteerableConversations = true, project files for local run and azd-based deployment, and a usage walkthrough showing how to submit stored background requests to observe queued behavior. It demonstrates steering only; crash/restart recovery is not included.",
+                "whatItGenerates": "An Agent Framework Responses sample project that registers steerable conversations in host configuration, includes local run and deployment setup, and shows how to submit stored background requests to observe steering behavior. It demonstrates steering only; crash/restart recovery is not included.",
                 "requirements": [
                     "Model deployment"
                 ]
             },
             "templatePaths": [
-                "samples/csharp/hosted-agents/agent-framework/steering"
+                "samples/csharp/hosted-agents/agent-framework/steering",
+                "samples/python/hosted-agents/agent-framework/responses/24-steering"
             ]
         },
         {
@@ -2657,6 +2725,32 @@
             },
             "templatePaths": [
                 "samples/python/hosted-agents/langgraph/responses/13-custom-store"
+            ]
+        },
+        {
+            "id": "openai-computer-tool-hosted-agent",
+            "title": "Use the OpenAI Computer Tool",
+            "categoryId": "browser-computer-use",
+            "details": {
+                "summary": "Run a hosted agent that uses the OpenAI Computer Tool to automate a virtual desktop inside the container.",
+                "whatItDoes": "Starts a hosted agent that calls the GA OpenAI Computer Tool and drives an in-container virtual desktop with mouse, keyboard, and screenshot actions. The sample is educational and demonstrates a containerized desktop automation loop rather than a production desktop integration.",
+                "whyUseIt": "Learn hosted computer-use automation without adding browser automation libraries or native GUI dependencies.",
+                "exampleScenario": "Send a paint_smiley request to the hosted endpoint and watch the agent draw and save the example image in the virtual desktop.",
+                "bestFit": "Developers exploring computer-tool automation in a hosted Responses agent.",
+                "capabilities": [
+                    "Runs a hosted agent loop inside the container",
+                    "Uses the OpenAI Computer Tool for desktop actions",
+                    "Interacts with a virtual paint desktop",
+                    "Returns screenshot-based results"
+                ],
+                "whatItGenerates": "A hosted-agent sample with Responses hosting, computer-tool integration, and a managed in-container virtual desktop. The desktop and saved image are part of the demonstration environment, not a real user machine.",
+                "requirements": [
+                    "Model access"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/bring-your-own/responses/openai-computer-tool",
+                "samples/python/hosted-agents/bring-your-own/responses/openai-computer-tool"
             ]
         }
     ]
