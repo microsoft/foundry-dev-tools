@@ -2,6 +2,18 @@
 
 Notable changes to the Microsoft Foundry Canvas plugin for GitHub Copilot App.
 
+## Version 1.0.17
+
+This release introduces support for Prompt Agents with harness and improves VS Code local inspection.
+
+### Added
+
+- **Prompt Agents with harness (preview)**: Choose **Prompt agent** during creation, configure instructions, models, tools, toolboxes, skills, and harness tools, then **Save & deploy** and **Test in Foundry Portal**.
+
+### Changed
+
+- **VS Code local inspection**: Show the startup command directly with an inline copy button, clearer waiting and troubleshooting guidance, and better layout in narrow panels. Related: [#861](https://github.com/microsoft/foundry-dev-tools/issues/861).
+
 ## Version 1.0.16
 
 This release improves VS Code sign-in and local inspection, speeds up project lookup, and fixes restored Canvas startup.
