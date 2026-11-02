@@ -1214,7 +1214,7 @@
             "language": "python",
             "framework": "langgraph",
             "protocol": "responses",
-            "displayName": "Human-in-the-Loop",
+            "displayName": "Agent Middleware",
             "description": "Agent with built-in tool approval and a custom pre-model check, hosted on Microsoft Foundry. The email tool is simulated, so no real email is sent.",
             "path": "samples/python/hosted-agents/langgraph/responses/14-middleware",
             "requiresModel": true
@@ -2734,7 +2734,7 @@
             "details": {
                 "summary": "Run a hosted agent that uses the OpenAI Computer Tool to automate a virtual desktop inside the container.",
                 "whatItDoes": "Starts a hosted agent that calls the GA OpenAI Computer Tool and drives an in-container virtual desktop with mouse, keyboard, and screenshot actions. The sample is educational and demonstrates a containerized desktop automation loop rather than a production desktop integration.",
-                "whyUseIt": "Learn hosted computer-use automation without adding browser automation libraries or native GUI dependencies.",
+                "whyUseIt": "Learn hosted computer-use automation without adding browser automation libraries.",
                 "exampleScenario": "Send a paint_smiley request to the hosted endpoint and watch the agent draw and save the example image in the virtual desktop.",
                 "bestFit": "Developers exploring computer-tool automation in a hosted Responses agent.",
                 "capabilities": [
