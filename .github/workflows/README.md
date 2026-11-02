@@ -30,6 +30,14 @@ a post-publication editorial agent or append correction commits.
 Action version tags follow the existing workflow. No source code from the sample
 bundle or data PR is executed. No approval or merge is automated.
 
+Card reuse and Details reviews may cite only the supplied sample paths and
+README excerpt IDs. Invalid evidence is returned to the model with the exact
+validation error, the unmodified response and the allowed references, for at most
+three review attempts. Quotes are resolved from the pinned README, never trusted
+from model output. Exhausted evidence retries still stop publication without
+writing the catalog; authentication errors and incompatible-card decisions are
+not retried as evidence errors.
+
 ## Local acceptance
 
 After Draft creation, use the

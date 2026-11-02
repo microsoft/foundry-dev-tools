@@ -464,7 +464,17 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                 const stage = request.messages[0].content.startsWith('You generate') ? 'metadata'
                     : request.messages[0].content.startsWith('You review Details') ? 'details'
                     : request.messages[0].content.startsWith('You review a proposed') ? 'reuse' : 'placement';
-                aiRequests.push({ stage, budget: request.max_completion_tokens, reasoningEffort: request.reasoning_effort });
+                const evidenceInput = stage === 'details' || stage === 'reuse' ? JSON.parse(request.messages[1].content) : undefined;
+                if (evidenceInput) {
+                    assert.deepEqual(evidenceInput.evidenceSources, evidenceInput.implementations.map(({ template, readmeExcerpts }) => ({
+                        path: template.path, excerptIds: readmeExcerpts.map(excerpt => excerpt.id),
+                    })));
+                }
+                aiRequests.push({
+                    stage, budget: request.max_completion_tokens, reasoningEffort: request.reasoning_effort,
+                    evidenceSources: evidenceInput?.evidenceSources, evidenceCorrection: evidenceInput?.evidenceCorrection,
+                });
+                if (evidenceInput && scenario.evidenceApiStatus) return new Response('Authentication failed', { status: scenario.evidenceApiStatus });
                 if (scenario.aiFailure) return new Response('AI unavailable', { status: 400 });
                 if (scenario.emptyFinish) return Response.json({ choices: [{ finish_reason: scenario.emptyFinish, message: { content: '' } }] });
                 if (scenario.lengthStage === stage && (!scenario.recoverAt || request.max_completion_tokens < scenario.recoverAt)) {
@@ -518,6 +528,20 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                 if (Object.hasOwn(scenario, 'excerptId') && (stage === 'details' || stage === 'reuse')) {
                     for (const review of Object.values(content.fieldReviews ?? content.candidateReviews)) {
                         review.evidence = review.evidence.map(({ path }) => ({ path, excerptId: scenario.excerptId }));
+                    }
+                }
+                if (scenario.badEvidence?.stage === stage
+                    && aiRequests.filter(item => item.stage === stage).length <= (scenario.badEvidence.failures ?? 1)) {
+                    const reviews = Object.values(content.fieldReviews ?? content.candidateReviews);
+                    const review = reviews.at(-1);
+                    if (scenario.badEvidence.kind === 'missing-array') {
+                        delete review.evidence;
+                    } else if (scenario.badEvidence.kind === 'extra-quote') {
+                        review.evidence[0].quote = 'An invented quote.';
+                    } else if (scenario.badEvidence.kind === 'excerpt') {
+                        review.evidence[0].excerptId = 'p999';
+                    } else {
+                        review.evidence[0].path = scenario.badEvidence.path;
                     }
                 }
                 return Response.json({ choices: [{ message: { content: JSON.stringify(content) } }] });
@@ -774,6 +798,76 @@ test('incremental CLI preserves Markdown and line endings in resolved evidence',
     const log = result.stdout.split(/\r?\n/).find(line => line.startsWith('Card Details review: '));
     const review = JSON.parse(log.slice('Card Details review: '.length));
     assert.deepEqual(review.fieldReviews.summary.evidence, [{ path: source.templates[0].path, excerptId: 'p2', quote: paragraph }]);
+});
+
+for (const stage of ['details', 'reuse']) {
+    for (const failure of [
+        { path: 'previousCard.details.summary' },
+        { path: 'card.details.summary' },
+        { path: 'samples/unrelated' },
+        { kind: 'excerpt' },
+        { kind: 'extra-quote' },
+        { kind: 'missing-array' },
+    ]) {
+        test(`incremental CLI corrects invalid ${stage} evidence ${JSON.stringify(failure)}`, context => {
+            const { root, source, definitions, outputPath } = temporaryFixture(context);
+            const newPath = 'samples/python/hosted-agents/langgraph/workflow';
+            const scenario = { badEvidence: { stage, ...failure } };
+            if (stage === 'reuse') scenario.decision = {
+                card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'New SDK.',
+            };
+            const result = runIncremental(root, source, [...source.templates.map(template => template.path), newPath], scenario);
+            assert.equal(result.status, 0, result.stderr);
+            const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length))
+                .filter(request => request.stage === stage);
+            assert.equal(requests.length, 2);
+            assert.equal(requests[0].evidenceCorrection, undefined);
+            assert.ok(requests[1].evidenceCorrection.error.includes('README'));
+            const previousReviews = requests[1].evidenceCorrection.previousResponse[stage === 'details' ? 'fieldReviews' : 'candidateReviews'];
+            if (stage === 'details' || failure.kind !== 'missing-array') {
+                assert.equal(Object.values(previousReviews)[0].evidence[0].quote,
+                    stage === 'reuse' && failure.kind === 'extra-quote' ? 'An invented quote.' : undefined,
+                    'Validation must not mutate the response used for correction');
+            }
+            if (failure.kind === 'missing-array') assert.equal(Object.values(previousReviews).at(-1).evidence, undefined);
+            assert.deepEqual(requests[1].evidenceSources, requests[0].evidenceSources);
+            assert.ok(requests[1].evidenceSources.some(item => item.path === newPath && item.excerptIds.includes('p1')));
+            if (failure.path) {
+                assert.equal(Object.values(previousReviews).at(-1).evidence[0].path, failure.path);
+                assert.ok(!requests[1].evidenceSources.some(item => item.path === failure.path));
+            }
+            assert.match(result.stderr, /retrying with README evidence feedback/);
+            assertSnapshot(JSON.parse(readFileSync(outputPath, 'utf8')));
+        });
+    }
+
+    test(`incremental CLI stops after three invalid ${stage} evidence responses without writing`, context => {
+        const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+        const before = readFileSync(outputPath);
+        const scenario = { badEvidence: { stage, path: 'previousCard.details.summary', failures: 3 } };
+        if (stage === 'reuse') scenario.decision = {
+            card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'New SDK.',
+        };
+        const result = runIncremental(root, source, [...source.templates.map(template => template.path), 'samples/python/hosted-agents/langgraph/workflow'], scenario);
+        assert.equal(result.status, 1, result.stderr);
+        assert.match(result.stderr, /Unverified README excerpt.*failed after 3 evidence attempts/);
+        const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+        assert.equal(requests.filter(request => request.stage === stage).length, 3);
+        assert.deepEqual(readFileSync(outputPath), before);
+        assert.ok(!readdirSync(directory).some(file => file.endsWith('.tmp')));
+    });
+}
+
+test('incremental CLI does not retry authentication failures as evidence errors', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const before = readFileSync(outputPath);
+    const result = runIncremental(root, source, [source.templates[0].path], { evidenceApiStatus: 401, maxAttempts: 5 });
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, /LLM API returned 401/);
+    assert.doesNotMatch(result.stderr, /retrying with README evidence feedback/);
+    const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+    assert.equal(requests.filter(request => request.stage === 'details').length, 1);
+    assert.deepEqual(readFileSync(outputPath), before);
 });
 
 for (const stage of ['reuse', 'details']) {
