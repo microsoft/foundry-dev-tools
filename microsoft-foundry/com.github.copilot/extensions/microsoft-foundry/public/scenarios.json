@@ -1,0 +1,1624 @@
+[
+  {
+    "id": "empower-sales-service-service-support-with-ai",
+    "name": "Empower sales, service, and support teams through knowledge discovery",
+    "category": "Manufacturing",
+    "description": "Discover how AI in manufacturing empowers sales, service, and support teams through real-time knowledge discovery and smarter decision-making.",
+    "tags": [
+      "Knowledge Grounding",
+      "Frontier Models",
+      "Observability"
+    ],
+    "objective": "Answer manufacturing sales, service, and support questions with grounded evidence and recommend next-best actions.",
+    "data": "Product manuals, CRM records, and service logs",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Multi-Agent Orchestration"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/empower-sales-service-service-support-with-ai",
+    "basePrompt": "Build a manufacturing solution powered by a Foundry-hosted agent. Answer manufacturing sales, service, and support questions with grounded evidence and recommend next-best actions. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "provide-personalized-learning-with-ai",
+    "name": "Provide around-the-clock personalized learning",
+    "category": "Education",
+    "description": "Discover how AI in education can enable individualized learning, improve academic performance, and enhance student satisfaction.",
+    "tags": [
+      "Personalization",
+      "Forms Recognition",
+      "Code Generation"
+    ],
+    "objective": "Provide personalized tutoring, adaptive lessons, quizzes, and feedback aligned to the student's curriculum.",
+    "data": "Authorized student records and curriculum",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/provide-personalized-learning-with-ai",
+    "basePrompt": "Build an education solution powered by a Foundry-hosted agent. Provide personalized tutoring, adaptive lessons, quizzes, and feedback aligned to the student's curriculum. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "safeguard-government-systems-and-public-data-with-ai",
+    "name": "Safeguard government systems and public data",
+    "category": "Government",
+    "description": "AI cybersecurity safeguards public sector data. Detect threats quickly and deploy government cybersecurity solutions with AI-driven threat detection.",
+    "tags": [
+      "Governance",
+      "Observability"
+    ],
+    "objective": "Analyze public-sector security signals, triage incidents, and recommend evidence-backed response playbooks.",
+    "data": "Security logs, threat feeds, and asset inventories",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Multi-Agent Orchestration",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/safeguard-government-systems-and-public-data-with-ai",
+    "basePrompt": "Build a government solution powered by a Foundry-hosted agent. Analyze public-sector security signals, triage incidents, and recommend evidence-backed response playbooks. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "ai-helpdesk-agents",
+    "name": "Resolve IT issues with AI helpdesk agents",
+    "category": "IT operations",
+    "description": "Learn how AI helpdesk agents improve ticket management systems, boost IT automation, and enhance user satisfaction through smarter support solutions.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Workflow Automation"
+    ],
+    "objective": "Diagnose IT support requests, propose fixes, and help resolve tickets through authorized tools.",
+    "data": "Ticketing, identity, and device-management systems",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/ai-helpdesk-agents",
+    "basePrompt": "Build a it operations solution powered by a Foundry-hosted agent. Diagnose IT support requests, propose fixes, and help resolve tickets through authorized tools. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "enhance-instruction-for-all-students-with-ai",
+    "name": "Enhance instruction for all students",
+    "category": "Education",
+    "description": "Explore AI in education to help create class materials, support individualized instruction, and improve learning outcomes.",
+    "tags": [
+      "Personalization"
+    ],
+    "objective": "Generate a lesson plan and short quiz from a curriculum excerpt, grade level, and learning goals. Let the teacher review and refine the result.",
+    "data": "A curriculum excerpt, grade level, and learning goals",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Human-in-the-Loop",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/enhance-instruction-for-all-students-with-ai",
+    "basePrompt": "Build an education solution powered by a Foundry-hosted agent. Generate a lesson plan and short quiz from a curriculum excerpt, grade level, and learning goals. Let the teacher review and refine the result. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "boost-student-engagement-with-ai",
+    "name": "Boost student engagement and efficiency",
+    "category": "Education",
+    "description": "Explore AI in education to boost student engagement strategies, enhance campus services, and transform classrooms with innovative technology.",
+    "tags": [
+      "Personalization",
+      "Forms Recognition",
+      "Frontier Models"
+    ],
+    "objective": "Recommend campus activities, answer student questions, and draft personalized outreach.",
+    "data": "Authorized student, course, and campus-services data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/boost-student-engagement-with-ai",
+    "basePrompt": "Build an education solution powered by a Foundry-hosted agent. Recommend campus activities, answer student questions, and draft personalized outreach. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "ai-developer-agent",
+    "name": "Ask a dev agent",
+    "category": "Software development",
+    "description": "Explore how AI agents in software development boost developer workflows by explaining code, improving docs, and guiding troubleshooting with smart automation.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Workflow Automation",
+      "Code Generation"
+    ],
+    "objective": "Explain supplied code, draft documentation, or diagnose a sample error log. Base answers on the supplied files and suggest fixes for the user to review.",
+    "data": "A small set of sample code files, a README, or an error log",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/ai-developer-agent",
+    "basePrompt": "Build a software development solution powered by a Foundry-hosted agent. Explain supplied code, draft documentation, or diagnose a sample error log. Base answers on the supplied files and suggest fixes for the user to review. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "drive-predictive-insights-with-ai",
+    "name": "Improve financial forecasting by analyzing market data with AI",
+    "category": "Financial Services: Capital markets",
+    "description": "Learn how the Microsoft data platform can unify internal and external data and enable AI to deliver predictive insights that drive smarter investment decisions.",
+    "tags": [
+      "Knowledge Grounding",
+      "Predictive Analytics"
+    ],
+    "objective": "Summarize capital-markets research and compare investment scenarios using supplied evidence; distinguish assumptions from verified results.",
+    "data": "Authorized internal and external market data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Multi-Agent Orchestration"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/drive-predictive-insights-with-ai",
+    "basePrompt": "Build a financial services: capital markets solution powered by a Foundry-hosted agent. Summarize capital-markets research and compare investment scenarios using supplied evidence; distinguish assumptions from verified results. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "optimize-pharmaceutical-manufacturing-with-ai",
+    "name": "Optimize pharmaceutical manufacturing with AI for streamlined SOP management and quality control",
+    "category": "Healthcare: Pharma",
+    "description": "Use AI to streamline pharmaceutical manufacturing and quality control. Improve SOPs, decision-making, and operational efficiency across pharma operations.",
+    "tags": [
+      "Workflow Automation"
+    ],
+    "objective": "Find relevant SOPs, flag deviations in batch records, and prepare evidence for human quality-control review.",
+    "data": "SOPs, batch records, and quality data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/optimize-pharmaceutical-manufacturing-with-ai",
+    "basePrompt": "Build a healthcare: pharma solution powered by a Foundry-hosted agent. Find relevant SOPs, flag deviations in batch records, and prepare evidence for human quality-control review. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "accelerate-telco-employee-productivity-with-ai",
+    "name": "Accelerate employee productivity",
+    "category": "Telecommunications",
+    "description": "Find out how AI tools for productivity boost employee satisfaction through automated task management and efficient communication across your organization.",
+    "tags": [
+      "Workflow Automation"
+    ],
+    "objective": "Help telecom employees manage tasks and draft communications through authorized tools.",
+    "data": "Authorized email, calendars, and task systems",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/accelerate-telco-employee-productivity-with-ai",
+    "basePrompt": "Build a telecommunications solution powered by a Foundry-hosted agent. Help telecom employees manage tasks and draft communications through authorized tools. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "ai-optimizated-contract-management",
+    "name": "Enable AI-optimized contract management",
+    "category": "Legal",
+    "description": "Learn how AI enhances contract management for law firms by reviewing documents, flagging risks, pulling clauses, and streamlining legal research.",
+    "tags": [
+      "Forms Recognition"
+    ],
+    "objective": "Review legal contracts, flag risks, extract clauses from supplied documents, and summarize supporting legal research.",
+    "data": "Contracts and clause libraries",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Human-in-the-Loop"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/ai-optimizated-contract-management",
+    "basePrompt": "Build a legal solution powered by a Foundry-hosted agent. Review legal contracts, flag risks, extract clauses from supplied documents, and summarize supporting legal research. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "boost-telco-product-and-service-innovation-with-ai",
+    "name": "Boost product and service innovation",
+    "category": "Telecommunications",
+    "description": "Discover how AI in telecommunications and network infrastructure drives product development and innovation, reduces costs, and boosts operational efficiency.",
+    "tags": [
+      "Frontier Models"
+    ],
+    "objective": "Generate and assess telecom product ideas and prepare evidence-backed product documentation.",
+    "data": "Network, usage, and market data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Multi-Agent Orchestration",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/boost-telco-product-and-service-innovation-with-ai",
+    "basePrompt": "Build a telecommunications solution powered by a Foundry-hosted agent. Generate and assess telecom product ideas and prepare evidence-backed product documentation. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "improve-benefits-eligibility-payments-and-fraud-with-ai",
+    "name": "Help improve benefits eligibility, payments, and fraud detection with AI analysis",
+    "category": "Government: Public health and social services",
+    "description": "Explore how AI in government supports eligibility verification, prevents fraud, aids investigations, and enables AI-powered cybersecurity.",
+    "tags": [
+      "Predictive Analytics",
+      "Governance",
+      "Observability"
+    ],
+    "objective": "Review benefits applications against supplied policies, flag inconsistencies, and prepare auditable evidence for authorized human eligibility and investigation decisions.",
+    "data": "Authorized applicant records and benefits policies",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Human-in-the-Loop"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/improve-benefits-eligibility-payments-and-fraud-with-ai",
+    "basePrompt": "Build a government: public health and social services solution powered by a Foundry-hosted agent. Review benefits applications against supplied policies, flag inconsistencies, and prepare auditable evidence for authorized human eligibility and investigation decisions. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "ai-content-creation-for-marketing",
+    "name": "Activate AI to drive insights, campaigns, content, and personalization",
+    "category": "Marketing",
+    "description": "Discover AI marketing tools that deliver smarter insights, faster personalized content creation, and optimized campaigns to boost engagement and growth.",
+    "tags": [
+      "Knowledge Grounding",
+      "Personalization",
+      "Frontier Models"
+    ],
+    "objective": "Generate personalized marketing copy, recommend campaign improvements, and summarize audience insights.",
+    "data": "Audience and campaign data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Multi-Agent Orchestration"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/ai-content-creation-for-marketing",
+    "basePrompt": "Build a marketing solution powered by a Foundry-hosted agent. Generate personalized marketing copy, recommend campaign improvements, and summarize audience insights. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "manage-physical-infrastructure-with-ai",
+    "name": "Manage facilities more proactively and responsively with virtual assistants",
+    "category": "Government: Ops and infra",
+    "description": "Learn how AI assistants improve facility management by enhancing resource allocation, analyzing infrastructure data, and enabling smarter, more efficient operations.",
+    "tags": [
+      "Domain-Specific Agents"
+    ],
+    "objective": "Triage facilities requests and recommend resource allocation and proactive maintenance.",
+    "data": "Building, sensor, and work-order data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/manage-physical-infrastructure-with-ai",
+    "basePrompt": "Build a government: ops and infra solution powered by a Foundry-hosted agent. Triage facilities requests and recommend resource allocation and proactive maintenance. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "modernize-and-monetize-telco-network-with-ai",
+    "name": "Modernize and monetize the network",
+    "category": "Telecommunications",
+    "description": "Explore how AI in telecommunications improves network efficiency, enhances digital security, and helps companies monetize and unlock new revenue streams.",
+    "tags": [
+      "Governance"
+    ],
+    "objective": "Analyze telecom network performance, recommend efficiency and security improvements, and identify potential service opportunities.",
+    "data": "Network performance and usage data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Multi-Agent Orchestration",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/modernize-and-monetize-telco-network-with-ai",
+    "basePrompt": "Build a telecommunications solution powered by a Foundry-hosted agent. Analyze telecom network performance, recommend efficiency and security improvements, and identify potential service opportunities. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "enable-seamless-access-to-information-with-ai",
+    "name": "Give staff seamless access to the information and services they need",
+    "category": "Government: Public health and social services",
+    "description": "Empower social service case managers and public health organizations with AI in government to improve access to information and deliver faster, smarter government aid. (160 characters)",
+    "tags": [
+      "Forms Recognition"
+    ],
+    "objective": "Summarize social-services cases, answer policy questions, and help case managers locate relevant aid programs.",
+    "data": "Authorized case files and program information",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/enable-seamless-access-to-information-with-ai",
+    "basePrompt": "Build a government: public health and social services solution powered by a Foundry-hosted agent. Summarize social-services cases, answer policy questions, and help case managers locate relevant aid programs. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "streamline-software-defined-products-with-ai",
+    "name": "Streamline software-defined products with AI assisted coding",
+    "category": "Manufacturing",
+    "description": "Use AI in manufacturing to accelerate software-defined product development with AI assisted coding and industrial automation tools.",
+    "tags": [
+      "Workflow Automation",
+      "Code Generation"
+    ],
+    "objective": "Help engineers reason about requirements, propose code and tests, and prepare release documentation.",
+    "data": "Engineering requirements and repositories",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/streamline-software-defined-products-with-ai",
+    "basePrompt": "Build a manufacturing solution powered by a Foundry-hosted agent. Help engineers reason about requirements, propose code and tests, and prepare release documentation. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "improve-civic-experience-and-engagement-with-ai",
+    "name": "Improve civic experience and public engagement",
+    "category": "Government: Ops and infra",
+    "description": "Explore how public AI chatbots meet market demands, identify trends, boost civic engagement, and improve service delivery for stronger community connection.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Personalization",
+      "Real-Time Conversations"
+    ],
+    "objective": "Answer residents' service questions using a small public FAQ and department directory. Cite the source and suggest the appropriate department; say when the supplied information is insufficient.",
+    "data": "A sample public-service FAQ and department directory",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/improve-civic-experience-and-engagement-with-ai",
+    "basePrompt": "Build a public services solution powered by a Foundry-hosted agent. Answer residents' service questions using a small public FAQ and department directory. Cite the source and suggest the appropriate department; say when the supplied information is insufficient. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "transform-factory-operations-with-ai",
+    "name": "Transform factory operations with real-time data access and industrial AI agents",
+    "category": "Manufacturing",
+    "description": "Discover how AI is transforming manufacturing with smart factories, real-time data insights, and AI-driven supply chain optimization in this Microsoft use case.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Knowledge Grounding",
+      "Forms Recognition"
+    ],
+    "objective": "Correlate factory anomalies, identify production bottlenecks, and propose evidence-backed, constraint-aware production and shift plans. Require operator approval before operational-system writes or control actions.",
+    "data": "Machine, MES, maintenance, quality, and supply-chain data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Multi-Agent Orchestration",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/transform-factory-operations-with-ai",
+    "basePrompt": "Build a manufacturing solution powered by a Foundry-hosted agent. Correlate factory anomalies, identify production bottlenecks, and propose evidence-backed, constraint-aware production and shift plans. Require operator approval before operational-system writes or control actions. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "improve-factory-safety-with-ai",
+    "name": "Improve factory safety and frontline productivity with AI guidance",
+    "category": "Manufacturing",
+    "description": "Use AI in manufacturing to boost factory safety and frontline productivity. Improve decision-making and operational efficiency with AI insights in real-time.",
+    "tags": [
+      "Observability"
+    ],
+    "objective": "Retrieve factory safety procedures, summarize incident evidence, and recommend guidance for frontline workers.",
+    "data": "Sensor, incident, and procedure data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/improve-factory-safety-with-ai",
+    "basePrompt": "Build a manufacturing solution powered by a Foundry-hosted agent. Retrieve factory safety procedures, summarize incident evidence, and recommend guidance for frontline workers. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "automated-claims-processing-fraud-detection",
+    "name": "Modernize claims processes",
+    "category": "Financial Services: Insurance",
+    "description": "Automate claims processing, improve insurance fraud detection, and streamline claims management with intelligent workflows for faster, accurate results.",
+    "tags": [
+      "Workflow Automation",
+      "Predictive Analytics",
+      "Governance"
+    ],
+    "objective": "Review insurance claim evidence, flag suspected inconsistencies, and prepare recommendations and exceptions for human adjudication.",
+    "data": "Authorized claims, policy, and third-party data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Human-in-the-Loop"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/automated-claims-processing-fraud-detection",
+    "basePrompt": "Build a financial services: insurance solution powered by a Foundry-hosted agent. Review insurance claim evidence, flag suspected inconsistencies, and prepare recommendations and exceptions for human adjudication. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "empower-relationship-managers-with-ai",
+    "name": "Agent-powered relationship managers",
+    "category": "Financial Services: Banking",
+    "description": "Learn how AI in customer relationship management boosts engagement in financial services by giving relationship managers insights, summaries, and prep tools.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Knowledge Grounding",
+      "Personalization"
+    ],
+    "objective": "Prepare banking relationship-manager meeting briefs, client summaries, and evidence-backed recommendations.",
+    "data": "Authorized client portfolios, interactions, and market data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/empower-relationship-managers-with-ai",
+    "basePrompt": "Build a financial services: banking solution powered by a Foundry-hosted agent. Prepare banking relationship-manager meeting briefs, client summaries, and evidence-backed recommendations. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "unify-data-across-agencies-and-accelerate-decisions-with-ai",
+    "name": "Elevate agency decision making with real-time intelligence",
+    "category": "Government",
+    "description": "Discover generative AI tools that can unify data at scale across government agencies for faster insights and proactive decision-making.",
+    "tags": [
+      "Knowledge Grounding",
+      "Frontier Models",
+      "Observability"
+    ],
+    "objective": "Summarize authorized cross-agency evidence and support government decision-making with cited insights.",
+    "data": "Existing authorized agency data connections",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Multi-Agent Orchestration"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/unify-data-across-agencies-and-accelerate-decisions-with-ai",
+    "basePrompt": "Build a government solution powered by a Foundry-hosted agent. Summarize authorized cross-agency evidence and support government decision-making with cited insights. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "boost-sales-and-help-policyholders-with-ai",
+    "name": "Accelerate insurance underwriting",
+    "category": "Financial Services: Insurance",
+    "description": "Boost sales and improve coverage accuracy with intelligent AI support agents. Help agents confidently match policyholders to the right insurance plans.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Predictive Analytics",
+      "Forms Recognition"
+    ],
+    "objective": "Compare insurance coverage against customer needs and prepare evidence for authorized human underwriting review.",
+    "data": "Authorized policyholder profiles and product catalogs",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/boost-sales-and-help-policyholders-with-ai",
+    "basePrompt": "Build a financial services: insurance solution powered by a Foundry-hosted agent. Compare insurance coverage against customer needs and prepare evidence for authorized human underwriting review. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "improve-frontline-worker-productivity-and-safety-with-ai",
+    "name": "AI-enabled workforce support, safety, and service",
+    "category": "Energy and resources",
+    "description": "Discover how AI helps energy providers upskill and retain frontline workers by automating processes, improving work productivity, and driving revenue growth.",
+    "tags": [
+      "Workflow Automation"
+    ],
+    "objective": "Help energy frontline workers find procedures, plan work, and prepare safety and training guidance.",
+    "data": "Procedures, asset data, and work orders",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/improve-frontline-worker-productivity-and-safety-with-ai",
+    "basePrompt": "Build a energy and resources solution powered by a Foundry-hosted agent. Help energy frontline workers find procedures, plan work, and prepare safety and training guidance. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "empower-shoppers-with-conversational-ai-assistants",
+    "name": "AI shopping assistant",
+    "category": "Retail",
+    "description": "Learn how to turn browsers into buyers with AI assistants, delivering personalized shopping experiences backed by conversational commerce.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Personalization",
+      "Real-Time Conversations"
+    ],
+    "objective": "Recommend products from the connected catalog or demo data based on shoppers' needs, budget, and preferences. Explain how they match the shopper's needs.",
+    "data": "A sample product catalog with prices, features, and availability",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/empower-shoppers-with-conversational-ai-assistants",
+    "basePrompt": "Build a retail solution powered by a Foundry-hosted agent. Recommend products from a small sample catalog based on the user's budget and preferences. Explain each recommendation using catalog details. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "accelerate-product-development-with-ai",
+    "name": "Agent powered R&D and digital engineering",
+    "category": "Manufacturing",
+    "description": "Learn how AI in manufacturing accelerates product development and engineering with real-time design, CAD automation, and innovative solutions.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Workflow Automation",
+      "Code Generation"
+    ],
+    "objective": "Analyze available engineering requirements and test evidence, recommend design improvements, and draft product documentation.",
+    "data": "Design specifications, design summaries, and test data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/accelerate-product-development-with-ai",
+    "basePrompt": "Build a manufacturing solution powered by a Foundry-hosted agent. Analyze available engineering requirements and test evidence, recommend design improvements, and draft product documentation. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "unify-patient-provider-and-data-with-ai",
+    "name": "Unify patient, provider, and clinical data to enhance member outcomes and drive operational efficiency",
+    "category": "Healthcare: Payors",
+    "description": "Discover how healthcare payors can use AI to unify member, provider, and clinical data to enhance member outcomes and drive operational efficiency.",
+    "tags": [
+      "Knowledge Grounding"
+    ],
+    "objective": "Summarize authorized healthcare-payor records and surface operational insights for professional review.",
+    "data": "Authorized member, provider, and clinical data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Multi-Agent Orchestration"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/unify-patient-provider-and-data-with-ai",
+    "basePrompt": "Build a healthcare: payors solution powered by a Foundry-hosted agent. Summarize authorized healthcare-payor records and surface operational insights for professional review. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "enhance-energy-production-with-ai",
+    "name": "Enhance energy and resources resilience with AI-powered decision making and forecasting",
+    "category": "Energy and resources",
+    "description": "Discover how AI transforms energy management through smart forecasting and decision-making to boost efficiency, reduce costs, and improve customer satisfaction.",
+    "tags": [
+      "Predictive Analytics",
+      "Forms Recognition"
+    ],
+    "objective": "Analyze supplied production forecasts and recommend evidence-backed energy planning options. Clearly identify assumptions and missing data.",
+    "data": "Production, weather, demand, and existing forecast data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/enhance-energy-production-with-ai",
+    "basePrompt": "Build a energy and resources solution powered by a Foundry-hosted agent. Analyze supplied production forecasts and recommend evidence-backed energy planning options. Clearly identify assumptions and missing data. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "accelerate-financial-research-with-ai",
+    "name": "Accelerate financial research with AI-driven analysis and summaries",
+    "category": "Financial Services: Capital markets",
+    "description": "Accelerate research with AI in financial services. Summarize reports, earnings calls, and market sentiment to power smarter decisions in capital markets.",
+    "tags": [
+      "Knowledge Grounding"
+    ],
+    "objective": "Summarize financial research and sentiment with references to the source evidence.",
+    "data": "Reports, earnings-call transcripts, and market data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/accelerate-financial-research-with-ai",
+    "basePrompt": "Build a financial services: capital markets solution powered by a Foundry-hosted agent. Summarize financial research and sentiment with references to the source evidence. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "generate-insights-from-data-with-ai",
+    "name": "Accelerate clinical research and patient care, including Trusted Research Environments",
+    "category": "Healthcare: Providers",
+    "description": "How healthcare providers can use AI to improve care delivery, streamline operations, and optimize resources with unified, high-quality patient data.",
+    "tags": [
+      "Workflow Automation",
+      "Knowledge Grounding"
+    ],
+    "objective": "Summarize governed clinical-research evidence and surface findings for qualified researcher review.",
+    "data": "Authorized, governed patient research data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/generate-insights-from-data-with-ai",
+    "basePrompt": "Build a healthcare: providers solution powered by a Foundry-hosted agent. Summarize governed clinical-research evidence and surface findings for qualified researcher review. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "drive-better-patient-outcomes-with-ai",
+    "name": "Drive better patient outcomes through personalized access and engagement",
+    "category": "Healthcare: Providers",
+    "description": "Discover how AI in healthcare drives better patient outcomes through personalized access and engagement in this Microsoft use case.",
+    "tags": [
+      "Personalization"
+    ],
+    "objective": "Prioritize care gaps, draft consent-aware outreach, and coordinate follow-up recommendations and rule-based escalation. Keep diagnosis, treatment changes, and urgent clinical decisions with licensed professionals.",
+    "data": "Authorized patient records, care plans, consent, and follow-up data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/drive-better-patient-outcomes-with-ai",
+    "basePrompt": "Build a healthcare: providers solution powered by a Foundry-hosted agent. Prioritize care gaps, draft consent-aware outreach, and coordinate follow-up recommendations and rule-based escalation. Keep diagnosis, treatment changes, and urgent clinical decisions with licensed professionals. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "accelerate-drug-development-with-ai",
+    "name": "Augmented research & drug discovery with optimized data & AI",
+    "category": "Healthcare: Pharma",
+    "description": "Discover how generative AI drives innovation in pharma by enhancing knowledge sharing and data analysis, accelerating drug discovery and development.",
+    "tags": [
+      "Knowledge Grounding",
+      "Frontier Models"
+    ],
+    "objective": "Synthesize scientific literature and experimental results to help researchers compare drug-discovery hypotheses.",
+    "data": "Scientific literature and experimental data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Multi-Agent Orchestration"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/accelerate-drug-development-with-ai",
+    "basePrompt": "Build a healthcare: pharma solution powered by a Foundry-hosted agent. Synthesize scientific literature and experimental results to help researchers compare drug-discovery hypotheses. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "augmented-device-research-with-optimized-data-and-ai",
+    "name": "Augmented device research with optimized data & AI",
+    "category": "Healthcare: MedTech",
+    "description": "Discover how AI in healthcare drives MedTech solutions like device research, leveraging data management to accelerate therapeutic discovery and time to market.",
+    "tags": [
+      "Knowledge Grounding",
+      "Frontier Models"
+    ],
+    "objective": "Summarize medical-device research evidence and compare therapeutic research findings.",
+    "data": "Authorized device and research data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/augmented-device-research-with-optimized-data-and-ai",
+    "basePrompt": "Build a healthcare: medtech solution powered by a Foundry-hosted agent. Summarize medical-device research evidence and compare therapeutic research findings. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "predictive-underwriting-automation-risk-assessment-with-ai",
+    "name": "Improve underwriting risk analysis",
+    "category": "Financial Services: Insurance",
+    "description": "Enhance insurance underwriting with AI automation, predictive risk analysis, and improved decision-making to reduce losses and streamline processes.",
+    "tags": [
+      "Workflow Automation",
+      "Predictive Analytics"
+    ],
+    "objective": "Summarize applicant risk evidence and prepare underwriting recommendations for authorized human review.",
+    "data": "Authorized applicant, claims, and risk data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Human-in-the-Loop"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/predictive-underwriting-automation-risk-assessment-with-ai",
+    "basePrompt": "Build a financial services: insurance solution powered by a Foundry-hosted agent. Summarize applicant risk evidence and prepare underwriting recommendations for authorized human review. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "enhance-pharma-sales-performance-with-ai",
+    "name": "AI-enabled guided selling and customer service",
+    "category": "Healthcare: Pharma",
+    "description": "Discover how AI in pharma helps knowledge sharing and data analysis within R&D teams, accelerating drug discovery and development in the pharmaceutical industry.",
+    "tags": [
+      "Knowledge Grounding",
+      "Real-Time Conversations",
+      "Frontier Models"
+    ],
+    "objective": "Prepare evidence-backed pharmaceutical selling guidance and customer-service answers within supplied compliance policies.",
+    "data": "Product, account, and compliance data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/enhance-pharma-sales-performance-with-ai",
+    "basePrompt": "Build a healthcare: pharma solution powered by a Foundry-hosted agent. Prepare evidence-backed pharmaceutical selling guidance and customer-service answers within supplied compliance policies. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "improve-risk-and-compliance-management-with-ai",
+    "name": "Improve risk and compliance management",
+    "category": "Financial Services: Capital markets",
+    "description": "Discover how AI for risk management predicts risks, helps report suspicious activity, automates monitoring, and strengthens compliance across financial systems.",
+    "tags": [
+      "Workflow Automation",
+      "Predictive Analytics",
+      "Governance"
+    ],
+    "objective": "Review transaction evidence against supplied policies, flag potential risks, and draft suspicious-activity summaries for compliance review.",
+    "data": "Authorized transaction and regulatory data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Human-in-the-Loop"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/improve-risk-and-compliance-management-with-ai",
+    "basePrompt": "Build a financial services: capital markets solution powered by a Foundry-hosted agent. Review transaction evidence against supplied policies, flag potential risks, and draft suspicious-activity summaries for compliance review. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "care-experience-personalization-through-connected-devices-with-ai",
+    "name": "Personalize care experiences through AI-enabled medical devices",
+    "category": "Healthcare: MedTech",
+    "description": "Discover how leveraging AI in MedTech can help create a connected ecosystem that personalizes care experiences and tailored support for patients.",
+    "tags": [
+      "Personalization"
+    ],
+    "objective": "Summarize connected-care information and draft personalized patient-support guidance for professional review.",
+    "data": "Authorized medical-device and patient data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/care-experience-personalization-through-connected-devices-with-ai",
+    "basePrompt": "Build a healthcare: medtech solution powered by a Foundry-hosted agent. Summarize connected-care information and draft personalized patient-support guidance for professional review. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "ai-for-insurance-agents",
+    "name": "Enhance agent and employee productivity",
+    "category": "Financial Services: Insurance",
+    "description": "Explore how AI tools can help insurance agents deliver better customer service by improving meeting preparation and enhancing customer insights.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Knowledge Grounding",
+      "Real-Time Conversations"
+    ],
+    "objective": "Prepare insurance-agent meeting briefs, customer insights, and service recommendations.",
+    "data": "Authorized customer and policy data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/ai-for-insurance-agents",
+    "basePrompt": "Build a financial services: insurance solution powered by a Foundry-hosted agent. Prepare insurance-agent meeting briefs, customer insights, and service recommendations. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "empower-advisory-and-sales-roles-with-ai",
+    "name": "Empower advisory and sales roles",
+    "category": "Financial Services: Capital markets",
+    "description": "Learn how advisors and sales teams can use an AI sales enablement platform to streamline meetings, personalize presentations, and deliver portfolio insights.",
+    "tags": [
+      "Workflow Automation",
+      "Personalization",
+      "Forms Recognition"
+    ],
+    "objective": "Prepare meeting briefs, personalized presentation outlines, and portfolio insights for advisory and sales teams.",
+    "data": "Authorized client portfolios and market data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/empower-advisory-and-sales-roles-with-ai",
+    "basePrompt": "Build a financial services: capital markets solution powered by a Foundry-hosted agent. Prepare meeting briefs, personalized presentation outlines, and portfolio insights for advisory and sales teams. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "increase-customer-conversion-with-ai",
+    "name": "Increase customer conversion and engagement with tailored content",
+    "category": "Retail",
+    "description": "Increase conversions and engagement with tailored content; generate real-time product and marketing assets aligned to goals with AI for retail.",
+    "tags": [
+      "Personalization",
+      "Observability"
+    ],
+    "objective": "Draft tailored product recommendations and marketing copy from available customer and campaign evidence.",
+    "data": "Authorized customer, product, and campaign data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/increase-customer-conversion-with-ai",
+    "basePrompt": "Build a retail solution powered by a Foundry-hosted agent. Draft tailored product recommendations and marketing copy from available customer and campaign evidence. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "accelerate-academic-research-with-ai",
+    "name": "Accelerate academic research and discovery",
+    "category": "Education",
+    "description": "Identify how AI in education uses AI to boost academic research, streamline literature reviews, and uncover valuable insights.",
+    "tags": [
+      "Workflow Automation",
+      "Knowledge Grounding",
+      "Code Generation"
+    ],
+    "objective": "Review literature, synthesize findings, and surface research insights with citations.",
+    "data": "Academic papers and datasets",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/accelerate-academic-research-with-ai",
+    "basePrompt": "Build an education solution powered by a Foundry-hosted agent. Review literature, synthesize findings, and surface research insights with citations. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "reinvent-telco-customer-engagement-with-ai",
+    "name": "Reinvent customer engagement with AI-powered care",
+    "category": "Telecommunications",
+    "description": "Discover how using AI in customer service helps telecoms automate work tasks, improve NPS, and build customer loyalty through faster, personalized support.",
+    "tags": [
+      "Workflow Automation",
+      "Personalization",
+      "Real-Time Conversations"
+    ],
+    "objective": "Provide telecom support, explain billing and network issues, and recommend personalized next steps.",
+    "data": "Authorized account, billing, and network data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/reinvent-telco-customer-engagement-with-ai",
+    "basePrompt": "Build a telecommunications solution powered by a Foundry-hosted agent. Provide telecom support, explain billing and network issues, and recommend personalized next steps. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "safeguard-learning-at-scale-with-ai",
+    "name": "Safeguard learning at scale",
+    "category": "Education",
+    "description": "Explore AI in education to tackle cyberthreats, enhance digital security, and learning technology while ensuring responsible AI governance.",
+    "tags": [
+      "Governance"
+    ],
+    "objective": "Review educational security and identity signals, flag possible threats, and recommend governance actions.",
+    "data": "Security and identity signals and governance policies",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Human-in-the-Loop"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/safeguard-learning-at-scale-with-ai",
+    "basePrompt": "Build an education solution powered by a Foundry-hosted agent. Review educational security and identity signals, flag possible threats, and recommend governance actions. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "accelerate-resource-exploration-with-ai",
+    "name": "Accelerate exploration with generated insights and intelligent search",
+    "category": "Energy and resources",
+    "description": "Discover how using AI in the energy sector can accelerate resource exploration, mining operations, product time-to-market, and sales revenue.",
+    "tags": [
+      "Knowledge Grounding"
+    ],
+    "objective": "Search geological and operational evidence and summarize insights for exploration teams.",
+    "data": "Geological and operational data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/accelerate-resource-exploration-with-ai",
+    "basePrompt": "Build a energy and resources solution powered by a Foundry-hosted agent. Search geological and operational evidence and summarize insights for exploration teams. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "customer-service-always-on-ai-agent",
+    "name": "Resolve customer problems with an always-on AI agent",
+    "category": "Customer service",
+    "description": "Boost loyalty with generative AI in customer service. Empower remote reps using AI chatbots, insights, and automation software to resolve issues efficiently.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Workflow Automation",
+      "Knowledge Grounding"
+    ],
+    "objective": "Provide customer support, draft follow-ups, and help service representatives resolve requests.",
+    "data": "Knowledge bases and authorized case history",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/customer-service-always-on-ai-agent",
+    "basePrompt": "Build a customer service solution powered by a Foundry-hosted agent. Provide customer support, draft follow-ups, and help service representatives resolve requests. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "improve-fraud-analysis-and-detection-with-ai",
+    "name": "AI Transforms Banking: Fraud Detection, Efficiency, and Accelerated AI Adoption",
+    "category": "Financial Services: Banking",
+    "description": "Learn how AI in fraud detection empowers intelligence officers with real-time insights, fewer false positives, and exact identification of fraudulent activity.",
+    "tags": [
+      "Knowledge Grounding",
+      "Predictive Analytics",
+      "Governance"
+    ],
+    "objective": "Review banking transaction evidence, flag potential fraud, and explain the evidence for human investigation.",
+    "data": "Authorized transaction and risk data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Human-in-the-Loop"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Knowledge"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/improve-fraud-analysis-and-detection-with-ai",
+    "basePrompt": "Build a financial services: banking solution powered by a Foundry-hosted agent. Review banking transaction evidence, flag potential fraud, and explain the evidence for human investigation. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "streamline-nonprofit-operations-with-ai",
+    "name": "Streamline operations with AI-powered case and compliance management",
+    "category": "Nonprofit",
+    "description": "Discover AI tools for nonprofits that reduce administrative burdens, enhance data accuracy, and speed up decision-making to maximize resource efficiency.",
+    "tags": [
+      "Workflow Automation",
+      "Governance"
+    ],
+    "objective": "Summarize nonprofit cases, flag data inconsistencies, and prepare compliance and case-management recommendations.",
+    "data": "Authorized case and compliance data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/streamline-nonprofit-operations-with-ai",
+    "basePrompt": "Build a nonprofit solution powered by a Foundry-hosted agent. Summarize nonprofit cases, flag data inconsistencies, and prepare compliance and case-management recommendations. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "automate-manual-non-profit-program-operations-with-ai",
+    "name": "Improve efficiency with intelligent automation of nonprofit operations",
+    "category": "Nonprofit",
+    "description": "Discover AI tools for nonprofits that automate decision making, accelerate nonprofit program delivery, and optimize fundraising.",
+    "tags": [
+      "Workflow Automation"
+    ],
+    "objective": "Recommend nonprofit program actions, prepare delivery plans, and draft fundraising guidance for staff review.",
+    "data": "Authorized program and donor data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Multi-Agent Orchestration",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/automate-manual-non-profit-program-operations-with-ai",
+    "basePrompt": "Build a nonprofit solution powered by a Foundry-hosted agent. Recommend nonprofit program actions, prepare delivery plans, and draft fundraising guidance for staff review. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "ai-in-capital-markets",
+    "name": "Automate operations",
+    "category": "Financial Services: Capital markets",
+    "description": "Boost efficiency and reduce costs in capital markets operations with AI-powered automation, predictive analytics, and machine learning tools.",
+    "tags": [
+      "Workflow Automation",
+      "Predictive Analytics"
+    ],
+    "objective": "Summarize capital-markets operational evidence and recommend workflow improvements and exception handling.",
+    "data": "Authorized trade and reference data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Multi-Agent Orchestration",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/ai-in-capital-markets",
+    "basePrompt": "Build a financial services: capital markets solution powered by a Foundry-hosted agent. Summarize capital-markets operational evidence and recommend workflow improvements and exception handling. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "hr-ai-digital-assistant",
+    "name": "Transform employee experiences with AI agents",
+    "category": "Human resources",
+    "description": "Learn how AI in Human Resources streamlines HR administration, improves employee experiences, and enables self-service access to HR tasks and knowledge.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Workflow Automation",
+      "Real-Time Conversations"
+    ],
+    "objective": "Answer employee HR questions with policy references and help with authorized self-service tasks through conversation.",
+    "data": "Authorized HR systems and policies",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/hr-ai-digital-assistant",
+    "basePrompt": "Build a human resources solution powered by a Foundry-hosted agent. Answer employee HR questions with policy references and help with authorized self-service tasks through conversation. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "enhance-marketing-effectiveness-with-ai",
+    "name": "Enhance banking marketing with AI-driven personalization, insights, and employee empowerment",
+    "category": "Financial Services: Banking",
+    "description": "Learn how to enhance your financial services marketing with AI-driven personalization and targeted offers that build meaningful customer relationships.",
+    "tags": [
+      "Knowledge Grounding",
+      "Personalization"
+    ],
+    "objective": "Draft personalized banking marketing copy, recommend offers, and summarize campaign insights.",
+    "data": "Authorized customer and campaign data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/enhance-marketing-effectiveness-with-ai",
+    "basePrompt": "Build a financial services: banking solution powered by a Foundry-hosted agent. Draft personalized banking marketing copy, recommend offers, and summarize campaign insights. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "self-service-microsoft-ai-assistant",
+    "name": "Provide self-service customer experiences using AI assistants",
+    "category": "Customer service",
+    "description": "Explore the benefits of AI in customer service. Automate support with chat, voice, and avatars for faster, personalized self-service customer experiences.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Workflow Automation",
+      "Personalization"
+    ],
+    "objective": "Provide self-service support, answer account questions, and recommend next steps.",
+    "data": "Knowledge and authorized account data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/self-service-microsoft-ai-assistant",
+    "basePrompt": "Build a customer service solution powered by a Foundry-hosted agent. Provide self-service support, answer account questions, and recommend next steps. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "protect-and-strengthen-infrastructure-and-energy-operations-with-ai",
+    "name": "Protect and strengthen critical infrastructure",
+    "category": "Energy and resources",
+    "description": "Explore how AI enables faster threat detection and response, minimizing disruptions and helping keep critical energy systems secure, stable, and online.",
+    "tags": [
+      "Governance",
+      "Observability"
+    ],
+    "objective": "Review energy operational and threat evidence and recommend incident responses for authorized operator review.",
+    "data": "Operational and threat data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Multi-Agent Orchestration",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/protect-and-strengthen-infrastructure-and-energy-operations-with-ai",
+    "basePrompt": "Build a energy and resources solution powered by a Foundry-hosted agent. Review energy operational and threat evidence and recommend incident responses for authorized operator review. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "increase-paid-media-engagement-with-ai",
+    "name": "Increase audience engagement and monetization opportunities",
+    "category": "Media and entertainment",
+    "description": "Discover how AI in media and entertainment drives audience engagement using smart recommendations and interactive features to boost retention and monetization.",
+    "tags": [
+      "Personalization"
+    ],
+    "objective": "Recommend media content and engagement strategies using available audience evidence.",
+    "data": "Authorized audience and content data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/increase-paid-media-engagement-with-ai",
+    "basePrompt": "Build a media and entertainment solution powered by a Foundry-hosted agent. Recommend media content and engagement strategies using available audience evidence. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "modernize-lending-and-mortgage-processes-with-ai",
+    "name": "Modernizing Lending with AI-Driven automation, faster approvals, and enhanced compliance",
+    "category": "Financial Services: Banking",
+    "description": "Learn how AI in financial services can automate data analysis, enhance risk assessment accuracy, and accelerate application approvals for fast lending decisions.",
+    "tags": [
+      "Workflow Automation",
+      "Knowledge Grounding",
+      "Governance"
+    ],
+    "objective": "Review loan-file completeness, consistency, freshness, and provenance; assemble policy evidence, conditions, and fair-lending checks for a human underwriter. Keep approval, denial, and pricing decisions with authorized human reviewers.",
+    "data": "Authorized application, document, credit, collateral, and compliance data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Human-in-the-Loop"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/modernize-lending-and-mortgage-processes-with-ai",
+    "basePrompt": "Build a financial services: banking solution powered by a Foundry-hosted agent. Review loan-file completeness, consistency, freshness, and provenance; assemble policy evidence, conditions, and fair-lending checks for a human underwriter. Keep approval, denial, and pricing decisions with authorized human reviewers. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "translate-program-data-and-documents-with-ai",
+    "name": "Translate program data and documents to improve participant outcomes",
+    "category": "Nonprofit",
+    "description": "Discover AI tools for nonprofits that translate program data, improve document accuracy, and streamline workflows to better serve people and causes.",
+    "tags": [
+      "Workflow Automation",
+      "Forms Recognition"
+    ],
+    "objective": "Translate nonprofit documents and summarize program information with references to the originals.",
+    "data": "Program data and documents",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Workflow Automation"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/translate-program-data-and-documents-with-ai",
+    "basePrompt": "Build a nonprofit solution powered by a Foundry-hosted agent. Translate nonprofit documents and summarize program information with references to the originals. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "transform-the-contact-center-with-ai",
+    "name": "Transform banking customer service with AI-powered contact centers and Copilot solutions",
+    "category": "Financial Services: Banking",
+    "description": "Discover how to empower your bank’s contact center with AI to transform routine service tasks into meaningful customer interactions and service experiences.",
+    "tags": [
+      "Domain-Specific Agents",
+      "Real-Time Conversations",
+      "Forms Recognition"
+    ],
+    "objective": "Provide banking customer support and evidence-backed service recommendations.",
+    "data": "Authorized customer, account, and knowledge data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/transform-the-contact-center-with-ai",
+    "basePrompt": "Build a financial services: banking solution powered by a Foundry-hosted agent. Provide banking customer support and evidence-backed service recommendations. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "personalize-and-augment-the-client-experience-with-ai",
+    "name": "Personalize and augment the client experience",
+    "category": "Financial Services: Capital markets",
+    "description": "Learn how AI in capital markets enables AI-driven personalization and transforms client experiences in financial services, driving client satisfaction.",
+    "tags": [
+      "Personalization",
+      "Forms Recognition"
+    ],
+    "objective": "Prepare personalized capital-markets client summaries and advisor recommendations from available evidence.",
+    "data": "Authorized client and portfolio data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Knowledge Grounding",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models",
+        "Forms Recognition"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/personalize-and-augment-the-client-experience-with-ai",
+    "basePrompt": "Build a financial services: capital markets solution powered by a Foundry-hosted agent. Prepare personalized capital-markets client summaries and advisor recommendations from available evidence. Use Python, Microsoft Agent Framework, and the Responses API."
+  },
+  {
+    "id": "transform-customer-service-with-ai",
+    "name": "Transform customer service",
+    "category": "Financial Services: Insurance",
+    "description": "See how AI for insurance enhances customer service with personalized support, faster claims processing, and smarter upsell opportunities for financial services.",
+    "tags": [
+      "Workflow Automation",
+      "Personalization",
+      "Real-Time Conversations"
+    ],
+    "objective": "Provide insurance support, summarize claims, and recommend service and coverage next steps.",
+    "data": "Authorized policy and claims data",
+    "defaults": {
+      "observability": true,
+      "patterns": [
+        "Workflow Automation",
+        "Domain-Specific Agents"
+      ],
+      "capabilities": [
+        "Frontier Models"
+      ],
+      "identityAndAccess": true,
+      "privateNetworking": false
+    },
+    "learnMoreUrl": "https://www.microsoft.com/en-us/ai/use-case/transform-customer-service-with-ai",
+    "basePrompt": "Build a financial services: insurance solution powered by a Foundry-hosted agent. Provide insurance support, summarize claims, and recommend service and coverage next steps. Use Python, Microsoft Agent Framework, and the Responses API."
+  }
+]
