@@ -2,6 +2,26 @@
 
 Notable changes to the Microsoft Foundry Canvas plugin for GitHub Copilot App.
 
+## Version 1.0.18
+
+This release introduces an agent prompt gallery, adds resource refresh and easier agent creation, and improves browsing and agent selection.
+
+### Added
+
+- **Agent prompt gallery**: Use **Browse all templates** to search and filter scenarios by industry, capability, and pattern. Customize building blocks and preview the prompt before **Use template in chat**, for Hosted Agents or Prompt Agents with harness.
+- **Prompt Agent resources**: Refresh models, tools, toolboxes, and skills directly from their controls without discarding unsaved edits.
+- **New agent action**: Start another agent with a visible **New agent** button beside the agent picker.
+
+### Changed
+
+- **Browsing while Copilot works**: Explore templates, view project and agent options, and inspect resource choices while Chat is running; state-changing actions remain unavailable.
+
+### Fixed
+
+- **Agent selection**: Selecting or discovering a local agent now enables **Inspect Locally** and **Deploy to Foundry** without requiring another refresh.
+- **Agent picker**: Close the dropdown when clicking outside it.
+- **Project validation**: Reject invalid project endpoints and resource IDs before using Foundry credentials.
+
 ## Version 1.0.17
 
 This release introduces support for Prompt Agents with harness and improves VS Code local inspection.
