@@ -1,5 +1,26 @@
 # What's New in Foundry Toolkit for VS Code
 
+## Version 1.6.19 - 4 November, 2026
+
+This release of Microsoft Foundry Toolkit for VS Code adds project Connections models to model selection and Model Playground, model policy checks, and container-build progress. It also improves Model Lab precision handling, catalog cards, and agent-creation controls.
+
+### Added
+
+- **Connections models**: Select models from your project's Connections in Agent Builder, hosted-agent creation, and Model Playground. Run these models in Model Playground with streaming responses and conversation history.
+- **Model policy checks**: See Azure Policy findings in Model Details and before model deployment. Audit findings remain non-blocking.
+- **Hosted-agent build progress**: The deployment panel stays open during container-based hosted-agent deployment. Follow Azure Container Registry build output in the **Foundry Toolkit** Output channel at **Debug** or **Trace** level.
+- **Model Lab FP32 configurations**: Select FP32 build configurations and identify their precision in run history. FP16 and FP32 configurations are labeled **no quant**. The default selection prefers FP16, then FP32, over quantized configurations.
+
+### Changed
+
+- **Catalog cards**: Model and Tool Catalog cards use consistent styling and action feedback on hover or keyboard focus. Toolbox cards show their tools and skills, with details accessible by mouse or keyboard.
+
+### Fixed
+
+- **Prompt-agent creation**: **Add Prompt Agent** in the Agents list now opens the creation dialog before Agent Builder, so you can enter an agent name or cancel without starting creation.
+- **Create Agent**: Creation options now have consistent hover and keyboard-focus feedback.
+- **Tool selection**: Selected Agent-to-Agent (A2A) agent cards retain their highlight on hover. Tool descriptions and search labels are more consistent across the selection dialog.
+
 ## Version 1.6.18 - 28 October, 2026
 
 This release of Microsoft Foundry Toolkit for VS Code adds a redesigned hosted-agent sample gallery, Microsoft Copilot harness support (preview), and Foundry model filters. It also improves Model Lab runtime labels and dialog appearance.
