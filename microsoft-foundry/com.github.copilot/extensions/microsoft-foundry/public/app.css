@@ -294,6 +294,9 @@ body {
 }
 .menu-retry:hover { background: var(--bg-subtle); border-color: var(--accent); }
 .menu-note { padding: 4px 8px 6px; color: var(--muted); font-size: 12px; font-style: italic; }
+.model-group-label { padding: 6px 10px; color: var(--muted); font-size: 11px; font-weight: 600; line-height: 16px; }
+.model-option-group + .model-option-group { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border); }
+.model-option-description { display: block; color: var(--muted); font-size: 11px; line-height: 16px; white-space: normal; overflow-wrap: anywhere; font-weight: 400; }
 .menu-spinner {
     width: 14px; height: 14px; flex: 0 0 auto; border-radius: 50%;
     border: 2px solid var(--border); border-top-color: var(--accent);
@@ -1575,7 +1578,7 @@ body {
 .canvas-resource-option { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 32px; padding: 6px 10px; border: 0; background: var(--bg); color: var(--text); font: inherit; font-size: 12px; line-height: 16px; text-align: left; }
 .canvas-resource-option:hover, .canvas-resource-option:focus-visible { background: var(--colorNeutralBackground3); }
 .canvas-resource-option > .fi { flex: 0 0 16px; --fi-size: 16px; }
-.canvas-option-label { min-width: 0; overflow-wrap: anywhere; }
+.canvas-option-label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .canvas-added { flex: 0 0 auto; border: 1px solid light-dark(#107c10, #92c353); border-radius: 10px; padding: 0 3px; font-size: 10px; line-height: 13px; color: light-dark(#107c10, #92c353); }
 .managed-agent-dropdown { flex: 0 1 auto; max-width: calc(100% - 30px); }
 .managed-agent-dropdown .canvas-resource-trigger { width: auto; max-width: 100%; min-height: 28px; padding: 0; border: 0; background: transparent; gap: 6px; }

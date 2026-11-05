@@ -1,7 +1,5 @@
 ---
-name: validate-microsoft-foundry-hosted-agent
-description: Validate one Microsoft Foundry hosted agent against Microsoft Foundry best practices and open its validation report. Use when the user explicitly asks to validate a Foundry hosted agent or invokes this skill.
-compatibility: Requires GitHub Copilot with the microsoft-foundry skill and agent-builder canvas.
+description: Validate one Microsoft Foundry hosted agent against Microsoft Foundry best practices and open its validation report.
 ---
 
 # Validate a Microsoft Foundry hosted agent
