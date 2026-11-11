@@ -1,5 +1,22 @@
 # What's New in Foundry Toolkit for VS Code
 
+## Version 1.6.20 - 11 November, 2026
+
+This release of Microsoft Foundry Toolkit for VS Code adds agent policy checks and improves model deployment controls and policy notifications.
+
+### Added
+
+- **Agent policy checks**: See applicable Azure Policy restrictions in Agent Builder and during hosted-agent creation and deployment, including container image and registry checks.
+
+### Changed
+
+- **Model deployment form**: Use consistent form controls and spacing, with a synchronized tokens-per-minute slider and numeric input.
+
+### Fixed
+
+- **Model policy notifications**: Restored non-blocking notifications in Model Playground and Agent Builder when a selected Foundry model does not comply with your organization's policy.
+- **Model deployment**: Recover from an unavailable initial deployment type instead of showing a blank page. Show a clear message when no models can be deployed, and avoid quota warnings before model selection or while capacity loads.
+
 ## Version 1.6.19 - 4 November, 2026
 
 This release of Microsoft Foundry Toolkit for VS Code adds project Connections models to model selection and Model Playground, model policy checks, and container-build progress. It also improves Model Lab precision handling, catalog cards, and agent-creation controls.
