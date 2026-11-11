@@ -223,6 +223,7 @@ jobs:
           rm -rf "$tap_dir"
           ln -s "$GITHUB_WORKSPACE/homebrew-foundry" "$tap_dir"
           brew tap | grep -qx 'microsoft/foundry'
+          brew trust --cask microsoft/foundry/devpack
           brew style microsoft/foundry/devpack
           brew audit --cask --strict microsoft/foundry/devpack
 
