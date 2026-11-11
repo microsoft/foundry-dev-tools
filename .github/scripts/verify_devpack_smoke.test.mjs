@@ -176,6 +176,37 @@ test("AKA and brew console output must show a successful Canvas group and final 
   }
 });
 
+test("Canvas console output accepts both branding forms", () => {
+  for (const name of ["Foundry Canvas", "Foundry Canvas (preview)"]) {
+    const done = `Done: Installing ${name} for GitHub Copilot App`;
+    verifyRun(release, "with-code", "console", `${done}\n${consoleSuccess}`);
+    verifyRun(
+      release, "with-code", "console",
+      `\x1b[32m(\u2713) Done:\x1b[0m Installing ${name} for GitHub Copilot App\r\n${consoleSuccess}\r\n`,
+    );
+    assert.throws(
+      () => verifyRun(release, "with-code", "console", `${done}\nALMOST DONE: Complete setup.`),
+      /fully successful setup/,
+    );
+  }
+});
+
+test("Canvas console output rejects unsuccessful or partial matches with either branding", () => {
+  for (const name of ["Foundry Canvas", "Foundry Canvas (preview)"]) {
+    const done = `Done: Installing ${name} for GitHub Copilot App`;
+    for (const line of [
+      ...["Skipped:", "Pending:", "Failed:"].map(status => done.replace("Done:", status)),
+      `Not ${done}`,
+      `${done} (skipped)`,
+    ]) {
+      assert.throws(
+        () => verifyRun(release, "with-code", "console", `${line}\n${consoleSuccess}`),
+        /Canvas did not install successfully/,
+      );
+    }
+  }
+});
+
 test("older releases retain their existing log and console expectations", () => {
   const old = "devpack-installer-0.1.4";
   verifyRun(old, "with-code", "log", finished.replace("deferred=False", "deferred=True"));

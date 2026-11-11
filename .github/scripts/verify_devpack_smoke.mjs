@@ -62,7 +62,7 @@ export function verifyRun(releaseTag, scenario, format, output) {
       throw new Error("Installer output does not report a fully successful setup");
     }
     if (scenario === "with-code" &&
-        !/^(?:\(\u2713\) )?Done: Installing Foundry Canvas \(preview\) for GitHub Copilot App\r?$/m.test(text)) {
+        !/^(?:\(\u2713\) )?Done: Installing Foundry Canvas(?: \(preview\))? for GitHub Copilot App\r?$/m.test(text)) {
       throw new Error("Canvas did not install successfully in this run");
     }
   }
