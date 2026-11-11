@@ -627,8 +627,8 @@ jobs:
           [ "$FOUNDRY_DEVPACK_COLLECT_TELEMETRY" = "$expected" ]
           echo "Testing $RELEASE_TAG from $INSTALL_SOURCE on macos ${{ matrix.platform.arch }} (${{ matrix.scenario }}), telemetry=$TELEMETRY_ENABLED"
 
-      - name: Refresh Homebrew metadata for daily smoke
-        if: github.event_name == 'schedule' || inputs.install_source == 'all'
+      - name: Refresh Homebrew metadata
+        if: github.event_name == 'schedule' || inputs.install_source == 'all' || matrix.source == 'brew'
         shell: bash
         run: brew update
 
