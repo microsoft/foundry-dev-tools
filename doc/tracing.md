@@ -15,6 +15,9 @@ All frameworks or SDKs that support OTLP and follow [semantic conventions for ge
 > 1. The SDKs in brackets are third-party SDKs to support OTLP instrumentation. They are used because the official SDKs don't support OTLP.
 > 2. These instrumentation SDKs don't strictly adhere to the OpenTelemetry semantic conventions for generative AI systems.
 
+> [!IMPORTANT]
+> For **Tracing** tool to be enabled on Linux OS the version of GLIBC (GNU C Library) needs to be version 2.39+ (check with `ldd --version`) - this corresponds to **Ubuntu 24.04 Noble** or **Debian 13 Trixie**
+
 ## How to Get Started with Tracing
 
 1. Select **Tracing** in the tree view to open the tracing webview and click **Start Collector** button to start the local OTLP trace collector server.
