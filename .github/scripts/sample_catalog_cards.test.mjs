@@ -464,6 +464,7 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                 const stage = request.messages[0].content.startsWith('You generate') ? 'metadata'
                     : request.messages[0].content.startsWith('You review Details') ? 'details'
                     : request.messages[0].content.startsWith('You review a proposed') ? 'reuse' : 'placement';
+                const requestInput = stage !== 'metadata' ? JSON.parse(request.messages[1].content) : undefined;
                 const evidenceInput = stage === 'details' || stage === 'reuse' ? JSON.parse(request.messages[1].content) : undefined;
                 if (evidenceInput) {
                     assert.deepEqual(evidenceInput.evidenceSources, evidenceInput.implementations.map(({ template, readmeExcerpts }) => ({
@@ -472,8 +473,11 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                 }
                 aiRequests.push({
                     stage, budget: request.max_completion_tokens, reasoningEffort: request.reasoning_effort,
-                    evidenceSources: evidenceInput?.evidenceSources, reviewCorrection: evidenceInput?.reviewCorrection,
+                    evidenceSources: evidenceInput?.evidenceSources, reviewCorrection: requestInput?.reviewCorrection,
+                    candidateIds: requestInput?.candidates?.map(candidate => candidate.id),
                 });
+                if (requestInput?.candidates) assert.ok(request.messages[0].content.includes(JSON.stringify(requestInput.candidates.map(candidate => candidate.id))));
+                if (scenario.contractApiStatus && stage === scenario.contractApiStage) return new Response('Request failed', { status: scenario.contractApiStatus });
                 if (evidenceInput && scenario.evidenceApiStatus) return new Response('Authentication failed', { status: scenario.evidenceApiStatus });
                 if (scenario.aiFailure) return new Response('AI unavailable', { status: 400 });
                 if (scenario.emptyFinish) return Response.json({ choices: [{ finish_reason: scenario.emptyFinish, message: { content: '' } }] });
@@ -525,6 +529,7 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                     if (scenario.candidates) assert.deepEqual(input.candidates.map(card => card.id), scenario.candidates);
                     content = scenario.decision ?? { cardId: input.candidates[0]?.id, reason: 'Same task and unchanged Details apply.' };
                 }
+                content = structuredClone(content);
                 if (Object.hasOwn(scenario, 'excerptId') && (stage === 'details' || stage === 'reuse')) {
                     for (const review of Object.values(content.fieldReviews ?? content.candidateReviews)) {
                         review.evidence = review.evidence.map(({ path }) => ({ path, excerptId: scenario.excerptId }));
@@ -562,6 +567,32 @@ function runIncremental(root, previous, discoveredPaths, scenario = {}) {
                         content.fieldReviews.bestFit.action = 'change';
                         if (scenario.badDetails.kind === 'no-op-change') content.detailsPatch.bestFit = evidenceInput.card.details.bestFit;
                     }
+                }
+                if (scenario.badContract?.stage === stage
+                    && aiRequests.filter(item => item.stage === stage).length <= (scenario.badContract.failures ?? 1)) {
+                    if (stage === 'reuse') {
+                        const reviews = content.candidateReviews;
+                        const firstId = requestInput.candidates[0].id;
+                        if (scenario.badContract.kind === 'missing') delete reviews[firstId];
+                        else if (scenario.badContract.kind === 'array') content.candidateReviews = [];
+                        else if (scenario.badContract.kind === 'boolean') reviews[firstId].sameTask = 'false';
+                        else if (scenario.badContract.kind === 'reason') reviews[firstId].reason = '';
+                        else if (scenario.badContract.kind === 'new-side') reviews[firstId].evidence = reviews[firstId].evidence.filter(item => item.path !== requestInput.template.path);
+                        else if (scenario.badContract.kind === 'candidate-side') reviews[firstId].evidence = [{ path: requestInput.template.path, excerptId: 'p1' }];
+                        else {
+                            for (const id of ['conversation-steering', 'resilient-streaming-2', 'steerable-conversations-2']) {
+                                reviews[id] = structuredClone(reviews[firstId]);
+                            }
+                        }
+                    } else if (scenario.badContract.kind === 'unknown') content.cardId = 'invented-card';
+                    else if (scenario.badContract.kind === 'both') content.cardId = requestInput.candidates[0]?.id ?? 'invented-card';
+                    else if (scenario.badContract.kind === 'reason') content.reason = '';
+                    else if (scenario.badContract.kind === 'pattern') content.card.categoryId = 'invented-pattern';
+                    else if (scenario.badContract.kind === 'title') content.card.title = '';
+                    else if (scenario.badContract.kind === 'id') content.card.id = 42;
+                    else if (scenario.badContract.kind === 'details') delete content.card.details.summary;
+                    else if (scenario.badContract.kind === 'html') content.card.details.summary = '<b>Not plain text</b>';
+                    else if (scenario.badContract.kind === 'requirements') content.card.details.requirements = ['one two three four five six'];
                 }
                 return Response.json({ choices: [{ message: { content: JSON.stringify(content) } }] });
             }
@@ -979,6 +1010,96 @@ for (const sameTask of [true, false]) {
         assert.deepEqual(requests.map(request => request.stage), sameTask ? ['metadata', 'placement', 'reuse', 'details'] : ['metadata', 'placement', 'reuse']);
     });
 }
+
+for (const stage of ['placement', 'reuse']) {
+    const kinds = stage === 'placement'
+        ? ['unknown', 'both', 'reason', 'pattern', 'title', 'id', 'details', 'html', 'requirements']
+        : ['extra', 'missing', 'array', 'boolean', 'reason', 'new-side', 'candidate-side'];
+    for (const kind of kinds) {
+        test(`incremental CLI corrects ${stage} contract ${kind} before applying decisions`, context => {
+            const { root, source, definitions, outputPath } = temporaryFixture(context);
+            const newPath = 'samples/python/hosted-agents/langgraph/workflow';
+            const result = runIncremental(root, source, [...source.templates.map(template => template.path), newPath], {
+                badContract: { stage, kind },
+                decision: { card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'Compare this proposed card independently.' },
+            });
+            assert.equal(result.status, 0, result.stderr);
+            const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length))
+                .filter(request => request.stage === stage);
+            assert.equal(requests.length, 2);
+            assert.equal(requests[0].reviewCorrection, undefined);
+            assert.ok(requests[1].reviewCorrection.error);
+            assert.deepEqual(requests[1].candidateIds, requests[0].candidateIds);
+            if (kind === 'extra') {
+                assert.match(requests[1].reviewCorrection.error, /unexpected IDs:.*conversation-steering.*resilient-streaming-2.*steerable-conversations-2/);
+                assert.ok(Object.hasOwn(requests[1].reviewCorrection.previousResponse.candidateReviews, 'conversation-steering'));
+            }
+            if (kind === 'missing') assert.match(requests[1].reviewCorrection.error, /missing IDs:.*writing-workflow/);
+            assert.match(result.stderr, /retrying with review validation feedback/);
+            const output = JSON.parse(readFileSync(outputPath, 'utf8'));
+            assertSnapshot(output);
+            assert.equal(output.cards.length, 1, 'Correction must not bypass the same-task reuse decision');
+            assert.ok(output.cards[0].templatePaths.includes(newPath));
+            assert.deepEqual(output.templates.slice(0, source.templates.length), source.templates);
+        });
+    }
+
+    test(`incremental CLI bounds repeated ${stage} contract errors without writing`, context => {
+        const { root, source, definitions, outputPath, directory } = temporaryFixture(context);
+        const before = readFileSync(outputPath);
+        const result = runIncremental(root, source, [...source.templates.map(template => template.path), 'samples/python/hosted-agents/langgraph/workflow'], {
+            badContract: { stage, kind: stage === 'reuse' ? 'extra' : 'unknown', failures: 3 },
+            decision: { card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'Compare independently.' },
+        });
+        assert.equal(result.status, 1, result.stderr);
+        assert.match(result.stderr, /failed after 3 review attempts/);
+        const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+        assert.equal(requests.filter(request => request.stage === stage).length, 3);
+        assert.deepEqual(readFileSync(outputPath), before);
+        assert.ok(!readdirSync(directory).some(file => file.endsWith('.tmp')));
+    });
+
+    test(`incremental CLI does not retry ${stage} API errors as contract corrections`, context => {
+        const { root, source, definitions, outputPath } = temporaryFixture(context);
+        const before = readFileSync(outputPath);
+        const result = runIncremental(root, source, [...source.templates.map(template => template.path), 'samples/python/hosted-agents/langgraph/workflow'], {
+            contractApiStage: stage, contractApiStatus: 401, maxAttempts: 5,
+            decision: { card: { ...definitions.cards[0], id: 'proposed-new-card' }, reason: 'Compare independently.' },
+        });
+        assert.equal(result.status, 1, result.stderr);
+        assert.match(result.stderr, /LLM API returned 401/);
+        assert.doesNotMatch(result.stderr, /retrying with review validation feedback/);
+        const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length));
+        assert.equal(requests.filter(request => request.stage === stage).length, 1);
+        assert.deepEqual(readFileSync(outputPath), before);
+    });
+}
+
+test('incremental CLI corrects the exact four-candidate reuse contract from the failing run', context => {
+    const { root, source, definitions, outputPath } = temporaryFixture(context);
+    const ids = ['event-grid-blob-summary', 'resilient-steering', 'resilient-streaming', 'steerable-conversations'];
+    source.templates = ids.map(id => ({ ...source.templates[0], path: `samples/python/hosted-agents/agent-framework/${id}` }));
+    definitions.cards = ids.map((id, index) => ({ ...structuredClone(definitions.cards[0]), id, templatePaths: [source.templates[index].path] }));
+    writeFileSync(outputPath, JSON.stringify(buildCatalogWithCards(source, definitions)));
+    const before = JSON.parse(readFileSync(outputPath, 'utf8'));
+    const newPath = 'samples/python/hosted-agents/langgraph/workflow';
+    const result = runIncremental(root, source, [...source.templates.map(template => template.path), newPath], {
+        badContract: { stage: 'reuse', kind: 'extra' },
+        decision: { card: { ...definitions.cards[0], id: 'branch-responses-memory' }, reason: 'New task requires all compatible candidates reviewed.' },
+        sameTask: false,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const requests = JSON.parse(result.stdout.split(/\r?\n/).find(line => line.startsWith('AI_REQUESTS=')).slice('AI_REQUESTS='.length))
+        .filter(request => request.stage === 'reuse');
+    assert.equal(requests.length, 2);
+    assert.deepEqual(requests[0].candidateIds, ids);
+    assert.deepEqual(Object.keys(requests[1].reviewCorrection.previousResponse.candidateReviews).sort(),
+        [...ids, 'conversation-steering', 'resilient-streaming-2', 'steerable-conversations-2'].sort());
+    const output = JSON.parse(readFileSync(outputPath, 'utf8'));
+    assertSnapshot(output);
+    assert.deepEqual(output.cards.slice(0, ids.length), before.cards);
+    assert.equal(output.cards.at(-1).id, 'branch-responses-memory');
+});
 
 for (const scenario of [
     { reuseFailure: true },

@@ -31,11 +31,15 @@ Action version tags follow the existing workflow. No source code from the sample
 bundle or data PR is executed. No approval or merge is automated.
 
 Card reuse and Details reviews may cite only the supplied sample paths and
-README excerpt IDs. Invalid evidence or Details contract violations (such as
-an action that disagrees with its patch) are returned to the model with the exact
+README excerpt IDs. Placement, reuse and Details decisions are checked against
+the same validators before accepting model output and before applying changes.
+Invalid candidate IDs, missing candidate reviews, incomplete new-card metadata,
+invalid evidence and Details contract violations (such as an action that
+disagrees with its patch) are returned to the model with the exact
 validation error, the unmodified response and the allowed references, for at most
-three review attempts in total. The same Details validator runs before accepting
-a model response and before applying its patch. Quotes are resolved from the
+three attempts per decision in total. Candidate-set errors identify the missing
+and unexpected IDs; invalid entries are never silently dropped or filled in.
+Quotes are resolved from the
 pinned README, never trusted from model output. Exhausted review retries still
 stop publication without writing the catalog; authentication errors and
 incompatible-card decisions are not retried as review validation errors.
