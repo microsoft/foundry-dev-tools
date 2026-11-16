@@ -136,6 +136,48 @@ export function buildCatalogWithCards(source, definitions) {
     };
 }
 
+export function validateCardPlacement({ template, candidates, patterns }, decision) {
+    assert.ok(decision && typeof decision === 'object' && !Array.isArray(decision), `Missing AI card decision for ${template.path}`);
+    requireText(decision.reason, `${template.path} placement reason`);
+    if (decision.cardId !== undefined) {
+        assert.equal(decision.card, undefined, 'Choose an existing card or create one, not both');
+        assert.ok(candidates.some(card => card.id === decision.cardId), `Unknown or conflicting card for ${template.path}: ${decision.cardId}`);
+        return;
+    }
+    const card = decision.card;
+    assert.ok(card && typeof card === 'object' && !Array.isArray(card), `New card is required for ${template.path}`);
+    assert.ok(typeof card.id === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(card.id), 'Invalid new card ID');
+    requireText(card.title, 'New card title');
+    assert.ok(patterns.some(pattern => pattern.id === card.categoryId), `Unknown Pattern: ${card.categoryId}`);
+    assert.ok(card.details && typeof card.details === 'object', 'New card Details required');
+    for (const field of DETAIL_TEXT_FIELDS) requireText(card.details[field], `New card ${field}`);
+    for (const field of DETAIL_LIST_FIELDS) {
+        assert.ok(Array.isArray(card.details[field]) && card.details[field].length > 0, `New card ${field} must be a non-empty array`);
+        card.details[field].forEach(value => requireText(value, `New card ${field}`));
+    }
+    assert.equal(card.details.requirements.length, 1, 'New card Requirements must be one value');
+    assert.ok(card.details.requirements[0].trim().split(/\s+/).length <= 5, 'New card Requirements must total at most five words');
+}
+
+export function validateCardReuseReview({ template, candidates }, review) {
+    const reviews = review?.candidateReviews;
+    assert.ok(reviews && typeof reviews === 'object' && !Array.isArray(reviews), 'candidateReviews required');
+    const expected = candidates.map(candidate => candidate.id);
+    const actual = Object.keys(reviews);
+    const missing = expected.filter(id => !Object.hasOwn(reviews, id));
+    const unexpected = actual.filter(id => !expected.includes(id));
+    assert.ok(!missing.length && !unexpected.length,
+        `Review every compatible candidate; missing IDs: ${JSON.stringify(missing)}; unexpected IDs: ${JSON.stringify(unexpected)}`);
+    for (const candidate of candidates) {
+        const assessment = reviews[candidate.id];
+        assert.equal(typeof assessment?.sameTask, 'boolean', 'Candidate sameTask must be boolean');
+        requireText(assessment.reason, `${candidate.id} reuse reason`);
+        assert.ok(Array.isArray(assessment.evidence), `${candidate.id} reuse evidence required`);
+        assert.ok(assessment.evidence.some(item => item.path === template.path), 'Reuse review must cite the new implementation');
+        assert.ok(assessment.evidence.some(item => candidate.templatePaths.includes(item.path)), 'Reuse review must cite the candidate');
+    }
+}
+
 export async function reconcileCardDefinitions(previous, source, definitions, chooseCard, reviewNewCard) {
     buildCatalogWithCards(previous, definitions);
     const byPath = validateSource(source);
@@ -159,38 +201,25 @@ export async function reconcileCardDefinitions(previous, source, definitions, ch
         const candidates = result.cards.filter(card => !card.templatePaths.some(templatePath =>
             DIMENSION_IDS.every(dimension => byPath.get(templatePath).template[dimension] === template[dimension])
         ));
-        const decision = await chooseCard({
+        const input = {
             template: structuredClone(template),
             candidates: structuredClone(candidates),
             patterns: structuredClone(PATTERNS),
-        });
-        assert.ok(decision && typeof decision === 'object', `Missing AI card decision for ${template.path}`);
-        requireText(decision.reason, `${template.path} placement reason`);
+        };
+        const decision = await chooseCard(input);
+        validateCardPlacement(input, decision);
         if (decision.cardId !== undefined) {
-            assert.equal(decision.card, undefined, 'Choose an existing card or create one, not both');
             const target = candidates.find(card => card.id === decision.cardId);
-            assert.ok(target, `Unknown or conflicting card for ${template.path}: ${decision.cardId}`);
             target.templatePaths.push(template.path);
         } else {
             const card = decision.card;
-            assert.ok(card && typeof card === 'object', `New card is required for ${template.path}`);
-            assert.match(card.id ?? '', /^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Invalid new card ID');
             const comparable = candidates.filter(candidate => candidate.categoryId === card.categoryId);
             if (comparable.length) {
                 assert.equal(typeof reviewNewCard, 'function', `New card reuse review required for ${template.path}`);
                 const review = await reviewNewCard({
                     template: structuredClone(template), card: structuredClone(card), candidates: structuredClone(comparable),
                 });
-                assert.ok(review?.candidateReviews && typeof review.candidateReviews === 'object', 'candidateReviews required');
-                assert.deepEqual(Object.keys(review.candidateReviews).sort(), comparable.map(candidate => candidate.id).sort(), 'Review every compatible candidate');
-                for (const candidate of comparable) {
-                    const assessment = review.candidateReviews[candidate.id];
-                    assert.equal(typeof assessment?.sameTask, 'boolean', 'Candidate sameTask must be boolean');
-                    requireText(assessment.reason, `${candidate.id} reuse reason`);
-                    assert.ok(Array.isArray(assessment.evidence), `${candidate.id} reuse evidence required`);
-                    assert.ok(assessment.evidence.some(item => item.path === template.path), 'Reuse review must cite the new implementation');
-                    assert.ok(assessment.evidence.some(item => candidate.templatePaths.includes(item.path)), 'Reuse review must cite the candidate');
-                }
+                validateCardReuseReview({ template, candidates: comparable }, review);
                 console.log(`Card reuse review: ${JSON.stringify({ templatePath: template.path, ...review })}`);
                 const target = comparable.find(candidate => review.candidateReviews[candidate.id].sameTask);
                 if (target) {
@@ -198,9 +227,6 @@ export async function reconcileCardDefinitions(previous, source, definitions, ch
                     continue;
                 }
             }
-            assert.equal(card.details?.requirements?.length, 1, 'New card Requirements must be one value');
-            requireText(card.details.requirements[0], 'New card Requirements');
-            assert.ok(card.details.requirements[0].trim().split(/\s+/).length <= 5, 'New card Requirements must total at most five words');
             let cardId = card.id;
             for (let suffix = 2; reservedIds.has(cardId); suffix++) {
                 cardId = `${card.id}-${suffix}`;
