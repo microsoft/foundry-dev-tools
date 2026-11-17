@@ -594,11 +594,14 @@ jobs:
         platform:
           - { os: macos-15-intel, arch: x64 }
           - { os: macos-latest, arch: arm64 }
-        # Fresh Azure CLI installs on Intel now build dependencies from source
-        # without Homebrew bottle support. Retain baseline/with-code coverage.
+        # Homebrew no longer supports Intel macOS or provides bottles for it.
+        # Fresh Azure CLI and cask dependency installs fail before DevPack runs.
+        # Retain Intel baseline/with-code via release/aka and full ARM coverage.
         exclude:
           - platform: { os: macos-15-intel, arch: x64 }
             scenario: no-az
+          - platform: { os: macos-15-intel, arch: x64 }
+            source: brew
 
     env:
       RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
