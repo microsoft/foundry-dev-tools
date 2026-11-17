@@ -8,9 +8,10 @@ import test from "node:test";
 import { buildReport, issueMarker, issueTitle, prepare, prepareInputs, report, reportAction, selectRelease, sourceMatrices } from "./devpack_smoke_schedule.mjs";
 
 const release = (tag, extras = {}) => ({ tag_name: tag, published_at: "2026-09-21T00:00:00Z", draft: false, ...extras });
-// The workflow excludes Intel/no-az on macOS: five jobs per source instead of six.
+// macOS excludes Intel/no-az for every source and Intel/brew entirely.
 const jobCount = matrix => Object.entries(matrix)
-  .reduce((count, [os, sources]) => count + sources.length * (os === "macos" ? 5 : 6), 0);
+  .reduce((count, [os, sources]) => count + sources.length * (os === "macos" ? 5 : 6) -
+    (os === "macos" && sources.includes("brew") ? 2 : 0), 0);
 
 test("selects newest numeric DevPack version, including GitHub prereleases", () => {
   assert.equal(selectRelease([
@@ -28,17 +29,17 @@ test("missing published DevPack is an error, not a fallback tag", () => {
   assert.throws(() => selectRelease([release("other-1.0.0")]), /No published DevPack/);
 });
 
-test("daily matrix has 45 valid jobs across all four sources", () => {
+test("daily matrix has 43 valid jobs across all four sources", () => {
   const matrix = sourceMatrices("all");
   assert.deepEqual(matrix, {
     windows: ["release", "winget", "aka"],
     linux: ["release", "aka"],
     macos: ["release", "brew", "aka"],
   });
-  assert.equal(jobCount(matrix), 45);
+  assert.equal(jobCount(matrix), 43);
 });
 
-test("single-source matrices retain OS coverage except macOS Intel/no-az", () => {
+test("single-source matrices retain supported OS and architecture coverage", () => {
   for (const source of ["release", "aka"]) {
     const matrix = sourceMatrices(source);
     assert.equal(jobCount(matrix), 17);
@@ -46,7 +47,7 @@ test("single-source matrices retain OS coverage except macOS Intel/no-az", () =>
   assert.deepEqual(sourceMatrices("winget"), { windows: ["winget"], linux: [], macos: [] });
   assert.deepEqual(sourceMatrices("brew"), { windows: [], linux: [], macos: ["brew"] });
   assert.equal(jobCount(sourceMatrices("winget")), 6);
-  assert.equal(jobCount(sourceMatrices("brew")), 5);
+  assert.equal(jobCount(sourceMatrices("brew")), 3);
   assert.throws(() => sourceMatrices("homebrew"), /Invalid installation source/);
 });
 
