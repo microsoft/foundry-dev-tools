@@ -1,5 +1,25 @@
 # What's New in Foundry Toolkit for VS Code
 
+## Version 1.6.21 - 17 November, 2026
+
+This release of Microsoft Foundry Toolkit for VS Code adds prompt-agent trace and evaluation actions in Copilot Chat. It also improves model selection, policy guidance, tool dialogs, and hosted-agent resource configuration.
+
+### Added
+
+- **Prompt-agent analysis**: From Agent Builder, open an agent version's traces in Foundry Portal or start a Copilot Chat prompt for trace analysis or evaluation setup.
+
+### Changed
+
+- **Connections model selection**: Model options show the model name, connection reference, and connection type when available in Model Playground, Agent Builder, and hosted-agent creation.
+- **Policy guidance**: See policy-specific errors when saving agents or toolboxes with disallowed tools. Model and tool policy messages show administrator-defined assignment names when available, and **View policy** opens the policy details in Foundry Portal.
+- **Catalog controls**: Model and Tool Catalog sections use consistent **Show more** labels.
+- **Tool selection**: Selected tool cards use VS Code theme colors and retain their highlight on hover. The **Configured** tab omits redundant headings when it contains only Foundry tools.
+
+### Fixed
+
+- **Tool connection dialogs**: Fixed validation icons overlapping error text, made fixed parameter and authentication fields easier to read, and aligned Work IQ (preview) connection fields with their icons.
+- **Hosted-agent resource settings**: Invalid CPU and memory settings stop deployment with corrective guidance. Valid custom allocations are preserved when switching between Code and Container deployment.
+
 ## Version 1.6.20 - 11 November, 2026
 
 This release of Microsoft Foundry Toolkit for VS Code adds agent policy checks and improves model deployment controls and policy notifications.
@@ -185,7 +205,7 @@ This release adds Agent-to-Agent connections and toolbox workflows for prompt ag
 ### Added
 
 - **Agent Builder**
-  - **Prompt Agent toolboxes**: Enable toolbox support with the `windowsaistudio.enableToolboxInPromptAgent` setting, which is disabled by default. Attach a toolbox from Agent Builder's **Add tools** menu or use **Add to Prompt Agent** from the Toolbox resource list. Inspect its tools and skills in a rich, collapsible card; manage versions and approval policies; configure nested tools; or replace, remove, and opt out of the toolbox.
+  - **Prompt Agent toolboxes**: This release introduced toolbox support behind the `windowsaistudio.enableToolboxInPromptAgent` setting, which was disabled by default. The setting has since been removed and toolbox support is always enabled. Attach a toolbox from Agent Builder's **Add tools** menu or use **Add to Prompt Agent** from the Toolbox resource list. Inspect its tools and skills in a rich, collapsible card; manage versions and approval policies; configure nested tools; or replace, remove, and opt out of the toolbox.
   - **Agent-to-Agent (A2A) connections (preview)**: Add an [A2A-compatible agent](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/tool-catalog#custom-tools) from a configured connection, the Foundry account catalog, or a custom HTTPS endpoint. Add it directly to a prompt agent or through an attached toolbox.
 - **Hosted Agent deep links**: Open a named Hosted Agent's Details or Optimization page in VS Code directly from a Microsoft Foundry portal link.
 - **Agent Inspector**
