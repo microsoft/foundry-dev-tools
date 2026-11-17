@@ -2,6 +2,47 @@
 
 Notable changes to the Microsoft Foundry Canvas plugin for GitHub Copilot App.
 
+## Version 1.0.20
+
+This release adds Foundry organization governance policy support, separates Agent Inspector into its own tab, adds a footer privacy link, and improves model selection and region warnings.
+
+### Added
+
+- **Organization governance policies**: Surface model, agent-type, and tool policy restrictions with **Not compliant** model badges, policy banners, deployment checks, and **View policy** links to Microsoft Foundry Portal.
+- **Connected model subtitles**: Show connection type and connection name subtitles for connected model choices in the Hosted Agent model picker.
+- **Privacy link**: Add a **Privacy** link to the Canvas footer alongside **Feedback**.
+
+### Changed
+
+- **Agent Inspector**: Open **Inspect Locally** in its own **Agent Inspector** Canvas tab instead of an in-panel overlay, allowing Builder and Inspector to run side by side while aligning Inspector colors with the host theme.
+- **Prompt Agent regions**: Load supported Prompt Agent harness regions dynamically at startup with a bundled fallback when offline or unavailable.
+- **Region warnings**: Show Prompt Agent and Hosted Agent region-availability notices as unified warning banners ordered below active agent policy notices across creation, catalog, and management views.
+- **Hosted Agent region sync**: Update the region sync script to read the public Microsoft Learn source.
+
+### Fixed
+
+- **Resource dropdown hover**: Prevent the first resource option from retaining hover action labels after moving the pointer away while preserving keyboard navigation.
+- **Agent Inspector proxy**: Remove the plain-HTTP fallback proxy from the Inspector backend.
+
+## Version 1.0.19
+
+This release adds connected model selection for Hosted Agents, expands Prompt Agent harness regions, and aligns validation commands and Canvas branding.
+
+### Added
+
+- **Connected models**: Select connected models from API Management and Model Gateway connections in the Hosted Agent model picker.
+- **Prompt Agent regions**: Expand the supported Prompt Agent harness regions list.
+
+### Changed
+
+- **Hosted Agent validation**: Move `/validate-microsoft-foundry-hosted-agent` to a Copilot command rather than a standalone skill.
+- **Canvas branding**: Remove the **(Preview)** suffix from the Canvas tab, title, and page title.
+- **Project discovery**: Keep project identity independent from model discovery.
+
+### Fixed
+
+- **Telemetry**: Record the **Hello World** template selection even when the draft prompt is edited.
+
 ## Version 1.0.18
 
 This release introduces an agent prompt gallery, adds resource refresh and easier agent creation, and improves browsing and agent selection.
