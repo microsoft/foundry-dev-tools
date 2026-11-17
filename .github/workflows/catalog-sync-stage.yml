@@ -1,0 +1,81 @@
+name: Catalog Sync Stage
+
+on:
+  workflow_call:
+    inputs:
+      stage:
+        required: true
+        type: string
+      source_sha:
+        required: true
+        type: string
+      state_artifact:
+        required: true
+        type: string
+    secrets:
+      AZURE_OPENAI_ENDPOINT:
+        required: true
+      AZURE_OPENAI_API_KEY:
+        required: true
+      AZURE_OPENAI_DEPLOYMENT:
+        required: true
+    outputs:
+      source_sha:
+        value: ${{ jobs.stage.outputs.source_sha }}
+      state_artifact:
+        value: ${{ jobs.stage.outputs.state_artifact }}
+
+permissions:
+  contents: read
+
+jobs:
+  stage:
+    name: ${{ inputs.stage }}
+    runs-on: ubuntu-latest
+    outputs:
+      source_sha: ${{ inputs.source_sha }}
+      state_artifact: ${{ format('catalog-sync-{0}-{1}-{2}', inputs.stage, github.run_id, github.run_attempt) }}
+    env:
+      REPO_ROOT: ${{ github.workspace }}
+      AI_REFINE: 'false'
+      IGNORE_EXISTING: 'false'
+      AZURE_OPENAI_REASONING_EFFORT: ${{ vars.AZURE_OPENAI_REASONING_EFFORT }}
+    steps:
+      - name: Checkout pinned workflow revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '20'
+
+      - name: Download previous stage state
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ inputs.state_artifact }}
+          path: ${{ runner.temp }}/catalog-sync
+
+      - name: Run catalog stage
+        env:
+          SYNC_STAGE: ${{ inputs.stage }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+        run: |
+          set -euo pipefail
+          case "$SYNC_STAGE" in metadata|group|details) ;; *) exit 1 ;; esac
+          export CATALOG_SYNC_STATE="$RUNNER_TEMP/catalog-sync/state.json"
+          node .github/scripts/generate_sample_catalog.mjs --sync-stage "$SYNC_STAGE" "$SOURCE_SHA"
+
+      - name: Upload completed stage state
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ format('catalog-sync-{0}-{1}-{2}', inputs.stage, github.run_id, github.run_attempt) }}
+          path: ${{ runner.temp }}/catalog-sync/state.json
+          if-no-files-found: error
+          retention-days: 7

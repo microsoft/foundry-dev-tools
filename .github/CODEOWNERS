@@ -1,0 +1,7 @@
+# Code owners for template/stable.
+#
+# GitHub uses this file (combined with the branch's
+# `require_code_owner_reviews` protection rule) to enforce that every PR
+# targeting this branch is approved by at least one listed owner. The line
+# below applies repo-wide; either owner can satisfy the requirement.
+*       @Yimin-Jin @huimiu
