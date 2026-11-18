@@ -1,7 +1,7 @@
 {
-    "commitSha": "9944503783b2c1041ac8cb2293bbb8e59e5eef15",
+    "commitSha": "41131c1cf192b455b22be28a3866089d149f4b9a",
     "repo": "https://github.com/microsoft-foundry/foundry-samples/",
-    "generatedAt": "2026-11-02T09:05:10Z",
+    "generatedAt": "2026-11-16T06:29:20Z",
     "dimensions": {
         "language": {
             "title": "Select a Language",
@@ -58,6 +58,10 @@
                 {
                     "id": "activity",
                     "displayName": "Activity"
+                },
+                {
+                    "id": "voice_conversation_engine",
+                    "displayName": "Voice Conversation Engine"
                 }
             ]
         }
@@ -1042,33 +1046,6 @@
         {
             "language": "python",
             "framework": "bring-your-own",
-            "protocol": "invocations_ws",
-            "displayName": "Managed Audio Offload",
-            "description": "Agent that receives text and control events while audio input and playback are managed externally.",
-            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/basic",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "invocations_ws",
-            "displayName": "Hosted Audio Target",
-            "description": "Hosted agent that provides managed audio interactions and streams assistant text to callers.",
-            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langchain",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
-            "protocol": "invocations_ws",
-            "displayName": "Voice Live Bridge",
-            "description": "Hosted agent that provides a managed voice experience and streams assistant text.",
-            "path": "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langgraph",
-            "requiresModel": true
-        },
-        {
-            "language": "python",
-            "framework": "bring-your-own",
             "protocol": "responses",
             "displayName": "VoiceLive Copilot Integration",
             "description": "Voice-friendly agent that streams assistant text and tool-status messages for VoiceLive synthesis.",
@@ -1218,6 +1195,105 @@
             "description": "Agent with built-in tool approval and a custom pre-model check, hosted on Microsoft Foundry. The email tool is simulated, so no real email is sent.",
             "path": "samples/python/hosted-agents/langgraph/responses/14-middleware",
             "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "bring-your-own",
+            "protocol": "activity",
+            "displayName": "Echo Agent",
+            "description": "Minimal agent that echoes nonblank messages and welcomes new members. No model is required.",
+            "path": "samples/csharp/hosted-agents/bring-your-own/activity/echo",
+            "requiresModel": false
+        },
+        {
+            "language": "csharp",
+            "framework": "bring-your-own",
+            "protocol": "activity",
+            "displayName": "GitHub Copilot",
+            "description": "Personal assistant with task tools, streaming responses, interactive task cards, and file handling.",
+            "path": "samples/csharp/hosted-agents/bring-your-own/activity/github-copilot",
+            "requiresModel": true
+        },
+        {
+            "language": "csharp",
+            "framework": "bring-your-own",
+            "protocol": "voice_conversation_engine",
+            "displayName": "Adapter Mode",
+            "description": "Voice-enabled echo agent that routes Bridge messages through an adapter and keeps the original handler unchanged.",
+            "path": "samples/csharp/hosted-agents/bring-your-own/conversation_engine/adapter_mode",
+            "requiresModel": false
+        },
+        {
+            "language": "csharp",
+            "framework": "bring-your-own",
+            "protocol": "voice_conversation_engine",
+            "displayName": "Voice Story Playback",
+            "description": "Hosted agent that streams a fixed children’s story through managed voice playback while keeping session state. No model client, prompt, or LLM call is involved.",
+            "path": "samples/csharp/hosted-agents/bring-your-own/conversation_engine/basic",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "agent-framework",
+            "protocol": "responses",
+            "displayName": "Custom Store",
+            "description": "Replaces the built-in hosting storage with Redis-backed stores for transcripts, agent sessions, checkpoints, and function approvals.",
+            "path": "samples/python/hosted-agents/agent-framework/responses/26-custom-store",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "voice_conversation_engine",
+            "displayName": "Adapter Mode",
+            "description": "Hosted agent that adds voice to a streaming Echo agent through an adapter, keeping the business handler separate from Bridge state management.",
+            "path": "samples/python/hosted-agents/bring-your-own/conversation_engine/adapter_mode",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "voice_conversation_engine",
+            "displayName": "Word-by-Word Story",
+            "description": "Streams the same fixed thirty-word children’s story one word at a time, and returns structured JSON input unchanged without speech.",
+            "path": "samples/python/hosted-agents/bring-your-own/conversation_engine/basic",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "voice_conversation_engine",
+            "displayName": "Foreground Background Conversation",
+            "description": "Voice conversation engine with a foreground router for live interaction and a background worker that continues the conversation behind the scenes.",
+            "path": "samples/python/hosted-agents/bring-your-own/conversation_engine/foreground_background",
+            "requiresModel": true
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "voice_conversation_engine",
+            "displayName": "Voice Live Bridge",
+            "description": "Server that streams a fixed thirty-word children's story word by word for each valid user message.",
+            "path": "samples/python/hosted-agents/bring-your-own/conversation_engine/langchain",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "bring-your-own",
+            "protocol": "voice_conversation_engine",
+            "displayName": "Fixed Story Stream",
+            "description": "Agent that streams the same thirty-word children's story word by word in response to each user message.",
+            "path": "samples/python/hosted-agents/bring-your-own/conversation_engine/langgraph",
+            "requiresModel": false
+        },
+        {
+            "language": "python",
+            "framework": "langgraph",
+            "protocol": "responses",
+            "displayName": "Branching Memory",
+            "description": "Checkpointed agent that branches from earlier responses to demonstrate rewind, continuation, and regeneration with remembered state.",
+            "path": "samples/python/hosted-agents/langgraph/responses/15-branching",
+            "requiresModel": false
         }
     ],
     "patterns": [
@@ -1703,7 +1779,7 @@
             "categoryId": "just-the-basics",
             "details": {
                 "summary": "Return incoming messages through a hosted endpoint without calling a language model.",
-                "whatItDoes": "Receives a message and echoes its text through C# Invocations or Python Activity hosting. The Activity variant includes channel delivery and a conversation welcome handler.",
+                "whatItDoes": "Receives a message and echoes its text through C# Invocations or C# or Python Activity hosting. The Activity variants include channel delivery and a conversation welcome handler.",
                 "whyUseIt": "Isolate the hosting and request-routing path from model authentication and inference.",
                 "exampleScenario": "Send a test message and verify that the endpoint returns the expected echo.",
                 "bestFit": "Hosting smoke tests and developers learning Invocations or Activity handlers.",
@@ -1711,14 +1787,15 @@
                     "Receives text messages",
                     "Echoes input without model inference"
                 ],
-                "whatItGenerates": "A C# Invocations echo agent or a Python Activity echo agent with hosting configuration. The Activity deployment also needs the documented Bot and Teams setup; no model is required for either echo handler.",
+                "whatItGenerates": "A C# Invocations echo agent, a Python Activity echo agent, or a C# Activity echo agent with hosting configuration. The Activity deployments also need the documented Bot and Teams setup; no model is required for any echo handler.",
                 "requirements": [
                     "No model required"
                 ]
             },
             "templatePaths": [
                 "samples/csharp/hosted-agents/agent-framework/invocations-echo-agent",
-                "samples/python/hosted-agents/bring-your-own/activity/echo"
+                "samples/python/hosted-agents/bring-your-own/activity/echo",
+                "samples/csharp/hosted-agents/bring-your-own/activity/echo"
             ]
         },
         {
@@ -1831,7 +1908,7 @@
             "categoryId": "teams-m365-channel",
             "details": {
                 "summary": "Bring a model-backed assistant to Teams with conversational tools and file attachments.",
-                "whatItDoes": "Serves conversations and attachments through a Teams integration. Agent Framework variants use Work IQ for Teams and calendar queries; the Python BYO Activity variant uses Copilot SDK for task lists, shared files, and generated downloads.",
+                "whatItDoes": "Serves conversations and attachments through a Teams integration. Agent Framework variants use Work IQ for Teams and calendar queries; the BYO Activity variants use Copilot SDK for task lists, shared files, and generated downloads.",
                 "whyUseIt": "Explore a Teams assistant with hosted-agent logic and channel integration already connected.",
                 "exampleScenario": "Share a document in a Teams conversation and ask the assistant about its contents.",
                 "bestFit": "Teams and Microsoft 365 assistant prototypes using Agent Framework or Copilot SDK.",
@@ -1840,7 +1917,7 @@
                     "Handles shared file attachments",
                     "Uses Work IQ or task and file tools, depending on the implementation"
                 ],
-                "whatItGenerates": "An Agent Framework project or a Python Copilot SDK Activity host with channel and hosting configuration. Work IQ authorization applies to the framework variants; the Activity variant needs Bot/Teams setup and uses a Foundry model rather than GitHub authentication.",
+                "whatItGenerates": "An Agent Framework project or a Copilot SDK Activity host with channel and hosting configuration. Work IQ authorization applies to the framework variants; the Activity variant needs Bot/Teams setup and uses a Foundry model rather than GitHub authentication.",
                 "requirements": [
                     "Model deployment, Teams"
                 ]
@@ -1848,7 +1925,8 @@
             "templatePaths": [
                 "samples/csharp/hosted-agents/agent-framework/teams-activity",
                 "samples/python/hosted-agents/agent-framework/responses/07-teams-activity",
-                "samples/python/hosted-agents/bring-your-own/activity/github-copilot"
+                "samples/python/hosted-agents/bring-your-own/activity/github-copilot",
+                "samples/csharp/hosted-agents/bring-your-own/activity/github-copilot"
             ]
         },
         {
@@ -1983,16 +2061,16 @@
             "categoryId": "voice-realtime",
             "details": {
                 "summary": "Connect a Voice Live client to a hosted audio bridge or text-event adapter.",
-                "whatItDoes": "Bridges browser audio to a managed Voice Live session over a WebSocket, adapts transcribed text and model replies into Voice Live–compatible Invocations SSE events, or emits Responses-based assistant text and tool-status events for VoiceLive synthesis.",
+                "whatItDoes": "Bridges browser audio to a managed Voice Live session over a WebSocket in the invocations_ws variants, adapts transcribed text and model replies into Voice Live–compatible Invocations SSE events, or emits Responses-based assistant text and tool-status events for VoiceLive synthesis. The Conversation Engine adapter-mode variants add voice through Bridge messages without changing the original handler.",
                 "whyUseIt": "Explore the connection between hosted-agent contracts and a voice conversation.",
                 "exampleScenario": "Use the selected sample's compatible client to ask a short spoken question and receive a reply.",
                 "bestFit": "Developers starting Voice Live integration in Python or C#.",
                 "capabilities": [
                     "Connects conversational input to the configured voice or model backend",
                     "Returns voice-compatible replies or events",
-                    "Bridges raw audio in the WebSocket variants; adapts text-event SSE in the Invocations variant; streams assistant text and tool-status events in the Responses (VoiceLive) variant"
+                    "Bridges raw audio in the WebSocket variants; adapts text-event SSE in the Invocations variant; streams assistant text and tool-status events in the Responses (VoiceLive) variant; uses Bridge messages in the Conversation Engine adapter-mode variants"
                 ],
-                "whatItGenerates": "A WebSocket audio bridge (Python or C#), or a Python hosted agent that emits Invocations- or Responses-format voice-compatible events, with hosting configuration and variant-specific client examples.",
+                "whatItGenerates": "A WebSocket audio bridge (Python or C#), a C# or Python hosted agent that uses Bridge messages through Conversation Engine adapter mode, or a Python hosted agent that emits Invocations- or Responses-format voice-compatible events, with hosting configuration and variant-specific client examples.",
                 "requirements": [
                     "Voice Live, model access"
                 ]
@@ -2001,7 +2079,9 @@
                 "samples/csharp/hosted-agents/bring-your-own/invocations_ws/HelloWorld",
                 "samples/python/hosted-agents/bring-your-own/invocations_ws/hello-world",
                 "samples/python/hosted-agents/bring-your-own/voicelive/hello-world-invocations-voicelive",
-                "samples/python/hosted-agents/bring-your-own/voicelive/github-copilot-responses-voicelive"
+                "samples/python/hosted-agents/bring-your-own/voicelive/github-copilot-responses-voicelive",
+                "samples/csharp/hosted-agents/bring-your-own/conversation_engine/adapter_mode",
+                "samples/python/hosted-agents/bring-your-own/conversation_engine/adapter_mode"
             ]
         },
         {
@@ -2264,14 +2344,15 @@
                     "Starts background agent work",
                     "Reports task status and results"
                 ],
-                "whatItGenerates": "A Python router/worker project with WebSocket or Responses hosting and variant-specific voice integration. Worker tools and task examples differ.",
+                "whatItGenerates": "A Python router/worker project with WebSocket, Responses, or voice-conversation-engine hosting and variant-specific voice integration. Worker tools and task examples differ.",
                 "requirements": [
                     "Voice Live, models, worker tools"
                 ]
             },
             "templatePaths": [
                 "samples/python/hosted-agents/bring-your-own/invocations_ws/duplex-live-agent",
-                "samples/python/hosted-agents/bring-your-own/voicelive/foreground-background-agents-responses-voicelive"
+                "samples/python/hosted-agents/bring-your-own/voicelive/foreground-background-agents-responses-voicelive",
+                "samples/python/hosted-agents/bring-your-own/conversation_engine/foreground_background"
             ]
         },
         {
@@ -2595,85 +2676,6 @@
             ]
         },
         {
-            "id": "managed-audio-offload",
-            "title": "Managed Audio Offload",
-            "categoryId": "voice-realtime",
-            "details": {
-                "summary": "A hosted text agent that offloads audio input/output to Voice Live by implementing the Voice Live Bridge Protocol over invocations_ws.",
-                "whatItDoes": "Implements Voice Live Bridge Protocol 1.0 using the AgentServer invocations_ws transport. The hosted target agent accepts session lifecycle and control events (session.start, session.ready, user.message, etc.), receives final transcripts and control signals from Voice Live, and streams model text output (response.output_text.delta and terminal events) back to Voice Live via the Responses API. Voice Live (the wrapper) owns STT, VAD, TTS, playback interruption, barge-in, and audio playback admission. The sample documents supported and unsupported Bridge features and exposes a protocol-aware local smoke client for testing.",
-                "whyUseIt": "Separate audio handling from conversational logic so a hosted text agent can be reused by managed voice wrappers; keep the agent free of audio capture/playback code while still supporting streaming and real-time voice scenarios.",
-                "exampleScenario": "Deploy the hosted target agent and the provided Voice wrapper. A caller connects to the Voice wrapper's voice WebSocket endpoint; the wrapper sends transcripts and control events to the target over invocations_ws; the target streams response deltas back and the wrapper handles STT/TTS and playback for the caller. Use the included smoke_test to validate the Bridge wire flow locally.",
-                "bestFit": "Developers building text-only hosted agents that will be wrapped by platform-managed voice (Voice Live) or anyone who wants to prototype a voice-capable integration without adding audio code to the agent.",
-                "capabilities": [
-                    "Accepts Voice Live Bridge Protocol events over invocations_ws",
-                    "Streams model text deltas back to Voice Live (Responses API)",
-                    "Handles session lifecycle and control events (session.start/ready/end)",
-                    "Supports barge-in, proactive responses, response.none, and self-cancellation",
-                    "Includes a protocol-aware local smoke client and azd deployment guidance",
-                    "Documents Bridge 1.0 limitations (no DTMF, no image input, no hosted-agent handoff)"
-                ],
-                "whatItGenerates": "A Python hosted-agent sample that implements Voice Live Bridge Protocol 1.0 over invocations_ws, relays text and control events to a Foundry model, and streams response.output_text deltas back to Voice Live. The sample includes a protocol callback layer, response coordination, state management, a smoke test, and azd/azd-provision guidance. Production audio is managed externally by Voice Live; deterministic fake model streams are used in tests.",
-                "requirements": [
-                    "Model deployment"
-                ]
-            },
-            "templatePaths": [
-                "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/basic"
-            ]
-        },
-        {
-            "id": "hosted-audio-target",
-            "title": "Hosted Audio Target",
-            "categoryId": "voice-realtime",
-            "details": {
-                "summary": "Provide a text-only hosted agent that integrates with Voice Live by implementing the Voice Live Bridge Protocol over invocations_ws and streaming assistant text back to callers.",
-                "whatItDoes": "Implements Voice Live Bridge Protocol 1.0 on the /invocations_ws transport: accepts session.start, emits session.ready, receives final transcripts as user.message, and streams response.output_text.delta back to Voice Live. The sample is text-only — Voice Live handles STT, VAD, synthesis, playback interruption, and proactive-response admission. It uses a LangChain hosting loop and the Responses API for model inference and includes a small local UTC-time tool. Protocol limitations: no DTMF, no image input, no app-driven history mutation, and no hosted-agent handoff.",
-                "whyUseIt": "Quickly add a managed audio front end to a hosted text agent without embedding audio code in the agent: let Voice Live own audio while your agent focuses on text conversation, streaming, and host-side response sequencing.",
-                "exampleScenario": "Deploy the LangChain hosted agent and a managed Voice wrapper; a caller connects to the Voice wrapper, which sends Bridge events to this hosted agent on /invocations_ws. The agent receives transcripts, calls the configured Foundry model, and streams assistant text deltas that Voice Live synthesizes to the caller.",
-                "bestFit": "Developers who want to expose a model-backed text agent as a managed-voice target (Voice Live) using Python + LangChain over invocations_ws, or teams evaluating voice/hosted-agent separation of concerns.",
-                "capabilities": [
-                    "Implements Voice Live Bridge Protocol 1.0 over invocations_ws",
-                    "Streams assistant text deltas (response.output_text.delta) to Voice Live",
-                    "Handles session lifecycle events and response sequencing",
-                    "Supports proactive responses, barge-in reconciliation, response cancellation and response.none",
-                    "Uses LangChain + Responses API and a local UTC-time tool; audio is managed externally"
-                ],
-                "whatItGenerates": "A Python LangChain hosted-agent project (invocations_ws transport) that exposes /invocations_ws, implements the typed AgentServer Voice callback surface, handles Bridge lifecycle events, calls a Foundry Responses model and streams text deltas back to Voice Live. The sample includes a protocol-aware smoke client and deterministic tests; production audio is provided by a separate managed Voice wrapper and the project does not contain STT/TTS code.",
-                "requirements": [
-                    "Model deployment"
-                ]
-            },
-            "templatePaths": [
-                "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langchain"
-            ]
-        },
-        {
-            "id": "voice-live-bridge",
-            "title": "Voice Live Bridge",
-            "categoryId": "voice-realtime",
-            "details": {
-                "summary": "A hosted text agent that implements Voice Live Bridge Protocol 1.0 over invocations_ws to connect a managed Voice Live audio front end and stream assistant text back to Voice Live.",
-                "whatItDoes": "Implements the Voice Live Bridge 1.0 protocol using the Invocations WebSocket transport: accepts session.start, emits session.ready, receives final transcripts as user.message, creates responses, and streams response.output_text.delta messages back to Voice Live. The sample uses a Python LangGraph StateGraph to route between a Microsoft Foundry Responses model and a local UTC-time tool; it emits only assistant text to the voice wrapper. Voice Live / the Voice wrapper owns all audio (STT, VAD, TTS, barge-in, playback interruption); this hosted agent receives text and control events on /invocations_ws.",
-                "whyUseIt": "Attach a managed voice front end (Voice Live) to an existing hosted text agent without adding audio processing code. Learn Bridge protocol sequencing, streaming assistant-text deltas, LangGraph routing between model and tools, and how to coordinate response lifecycle and turnaround with a voice wrapper.",
-                "exampleScenario": "Deploy the sample locally or to a Foundry project, start the server exposing /invocations_ws, connect a Voice wrapper (or run the included smoke client). A caller speaks; Voice Live sends transcripts as user.message; the LangGraph agent calls the Foundry model and/or the UTC tool; assistant text is streamed back as response.output_text.delta and synthesized by Voice Live.",
-                "bestFit": "Developers building BYO hosted agents that must integrate with Voice Live or other managed voice wrappers using the Voice Live Bridge Protocol over invocations_ws, and teams using LangGraph to coordinate model↔tool flows without adding audio code to the agent.",
-                "capabilities": [
-                    "Implements Bridge Protocol 1.0 over invocations_ws",
-                    "Streams assistant text deltas to Voice Live",
-                    "Handles session.start/ready and full response lifecycle events",
-                    "Routes model and local tool calls via a LangGraph StateGraph",
-                    "Demonstrates barge-in, proactive responses, no-input handling, and response self-cancellation"
-                ],
-                "whatItGenerates": "A Python LangGraph hosted-agent implementation that exposes /invocations_ws, includes voice_runtime callbacks and a response coordinator, defines a StateGraph that routes between a Foundry Responses model node and a UTC-time tool, and streams assistant text deltas back to Voice Live. The sample includes a protocol-aware smoke test and azd-based provisioning/deploy guidance. Production audio is managed externally by Voice Live; deterministic fake model streams are used in tests.",
-                "requirements": [
-                    "Foundry model deployment"
-                ]
-            },
-            "templatePaths": [
-                "samples/python/hosted-agents/bring-your-own/voice-agent-target-agent/langgraph"
-            ]
-        },
-        {
             "id": "location-aware-host",
             "title": "Location-aware host",
             "categoryId": "other-sdks-adapters",
@@ -2706,25 +2708,28 @@
             "title": "Custom State Stores",
             "categoryId": "knowledge-rag-memory",
             "details": {
-                "summary": "Show how to implement and wire custom persistence stores for a LangGraph Responses agent so you control conversation chains, response records, and long-term memory storage.",
-                "whatItDoes": "Provides concrete implementations and wiring for ConversationChainStoreProtocol and ResponseProviderProtocol, plus examples of integrating LangGraph-compatible long-term memory/checkpointer stores. The sample includes SQLite-backed example stores, host-server wiring (ResponsesHostServer), and a main.py that runs locally or as a Foundry hosted agent. Model calls use AZURE_AI_API_KEY when present or DefaultAzureCredential otherwise.",
+                "summary": "Show how to implement and wire custom persistence stores for a Responses agent so you control response records and agent state.",
+                "whatItDoes": "Provides concrete implementations and wiring for custom stores, including ConversationChainStoreProtocol, ResponseProviderProtocol, and long-term memory/checkpoint stores in the LangGraph sample, plus the Agent Framework hosting storage extension points for response history, agent sessions, checkpoints, and function approvals. The sample includes example stores, host-server wiring, and a main.py that runs locally or as a Foundry hosted agent. The LangGraph sample uses AZURE_AI_API_KEY when present or DefaultAzureCredential otherwise; the Agent Framework sample uses DefaultAzureCredential.",
                 "whyUseIt": "Use custom stores to control persistence behavior, storage backend, data lifecycle, and deployment topology instead of relying on Foundry-managed state services—needed for on-prem deployments, custom security, or alternative storage choices.",
-                "exampleScenario": "Run the local server, persist a conversation-only parcel code in the conversation-chain store and validate it is available only in that conversation; then persist a long-term memory fact and query it from a new conversation to confirm memory retrieval. The sample shows tests and curl examples to exercise both behaviors.",
-                "bestFit": "Teams building LangGraph/Responses agents that must implement custom persistence backends (on-prem or hosted), validate storage behavior, or migrate to a non-Foundry storage solution.",
+                "exampleScenario": "Run the local server, persist a conversation-scoped fact and confirm it is available only in that conversation; then restart the host and send a follow-up to verify stored state is still recovered. In the Agent Framework variant, run the checkpoint and approval prompts to confirm the checkpoint and human-approval stores too.",
+                "bestFit": "Teams building Responses agents that must implement custom persistence backends, validate storage behavior, or migrate to a non-Foundry storage solution.",
                 "capabilities": [
-                    "Custom ConversationChainStore wiring",
+                    "Custom ConversationChainStore wiring (LangGraph)",
                     "Custom ResponseProvider persistence",
-                    "LangGraph-compatible memory/checkpoint integration",
-                    "SQLite example implementations and tests",
+                    "Long-term memory and checkpoint integration (LangGraph)",
+                    "Agent session and checkpoint stores (Agent Framework)",
+                    "Function approval persistence (Agent Framework)",
+                    "SQLite (LangGraph) or Redis (Agent Framework) example implementations",
                     "Runs on-host or in Foundry hosted agents"
                 ],
-                "whatItGenerates": "A Python LangGraph Responses sample that implements and wires SQLite-based ConversationChainStore and ResponseStore classes, a ResponsesHostServer setup, tests and curl-based usage examples. The committed SQLite classes are illustrative—production backends must satisfy the same protocols and address concurrency, replication, and security limitations.",
+                "whatItGenerates": "A Python Responses sample that implements and wires custom store classes, a ResponsesHostServer setup, tests and curl-based usage examples. The committed store implementations are illustrative—production backends must satisfy the same contracts and address concurrency, replication, and security limitations.",
                 "requirements": [
                     "Python 3.13"
                 ]
             },
             "templatePaths": [
-                "samples/python/hosted-agents/langgraph/responses/13-custom-store"
+                "samples/python/hosted-agents/langgraph/responses/13-custom-store",
+                "samples/python/hosted-agents/agent-framework/responses/26-custom-store"
             ]
         },
         {
@@ -2751,6 +2756,106 @@
             "templatePaths": [
                 "samples/csharp/hosted-agents/bring-your-own/responses/openai-computer-tool",
                 "samples/python/hosted-agents/bring-your-own/responses/openai-computer-tool"
+            ]
+        },
+        {
+            "id": "voice-story-playback",
+            "title": "Voice Story Playback",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Stream a fixed story through a managed voice conversation engine while preserving session state.",
+                "whatItDoes": "Implements a hosted voice-conversation-engine sample that sends a predetermined children’s story as text deltas through the voice layer and retains protocol/session state. It does not call a language model, use prompts, or generate story content dynamically.",
+                "whyUseIt": "Use it to validate the voice conversation engine wiring, session handling, cancellation behavior, and playback flow without adding model inference.",
+                "exampleScenario": "Start the hosted agent, connect through the Voice wrapper, and hear the same fixed story play back while session state is maintained across control events.",
+                "bestFit": "Voice-hosting demos and protocol smoke tests that need deterministic playback without model integration.",
+                "capabilities": [
+                    "Streams a predetermined story as voice output",
+                    "Preserves session and protocol state",
+                    "Handles voice control events without model calls",
+                    "Supports hosted voice-wrapper routing"
+                ],
+                "whatItGenerates": "A hosted-agent sample with voice conversation engine wiring and a fixed story playback implementation. Voice Live provides speech recognition and synthesis; the story is deterministic rather than generated by a language model.",
+                "requirements": [
+                    "Python 3.13 or .NET 10"
+                ]
+            },
+            "templatePaths": [
+                "samples/csharp/hosted-agents/bring-your-own/conversation_engine/basic",
+                "samples/python/hosted-agents/bring-your-own/conversation_engine/basic"
+            ]
+        },
+        {
+            "id": "voice-live-bridge-langchain-python",
+            "title": "Bridge voice messages to a fixed story",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Stream the same fixed children’s story word by word for each valid voice message through a dedicated conversation-engine bridge.",
+                "whatItDoes": "Implements a Voice Live Bridge protocol host that accepts valid user messages and sends a predetermined thirty-word story as streamed text deltas. The sample is deterministic and does not initialize a model, parse commands, or change the story based on input.",
+                "whyUseIt": "Use it to test voice-bridge hosting, streaming, cancellation, and session lifecycle behavior without adding model inference or application-specific logic.",
+                "exampleScenario": "A caller sends a voice conversation turn, and the host streams the story one word at a time before completing the response.",
+                "bestFit": "Voice Live bridge samples that need a fixed streaming response and protocol-level integration rather than model-backed conversation.",
+                "capabilities": [
+                    "Validates incoming user messages",
+                    "Streams a fixed thirty-word story word by word",
+                    "Supports session and cancellation events at the protocol layer"
+                ],
+                "whatItGenerates": "A Python hosted-agent sample for the Voice Live Bridge conversation-engine protocol with streaming response handling and local smoke-test support. It demonstrates a fixed story response, not a real conversational model integration.",
+                "requirements": [
+                    "Python 3.13"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/conversation_engine/langchain"
+            ]
+        },
+        {
+            "id": "fixed-story-stream-voice-agent",
+            "title": "Stream a fixed voice story",
+            "categoryId": "voice-realtime",
+            "details": {
+                "summary": "Stream the same fixed children's story word by word over a voice conversation engine endpoint.",
+                "whatItDoes": "Implements a Voice Live Bridge conversation engine handler that validates each user message and sends a predetermined thirty-word story as streamed text deltas. It does not call a language model, parse commands, or change the story based on input.",
+                "whyUseIt": "Use it to test voice-bridge hosting, streaming, interruption handling, and protocol events without adding model dependencies.",
+                "exampleScenario": "Send any valid message to the voice endpoint and verify the same story is streamed one word at a time, followed by completion events.",
+                "bestFit": "Developers validating Voice Live Bridge or similar voice-conversation hosting with deterministic output.",
+                "capabilities": [
+                    "Validates incoming voice conversation messages",
+                    "Streams a fixed story as text deltas",
+                    "Supports cancellation and session lifecycle events",
+                    "Runs without a model call"
+                ],
+                "whatItGenerates": "A Python hosted-agent sample with Voice Live Bridge protocol handling, a fixed-story async generator, and local smoke-test scaffolding. The voice transport and audio behavior are handled by the Voice Live layer, not by a model integration.",
+                "requirements": [
+                    "Python 3.13 and uv"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/bring-your-own/conversation_engine/langgraph"
+            ]
+        },
+        {
+            "id": "branch-response-history",
+            "title": "Branch response history",
+            "categoryId": "human-in-the-loop-async-events",
+            "details": {
+                "summary": "Use previous_response_id to branch from earlier Responses and revisit remembered state.",
+                "whatItDoes": "Hosts a checkpointed LangGraph agent with Responses branching enabled so clients can create new responses from an earlier completed response, rewind to a prior branch, and regenerate from the same parent response.",
+                "whyUseIt": "Explore how persisted response history and saved graph checkpoints let you branch, continue, and repeat a prior turn without sending the full conversation history again.",
+                "exampleScenario": "Remember a number, create two branches from that response, return to an earlier branch, and regenerate one branch from the same parent response ID.",
+                "bestFit": "Developers experimenting with Responses history reuse and checkpoint-backed branching behavior.",
+                "capabilities": [
+                    "Branches from earlier completed responses",
+                    "Rewinds to a prior branch",
+                    "Regenerates from the same parent response",
+                    "Preserves graph checkpoints across turns"
+                ],
+                "whatItGenerates": "A Python LangGraph hosted agent with Responses branching enabled and checkpoint storage for the selected implementation. It demonstrates branching behavior in the hosted sample rather than a new protocol or recovery mechanism.",
+                "requirements": [
+                    "Python 3.13, uv"
+                ]
+            },
+            "templatePaths": [
+                "samples/python/hosted-agents/langgraph/responses/15-branching"
             ]
         }
     ]
