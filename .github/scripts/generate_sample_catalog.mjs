@@ -74,10 +74,10 @@ const DIMENSION_DEFAULTS = {
         // Insertion order here drives the option order in the generated catalog
         // (see buildDimensions). Keep the most actively promoted framework first.
         options: {
-            'copilot-sdk': 'Copilot SDK',
             'agent-framework': 'Agent Framework',
-            'bring-your-own': 'Bring Your Own',
             'langgraph': 'LangGraph',
+            'copilot-sdk': 'Copilot SDK',
+            'bring-your-own': 'Bring Your Own',
         },
     },
     protocol: {
@@ -1028,8 +1028,8 @@ async function scanTemplates(commitSha, previousTemplates) {
 /**
  * Build the dimensions section from discovered templates and defaults.
  * Option order follows the insertion order of `DIMENSION_DEFAULTS[dim].options`
- * so we have UX control (e.g. promote `copilot-sdk` ahead of
- * `agent-framework`). Any id seen in the scanned templates but not declared in
+ * so we have UX control (e.g. keep `agent-framework` first and `langgraph`
+ * second). Any id seen in the scanned templates but not declared in
  * the defaults is appended at the end in alphabetical order, so a new
  * framework added upstream does not break the build — just shows up last.
  *
