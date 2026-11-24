@@ -1470,4 +1470,7 @@ test('normal scanning orders framework dimensions with Agent Framework first and
         output.dimensions.framework.options.map(option => option.id),
         ['agent-framework', 'langgraph', 'copilot-sdk', 'bring-your-own', 'alpha-sdk', 'zeta-sdk']
     );
+    assert.deepEqual(output.dimensions.framework.options[1], {
+        id: 'langgraph', displayName: 'LangGraph', searchAliases: ['LangChain'],
+    });
 });
