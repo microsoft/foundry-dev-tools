@@ -58,7 +58,7 @@ const BLOCKED_FRAMEWORKS = [];
 /** @type {string[]} */
 const BLOCKED_PROTOCOLS = [];
 
-/** @type {Record<string, {title: string, placeholder: string, options: Record<string, string>}>} */
+/** @type {Record<string, {title: string, placeholder: string, options: Record<string, string>, searchAliases?: Record<string, string[]>}>} */
 const DIMENSION_DEFAULTS = {
     language: {
         title: 'Select a Language',
@@ -79,6 +79,7 @@ const DIMENSION_DEFAULTS = {
             'copilot-sdk': 'Copilot SDK',
             'bring-your-own': 'Bring Your Own',
         },
+        searchAliases: { langgraph: ['LangChain'] },
     },
     protocol: {
         title: 'Select a Protocol',
@@ -1036,7 +1037,7 @@ async function scanTemplates(commitSha, previousTemplates) {
  * @param {Array<{language: string, framework: string, protocol: string}>} templates
  */
 function buildDimensions(templates) {
-    /** @type {Record<string, {title: string, placeholder: string, options: Array<{id: string, displayName: string}>}>} */
+    /** @type {Record<string, {title: string, placeholder: string, options: Array<{id: string, displayName: string, searchAliases?: string[]}>}>} */
     const dimensions = {};
 
     for (const dimKey of /** @type {const} */ (['language', 'framework', 'protocol'])) {
@@ -1047,10 +1048,14 @@ function buildDimensions(templates) {
             ...declaredOrder.filter((id) => seenIds.has(id)),
             ...[...seenIds].filter((id) => !declaredOrder.includes(id)).sort(),
         ];
-        const options = orderedIds.map((id) => ({
-            id,
-            displayName: defaults.options[id] || titleCaseId(id),
-        }));
+        const options = orderedIds.map((id) => {
+            const searchAliases = defaults.searchAliases?.[id];
+            return {
+                id,
+                displayName: defaults.options[id] || titleCaseId(id),
+                ...(searchAliases ? { searchAliases } : {}),
+            };
+        });
         dimensions[dimKey] = {
             title: defaults.title,
             placeholder: defaults.placeholder,
