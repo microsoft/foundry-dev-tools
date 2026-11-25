@@ -1,5 +1,18 @@
 # What's New in Foundry Toolkit for VS Code
 
+## Version 1.6.22 - 25 November, 2026
+
+This release of Microsoft Foundry Toolkit for VS Code makes prompt-agent toolboxes available without changing settings, updates Copilot guidance for Python agents, and removes unnecessary model policy error notifications.
+
+### Changed
+
+- **Prompt-agent toolboxes**: Attach a toolbox from Agent Builder's **Add tools** menu or choose **Add to Prompt Agent** from the Toolbox list. The separate toolbox setting is no longer needed.
+- **LangChain and LangGraph guidance**: The Copilot quick start uses a Python hosted-agent sample built on the Responses API. Copilot tracing guidance recommends Azure Monitor auto-tracing for Foundry Portal and distinguishes it from local tracing in VS Code.
+
+### Fixed
+
+- **Model policy notifications**: A failed model policy check no longer shows a VS Code error notification. Policy findings still appear when the check succeeds.
+
 ## Version 1.6.21 - 17 November, 2026
 
 This release of Microsoft Foundry Toolkit for VS Code adds prompt-agent trace and evaluation actions in Copilot Chat. It also improves model selection, policy guidance, tool dialogs, and hosted-agent resource configuration.
