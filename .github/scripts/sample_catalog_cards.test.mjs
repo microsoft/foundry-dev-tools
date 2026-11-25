@@ -132,6 +132,10 @@ test('checked-in catalog and cards have separate responsibilities and form one r
     const definitions = { sourceCommitSha: source.commitSha, patterns: source.patterns, cards: source.cards };
 
     assert.equal(definitions.sourceCommitSha, source.commitSha);
+    assert.deepEqual(
+        source.dimensions.framework.options.map(option => option.id),
+        ['agent-framework', 'langgraph', 'copilot-sdk', 'bring-your-own']
+    );
     const output = buildCatalogWithCards(source, definitions);
     for (const field of ['repo', 'commitSha', 'generatedAt', 'dimensions', 'templateSelection', 'templates']) {
         assert.deepEqual(output[field], source[field], `Legacy field changed: ${field}`);
@@ -1416,4 +1420,57 @@ test('normal scanning writes templates and cards together using pinned source da
     });
     assert.equal(repeated.status, 0, repeated.stderr || repeated.error?.message);
     assert.deepEqual(readFileSync(outputPath), before, 'Unchanged scans must not refresh generatedAt');
+});
+
+test('normal scanning orders framework dimensions with Agent Framework first and LangGraph second', context => {
+    const { root, source, outputPath } = temporaryFixture(context);
+    const frameworks = ['bring-your-own', 'copilot-sdk', 'langgraph', 'agent-framework', 'zeta-sdk', 'alpha-sdk'];
+    const templates = frameworks.map(framework => ({
+        ...source.templates[0],
+        framework,
+        path: `samples/python/hosted-agents/${framework}/workflow`,
+    }));
+    const seeded = {
+        ...source,
+        dimensions: {
+            ...source.dimensions,
+            framework: {
+                ...source.dimensions.framework,
+                options: frameworks.map(id => ({ id, displayName: id })),
+            },
+        },
+        templates,
+        cards: [{ ...source.cards[0], templatePaths: templates.map(template => template.path) }],
+    };
+    writeFileSync(outputPath, JSON.stringify(seeded));
+    const generator = new URL('./generate_sample_catalog.mjs', import.meta.url);
+    const tree = templates.map(template => ({ path: `${template.path}/azure.yaml`, type: 'blob' }));
+    const manifest = 'services:\n  agent:\n    protocols:\n      - protocol: responses\n    environmentVariables:\n      - name: AZURE_AI_MODEL_DEPLOYMENT_NAME\n';
+    const code = `
+        process.argv = [process.execPath, ${JSON.stringify(fileURLToPath(generator))}, ${JSON.stringify(source.commitSha)}];
+        globalThis.fetch = async resource => {
+            const url = String(resource);
+            if (url.includes('/git/trees/')) return Response.json({ tree: ${JSON.stringify(tree)}, truncated: false });
+            if (url.endsWith('/azure.yaml')) return new Response(${JSON.stringify(manifest)});
+            throw new Error('Unexpected request: ' + url);
+        };
+        await import(${JSON.stringify(generator.href)});
+    `;
+    const env = {
+        ...process.env, REPO_ROOT: root, GITHUB_TOKEN: '', AZURE_OPENAI_ENDPOINT: '', AZURE_OPENAI_API_KEY: '',
+        AI_REFINE: 'false', IGNORE_EXISTING: 'false',
+    };
+    delete env.GITHUB_STEP_SUMMARY;
+    const result = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
+        encoding: 'utf8', env, timeout: 10000,
+    });
+    assert.equal(result.status, 0, result.stderr || result.error?.message);
+    const output = JSON.parse(readFileSync(outputPath, 'utf8'));
+    assert.deepEqual(
+        output.dimensions.framework.options.map(option => option.id),
+        ['agent-framework', 'langgraph', 'copilot-sdk', 'bring-your-own', 'alpha-sdk', 'zeta-sdk']
+    );
+    assert.deepEqual(output.dimensions.framework.options[1], {
+        id: 'langgraph', displayName: 'LangGraph', searchAliases: ['LangChain'],
+    });
 });
