@@ -58,7 +58,7 @@ const BLOCKED_FRAMEWORKS = [];
 /** @type {string[]} */
 const BLOCKED_PROTOCOLS = [];
 
-/** @type {Record<string, {title: string, placeholder: string, options: Record<string, string>}>} */
+/** @type {Record<string, {title: string, placeholder: string, options: Record<string, string>, searchAliases?: Record<string, string[]>}>} */
 const DIMENSION_DEFAULTS = {
     language: {
         title: 'Select a Language',
@@ -74,11 +74,12 @@ const DIMENSION_DEFAULTS = {
         // Insertion order here drives the option order in the generated catalog
         // (see buildDimensions). Keep the most actively promoted framework first.
         options: {
-            'copilot-sdk': 'Copilot SDK',
             'agent-framework': 'Agent Framework',
-            'bring-your-own': 'Bring Your Own',
             'langgraph': 'LangGraph',
+            'copilot-sdk': 'Copilot SDK',
+            'bring-your-own': 'Bring Your Own',
         },
+        searchAliases: { langgraph: ['LangChain'] },
     },
     protocol: {
         title: 'Select a Protocol',
@@ -1028,15 +1029,15 @@ async function scanTemplates(commitSha, previousTemplates) {
 /**
  * Build the dimensions section from discovered templates and defaults.
  * Option order follows the insertion order of `DIMENSION_DEFAULTS[dim].options`
- * so we have UX control (e.g. promote `copilot-sdk` ahead of
- * `agent-framework`). Any id seen in the scanned templates but not declared in
+ * so we have UX control (e.g. keep `agent-framework` first and `langgraph`
+ * second). Any id seen in the scanned templates but not declared in
  * the defaults is appended at the end in alphabetical order, so a new
  * framework added upstream does not break the build — just shows up last.
  *
  * @param {Array<{language: string, framework: string, protocol: string}>} templates
  */
 function buildDimensions(templates) {
-    /** @type {Record<string, {title: string, placeholder: string, options: Array<{id: string, displayName: string}>}>} */
+    /** @type {Record<string, {title: string, placeholder: string, options: Array<{id: string, displayName: string, searchAliases?: string[]}>}>} */
     const dimensions = {};
 
     for (const dimKey of /** @type {const} */ (['language', 'framework', 'protocol'])) {
@@ -1047,10 +1048,14 @@ function buildDimensions(templates) {
             ...declaredOrder.filter((id) => seenIds.has(id)),
             ...[...seenIds].filter((id) => !declaredOrder.includes(id)).sort(),
         ];
-        const options = orderedIds.map((id) => ({
-            id,
-            displayName: defaults.options[id] || titleCaseId(id),
-        }));
+        const options = orderedIds.map((id) => {
+            const searchAliases = defaults.searchAliases?.[id];
+            return {
+                id,
+                displayName: defaults.options[id] || titleCaseId(id),
+                ...(searchAliases ? { searchAliases } : {}),
+            };
+        });
         dimensions[dimKey] = {
             title: defaults.title,
             placeholder: defaults.placeholder,

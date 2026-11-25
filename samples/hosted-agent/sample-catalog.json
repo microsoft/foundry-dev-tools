@@ -22,20 +22,23 @@
             "placeholder": "Choose the framework for your agent",
             "options": [
                 {
-                    "id": "copilot-sdk",
-                    "displayName": "Copilot SDK"
-                },
-                {
                     "id": "agent-framework",
                     "displayName": "Agent Framework"
                 },
                 {
-                    "id": "bring-your-own",
-                    "displayName": "Bring Your Own"
+                    "id": "langgraph",
+                    "displayName": "LangGraph",
+                    "searchAliases": [
+                        "LangChain"
+                    ]
                 },
                 {
-                    "id": "langgraph",
-                    "displayName": "LangGraph"
+                    "id": "copilot-sdk",
+                    "displayName": "Copilot SDK"
+                },
+                {
+                    "id": "bring-your-own",
+                    "displayName": "Bring Your Own"
                 }
             ]
         },
