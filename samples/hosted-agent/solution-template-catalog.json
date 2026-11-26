@@ -32,6 +32,17 @@
             "ref": "main",
             "path": "enterprise-knowledge-agent",
             "readmePath": "README.md"
+        },
+        {
+            "id": "ag-ui-hosted-agent",
+            "title": "AG-UI Web Client for a Hosted Agent",
+            "description": "Demonstrates a browser chat client for a Hosted Agent over AG-UI with CopilotKit, including Microsoft Entra sign-in, per-user threads, and human approval of agent actions.",
+            "tags": ["AG-UI", "Web Client", "Human-in-the-loop"],
+            "repo": "https://github.com/microsoft/Foundry-Agent-Solution-Templates",
+            "githubUrl": "https://github.com/microsoft/Foundry-Agent-Solution-Templates/tree/main/ag-ui-hosted-agent",
+            "ref": "main",
+            "path": "ag-ui-hosted-agent",
+            "readmePath": "README.md"
         }
     ]
 }
